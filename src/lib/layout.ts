@@ -91,8 +91,26 @@ export function computeLayout({
   const palette = template.palette;
 
   const visible = photos.filter((p) => !p.hidden);
-  const columns = Math.max(1, Math.round(settings.columns));
   const count = Math.max(visible.length, 1);
+
+  // Cards pick a column count that uses the fixed proportions well, unless the
+  // photographer has set one explicitly.
+  const autoColumns =
+    template.autoColumns && templateSettings?.columns === undefined && template.fixedSize
+      ? Math.max(
+          1,
+          Math.min(
+            12,
+            Math.round(
+              Math.sqrt(
+                (count * (template.fixedSize.width / template.fixedSize.height)) /
+                  template.frameAspect,
+              ),
+            ),
+          ),
+        )
+      : null;
+  const columns = autoColumns ?? Math.max(1, Math.round(settings.columns));
   const rows = Math.max(1, Math.ceil(count / columns));
 
   const showCaption = Boolean(settings.showTitles || settings.showFilenames);
@@ -115,28 +133,33 @@ export function computeLayout({
   let contentWidth = columns * frameWidth + (columns - 1) * gap;
   if (isFilm) contentWidth += STRIP_PAD_X * 2;
 
-  const width = contentWidth + margin * 2;
+  let width = contentWidth + margin * 2;
   const rowHeight = stripPadY * 2 + frameHeight + captionHeight;
   let contentHeight = rows * rowHeight + (rows - 1) * rowGap;
   let height = margin + headerHeight + contentHeight + footerHeight + margin;
+  let contentTop = margin + headerHeight;
 
-  // --- fixed-aspect templates (postcards) scale the grid to fit ----------
-  if (template.fixedAspect) {
-    const targetHeight = width / template.fixedAspect;
-    const chromeVertical = margin * 2 + headerHeight + footerHeight;
-    const available = targetHeight - chromeVertical;
-    if (contentHeight > available && contentHeight > 0) {
-      const scale = Math.max(0.25, available / contentHeight);
-      frameWidth *= scale;
-      frameHeight = frameWidth / template.frameAspect;
-      contentWidth = columns * frameWidth + (columns - 1) * gap + (isFilm ? STRIP_PAD_X * 2 : 0);
-      contentHeight = rows * (frameHeight + captionHeight) + (rows - 1) * rowGap;
-    }
-    height = targetHeight;
+  // --- fixed-size templates (cards) fit the grid inside the card ----------
+  if (template.fixedSize) {
+    width = template.fixedSize.width;
+    height = template.fixedSize.height;
+    const availableWidth = width - margin * 2;
+    const availableHeight = height - margin * 2 - headerHeight - footerHeight;
+
+    // The frame width that satisfies both the horizontal and vertical budget.
+    const byWidth = (availableWidth - (columns - 1) * gap) / columns;
+    const byHeight =
+      ((availableHeight - (rows - 1) * rowGap) / rows - captionHeight) * template.frameAspect;
+    frameWidth = Math.max(8, Math.min(byWidth, byHeight));
+    frameHeight = frameWidth / template.frameAspect;
+
+    contentWidth = columns * frameWidth + (columns - 1) * gap;
+    contentHeight = rows * (frameHeight + captionHeight) + (rows - 1) * rowGap;
+    contentTop = margin + headerHeight + Math.max(0, (availableHeight - contentHeight) / 2);
   }
 
   const contentX = Math.round((width - contentWidth) / 2);
-  const contentY = margin + headerHeight;
+  const contentY = contentTop;
 
   const strips: StripBox[] = [];
   const frames: FrameBox[] = [];

@@ -55,8 +55,13 @@ export interface TemplateDef {
       | "edgeLabel"
     >
   >;
-  /** Fixed sheet aspect (postcards); otherwise the sheet grows with content. */
-  fixedAspect?: number;
+  /**
+   * Fixed sheet size in sheet units (postcards and other cards). When set, the
+   * sheet never grows with the photo count — the grid is fitted inside instead.
+   */
+  fixedSize?: { width: number; height: number };
+  /** Choose the column count from the photo count instead of a fixed value. */
+  autoColumns?: boolean;
   /** Caption band height below each frame, when titles/filenames are shown. */
   captionHeight: number;
 }
@@ -243,7 +248,9 @@ export const TEMPLATES: Record<TemplateId, TemplateDef> = {
     header: "minimal",
     frameAspect: 3 / 2,
     frameWidth: 196,
-    fixedAspect: 6 / 4,
+    // 6 × 4 inches at 200 units/inch.
+    fixedSize: { width: 1200, height: 800 },
+    autoColumns: true,
     palette: {
       paper: "#0c0c0d",
       base: "#0c0c0d",

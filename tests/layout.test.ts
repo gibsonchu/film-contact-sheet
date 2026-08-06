@@ -60,9 +60,25 @@ describe("layout engine", () => {
     }
   });
 
-  it("keeps the postcard at its fixed 3:2 card ratio", () => {
-    const layout = computeLayout({ templateId: "postcard", photos: photos(12) });
-    expect(layout.width / layout.height).toBeCloseTo(6 / 4, 2);
+  it("keeps the postcard at its fixed 6:4 card size whatever the frame count", () => {
+    for (const n of [4, 12, 36, 38]) {
+      const layout = computeLayout({ templateId: "postcard", photos: photos(n) });
+      expect(layout.width / layout.height).toBeCloseTo(6 / 4, 2);
+      expect(layout.width).toBe(1200);
+      expect(layout.height).toBe(800);
+    }
+  });
+
+  it("never lets a postcard grid spill outside the card", () => {
+    for (const n of [1, 6, 20, 36, 38]) {
+      const layout = computeLayout({ templateId: "postcard", photos: photos(n) });
+      for (const frame of layout.frames) {
+        expect(frame.x).toBeGreaterThanOrEqual(0);
+        expect(frame.y).toBeGreaterThanOrEqual(0);
+        expect(frame.x + frame.width).toBeLessThanOrEqual(layout.width);
+        expect(frame.y + frame.height).toBeLessThanOrEqual(layout.height);
+      }
+    }
   });
 });
 
