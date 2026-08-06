@@ -1,0 +1,235 @@
+"use client";
+
+import { useEffect, useId, useRef, type ButtonHTMLAttributes, type ReactNode } from "react";
+
+export function cx(...parts: (string | false | null | undefined)[]): string {
+  return parts.filter(Boolean).join(" ");
+}
+
+type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: "primary" | "ghost" | "outline" | "danger";
+  size?: "sm" | "md";
+};
+
+export function Button({ variant = "outline", size = "md", className, ...props }: ButtonProps) {
+  const base =
+    "inline-flex items-center justify-center gap-2 font-medium transition-colors disabled:opacity-40 disabled:pointer-events-none";
+  const sizes = size === "sm" ? "h-8 px-3 text-[13px]" : "h-10 px-4 text-sm";
+  const variants = {
+    primary: "bg-warm text-noir hover:bg-white",
+    ghost: "text-bone hover:bg-white/8 hover:text-warm",
+    outline: "border border-white/15 text-bone hover:border-white/35 hover:text-warm",
+    danger: "border border-darkroom/60 text-darkroom hover:bg-darkroom hover:text-white",
+  }[variant];
+  return <button className={cx(base, sizes, variants, className)} {...props} />;
+}
+
+export function IconButton({
+  label,
+  active,
+  className,
+  children,
+  ...props
+}: ButtonHTMLAttributes<HTMLButtonElement> & { label: string; active?: boolean }) {
+  return (
+    <button
+      type="button"
+      title={label}
+      aria-label={label}
+      aria-pressed={active}
+      className={cx(
+        "relative grid h-9 w-9 place-items-center border transition-colors",
+        active
+          ? "border-grease/70 bg-grease/15 text-grease"
+          : "border-transparent text-smoke hover:border-white/15 hover:text-warm",
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
+
+export function Field({
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  children: (id: string) => ReactNode;
+}) {
+  const id = useId();
+  return (
+    <div className="space-y-1.5">
+      <label htmlFor={id} className="label block">
+        {label}
+      </label>
+      {children(id)}
+      {hint ? <p className="text-[11px] leading-snug text-smoke">{hint}</p> : null}
+    </div>
+  );
+}
+
+export const inputClass =
+  "w-full border border-white/12 bg-black/40 px-2.5 py-1.5 text-sm text-warm placeholder:text-smoke/60 focus:border-grease/60 focus:outline-none";
+
+export function Panel({ title, children, className }: { title?: string; children: ReactNode; className?: string }) {
+  return (
+    <section className={cx("border border-white/8 bg-charcoal/70", className)}>
+      {title ? (
+        <header className="border-b border-white/8 px-3 py-2">
+          <h2 className="label">{title}</h2>
+        </header>
+      ) : null}
+      <div className="p-3">{children}</div>
+    </section>
+  );
+}
+
+export function Dialog({
+  open,
+  onClose,
+  title,
+  description,
+  children,
+  wide,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  description?: string;
+  children: ReactNode;
+  wide?: boolean;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        onClose();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    const first = ref.current?.querySelector<HTMLElement>(
+      "button, input, select, textarea, [tabindex]:not([tabindex='-1'])",
+    );
+    first?.focus();
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 p-4 sm:p-8">
+      <div
+        className="absolute inset-0"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      <div
+        ref={ref}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        className={cx(
+          "relative z-10 w-full border border-white/12 bg-charcoal shadow-2xl",
+          wide ? "max-w-4xl" : "max-w-lg",
+        )}
+      >
+        <header className="flex items-start justify-between gap-6 border-b border-white/8 px-5 py-4">
+          <div>
+            <h2 className="text-lg tracking-tight text-warm">{title}</h2>
+            {description ? <p className="mt-1 text-[13px] text-smoke">{description}</p> : null}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="-mr-1 -mt-1 grid h-8 w-8 place-items-center text-smoke hover:text-warm"
+          >
+            <svg viewBox="0 0 16 16" className="h-4 w-4" aria-hidden="true">
+              <path d="M3 3 L13 13 M13 3 L3 13" stroke="currentColor" strokeWidth="1.5" fill="none" />
+            </svg>
+          </button>
+        </header>
+        <div className="px-5 py-4">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+export function Toggle({
+  label,
+  checked,
+  onChange,
+  hint,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  hint?: string;
+}) {
+  const id = useId();
+  return (
+    <div className="flex items-start justify-between gap-3 py-1">
+      <label htmlFor={id} className="cursor-pointer text-[13px] text-bone">
+        {label}
+        {hint ? <span className="mt-0.5 block text-[11px] text-smoke">{hint}</span> : null}
+      </label>
+      <button
+        id={id}
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        onClick={() => onChange(!checked)}
+        className={cx(
+          "mt-0.5 h-4 w-8 shrink-0 border transition-colors",
+          checked ? "border-grease bg-grease/70" : "border-white/20 bg-transparent",
+        )}
+      >
+        <span
+          className={cx(
+            "block h-3 w-3 bg-warm transition-transform",
+            checked ? "translate-x-4" : "translate-x-0.5",
+          )}
+        />
+      </button>
+    </div>
+  );
+}
+
+export function Segmented<T extends string>({
+  options,
+  value,
+  onChange,
+  label,
+}: {
+  options: { value: T; label: string; title?: string }[];
+  value: T;
+  onChange: (v: T) => void;
+  label: string;
+}) {
+  return (
+    <div role="group" aria-label={label} className="flex flex-wrap gap-px border border-white/12">
+      {options.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          title={o.title ?? o.label}
+          aria-pressed={value === o.value}
+          onClick={() => onChange(o.value)}
+          className={cx(
+            "flex-1 whitespace-nowrap px-2 py-1.5 text-[11px] uppercase tracking-[0.12em] transition-colors",
+            value === o.value ? "bg-warm text-noir" : "text-smoke hover:bg-white/6 hover:text-warm",
+          )}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
