@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { IconEye, IconEyeOff, IconLayers, IconLock, IconRotate, IconTrash } from "@/components/icons";
-import { Button, Field, IconButton, Panel, Segmented, Toggle, cx, inputClass } from "@/components/ui/primitives";
+import { Button, Field, IconButton, Panel, Segmented, Select, Toggle, cx, inputClass } from "@/components/ui/primitives";
 import { INK_COLORS, STROKE_SIZES, TAPE_KINDS } from "@/lib/palette";
 import { TEMPLATE_LIST } from "@/lib/templates";
 import { useEditor } from "@/lib/store/editor";
@@ -397,18 +397,16 @@ export function SheetInspector() {
         <div className="space-y-2">
           <Field label="Sheet template">
             {(id) => (
-              <select
+              <Select
                 id={id}
-                className={cx(inputClass, "appearance-none pr-7")}
+                label="Sheet template"
                 value={sheet.templateId}
-                onChange={(e) => setTemplate(e.target.value as TemplateId)}
-              >
-                {TEMPLATE_LIST.map((t) => (
-                  <option key={t.id} value={t.id} className="bg-charcoal">
-                    {t.name} · {t.format}
-                  </option>
-                ))}
-              </select>
+                onChange={(v) => setTemplate(v as TemplateId)}
+                options={TEMPLATE_LIST.map((t) => ({
+                  value: t.id,
+                  label: `${t.name} · ${t.format}`,
+                }))}
+              />
             )}
           </Field>
           <p className="text-[11px] leading-snug text-smoke">{template.blurb}</p>

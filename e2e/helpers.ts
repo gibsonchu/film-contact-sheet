@@ -1,4 +1,7 @@
 import { expect, type Page } from "@playwright/test";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 
 /** Opens the generated demo roll and waits for the sheet to render. */
 export async function openDemo(page: Page) {
@@ -51,4 +54,34 @@ export function fakeImages(count: number) {
     mimeType: "image/png",
     buffer: PNG_1PX,
   }));
+}
+
+/** Drives the template listbox, which is a custom control rather than a select. */
+export async function chooseTemplate(page: Page, label: RegExp | string) {
+  await page.getByRole("combobox", { name: "Sheet template" }).click();
+  await page.getByRole("option", { name: label }).click();
+}
+
+export function templateButton(page: Page) {
+  return page.getByRole("combobox", { name: "Sheet template" });
+}
+
+/** The plain multi-file input, as opposed to the directory picker beside it. */
+export const FILE_INPUT = 'input[type="file"]:not([webkitdirectory])';
+export const FOLDER_INPUT = "input[webkitdirectory]";
+
+/**
+ * A real folder on disk: a directory input can only be driven with a path, not
+ * with in-memory buffers. Includes the junk a photo folder actually carries.
+ */
+export function makeImageFolder(count: number, opts?: { withJunk?: boolean }): string {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "fcs-roll-"));
+  for (let i = 0; i < count; i += 1) {
+    fs.writeFileSync(path.join(dir, `frame-${String(i + 1).padStart(3, "0")}.png`), PNG_1PX);
+  }
+  if (opts?.withJunk) {
+    fs.writeFileSync(path.join(dir, ".DS_Store"), "junk");
+    fs.writeFileSync(path.join(dir, "notes.txt"), "hello");
+  }
+  return dir;
 }

@@ -6,6 +6,7 @@ import { useCallback, useRef, useState } from "react";
 import { Button, Field, Panel, cx, inputClass } from "@/components/ui/primitives";
 import { chunkForSheets, createDocument, createPhoto, renumber, sheetTitleForChunk } from "@/lib/document";
 import { ACCEPT_ATTR, formatBytes, processImage, validateFile } from "@/lib/images";
+import { filesFromDrop, pathOf, sortFiles } from "@/lib/upload";
 import { getStorage } from "@/lib/storage/local";
 import { MAX_PHOTOS_PER_SHEET } from "@/lib/types";
 
@@ -19,8 +20,10 @@ interface Candidate {
 export function UploadFlow() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
+  const folderRef = useRef<HTMLInputElement>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [dragging, setDragging] = useState(false);
+  const [scanning, setScanning] = useState(false);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
   const [meta, setMeta] = useState({
@@ -34,8 +37,10 @@ export function UploadFlow() {
     description: "",
   });
 
-  const addFiles = useCallback((files: FileList | File[]) => {
-    const next: Candidate[] = Array.from(files).map((file) => ({
+  const addFiles = useCallback((files: File[]) => {
+    // A folder pick arrives unsorted and full of junk; keep only photographs,
+    // in the order they sit in the folder.
+    const next: Candidate[] = sortFiles(files.filter((f) => !/^\./.test(f.name))).map((file) => ({
       id: `${file.name}-${file.size}-${file.lastModified}-${Math.random().toString(36).slice(2, 7)}`,
       file,
       previewUrl: URL.createObjectURL(file),
@@ -119,7 +124,16 @@ export function UploadFlow() {
             onDrop={(e) => {
               e.preventDefault();
               setDragging(false);
-              addFiles(e.dataTransfer.files);
+              void (async () => {
+                // Folders are walked recursively; a plain multi-file drop is
+                // unaffected.
+                setScanning(true);
+                try {
+                  addFiles(await filesFromDrop(e.dataTransfer));
+                } finally {
+                  setScanning(false);
+                }
+              })();
             }}
             className={cx(
               "texture-noise flex flex-col items-center justify-center border-2 border-dashed px-6 py-14 text-center transition-colors",
@@ -127,13 +141,21 @@ export function UploadFlow() {
             )}
           >
             <div className="sprocket-rail mb-5 w-40 opacity-40" aria-hidden="true" />
-            <p className="text-[15px] text-warm">Drop photographs here</p>
+            <p className="text-[15px] text-warm">Drop photographs or a folder here</p>
             <p className="mt-1 text-[13px] text-smoke">
               JPG, PNG, WebP or HEIC · up to {MAX_PHOTOS_PER_SHEET} frames per sheet
             </p>
-            <Button className="mt-5" onClick={() => inputRef.current?.click()}>
-              Choose files
-            </Button>
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+              <Button onClick={() => inputRef.current?.click()}>Choose files</Button>
+              <Button variant="ghost" onClick={() => folderRef.current?.click()}>
+                Choose a folder
+              </Button>
+            </div>
+            {scanning ? (
+              <p className="label mt-3" role="status">
+                Reading folder…
+              </p>
+            ) : null}
             <input
               ref={inputRef}
               type="file"
@@ -141,7 +163,21 @@ export function UploadFlow() {
               accept={ACCEPT_ATTR}
               className="sr-only"
               onChange={(e) => {
-                if (e.target.files) addFiles(e.target.files);
+                if (e.target.files) addFiles(Array.from(e.target.files));
+                e.target.value = "";
+              }}
+            />
+            {/* webkitdirectory is the only way to pick a folder; it is
+                non-standard but supported everywhere this app runs. */}
+            <input
+              ref={folderRef}
+              type="file"
+              multiple
+              className="sr-only"
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              {...({ webkitdirectory: "", directory: "" } as any)}
+              onChange={(e) => {
+                if (e.target.files) addFiles(Array.from(e.target.files));
                 e.target.value = "";
               }}
             />
@@ -179,7 +215,7 @@ export function UploadFlow() {
                     >
                       ✕
                     </button>
-                    <p className="mt-1 truncate font-sans text-[9px] text-smoke" title={c.file.name}>
+                    <p className="mt-1 truncate font-sans text-[9px] text-smoke" title={pathOf(c.file)}>
                       {c.error ?? formatBytes(c.file.size)}
                     </p>
                   </li>

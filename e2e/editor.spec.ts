@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { centreOf, dragBetween, frame, openDemo } from "./helpers";
+import { centreOf, chooseTemplate, dragBetween, frame, openDemo } from "./helpers";
 
 test.describe("contact sheet editor", () => {
   test("renders the demo roll as a 36-frame contact sheet", async ({ page }) => {
@@ -51,18 +51,30 @@ test.describe("contact sheet editor", () => {
 
     await page.getByRole("button", { name: /^Pen/ }).click();
     const start = await centreOf(page, '[data-frame-index="20"]');
-    const end = { x: start.x + 160, y: start.y };
-    await dragBetween(page, start, end);
+    await dragBetween(page, start, { x: start.x + 160, y: start.y });
     await expect(page.locator("[data-annotation-id]")).toHaveCount(before + 1);
+
+    // Track the stroke itself, so nothing else on the demo sheet can stand in
+    // for it and make this pass or fail by accident.
+    const strokeId = await page.evaluate(() => {
+      const marks = [...document.querySelectorAll("[data-annotation-id]")];
+      return marks[marks.length - 1]?.getAttribute("data-annotation-id") ?? "";
+    });
+    const stroke = page.locator(`[data-annotation-id="${strokeId}"]`);
+    await expect(stroke).toHaveCount(1);
 
     await page.getByRole("button", { name: /^Eraser/ }).click();
 
-    // Clicking well clear of the ink must not erase it.
-    await page.mouse.click(start.x + 80, start.y + 90);
+    // Over the sheet but clear of any ink: nothing is erased.
+    const sheet = await page.getByTestId("canvas-stage").locator("svg").first().boundingBox();
+    if (!sheet) throw new Error("no sheet");
+    await page.mouse.click(sheet.x + 10, sheet.y + 10);
+    await expect(stroke).toHaveCount(1);
     await expect(page.locator("[data-annotation-id]")).toHaveCount(before + 1);
 
-    // A near miss — how anyone actually aims — does.
+    // A near miss — how anyone actually aims — erases it.
     await page.mouse.click(start.x + 80, start.y + 8);
+    await expect(stroke).toHaveCount(0);
     await expect(page.locator("[data-annotation-id]")).toHaveCount(before);
   });
 
@@ -97,10 +109,8 @@ test.describe("contact sheet editor", () => {
     await openDemo(page);
     const annotations = await page.locator("[data-annotation-id]").count();
 
-    const picker = page.getByLabel("Sheet template");
-
-    for (const template of ["darkroom-proof", "eliz-digital", "archival-sheet"]) {
-      await picker.selectOption(template);
+    for (const template of [/Darkroom Proof/, /Eliz Digital/, /Archival Sheet/]) {
+      await chooseTemplate(page, template);
       await expect(page.locator("[data-frame-index]")).toHaveCount(36);
       await expect(page.locator("[data-annotation-id]")).toHaveCount(annotations);
     }
@@ -108,7 +118,7 @@ test.describe("contact sheet editor", () => {
 
   test("Eliz Digital prints butted thumbnails with a notes bar and order slip", async ({ page }) => {
     await openDemo(page);
-    await page.getByLabel("Sheet template").selectOption("eliz-digital");
+    await chooseTemplate(page, /Eliz Digital/);
 
     await expect(page.locator("text=Notes:")).toBeVisible();
     await expect(page.locator("[data-frame-index]")).toHaveCount(36);

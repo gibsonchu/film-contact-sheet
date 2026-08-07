@@ -1,8 +1,13 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { cx } from "@/components/ui/primitives";
+import { createPhoto } from "@/lib/document";
+import { ACCEPT_ATTR, processImage } from "@/lib/images";
+import { getStorage } from "@/lib/storage/local";
+import { keepImages, sortFiles } from "@/lib/upload";
 import { useEditor } from "@/lib/store/editor";
-import type { ReviewStatus } from "@/lib/types";
+import { MAX_PHOTOS_PER_SHEET, type Photo, type ReviewStatus } from "@/lib/types";
 
 const STATUS_GLYPH: Record<ReviewStatus, string> = {
   unreviewed: "",
@@ -20,6 +25,127 @@ const FILTERS: { value: ReviewStatus | "all"; label: string }[] = [
   { value: "rejected", label: "Rejected" },
   { value: "unreviewed", label: "Unreviewed" },
 ];
+
+/**
+ * Adds photographs to a sheet that already exists, from files or a whole
+ * folder. The 38-frame roll limit still holds: anything over the remaining
+ * room is left out and said so plainly rather than silently dropped.
+ */
+function AddPhotos({ count }: { count: number }) {
+  const filesRef = useRef<HTMLInputElement>(null);
+  const folderRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [note, setNote] = useState<string | null>(null);
+  const readOnly = useEditor((s) => s.readOnly);
+
+  const room = MAX_PHOTOS_PER_SHEET - count;
+  if (readOnly) return null;
+
+  async function ingest(incoming: File[]) {
+    const usable = keepImages(sortFiles(incoming));
+    if (usable.length === 0) {
+      setNote("No usable images in there.");
+      return;
+    }
+    const accepted = usable.slice(0, Math.max(0, room));
+    const leftOut = usable.length - accepted.length;
+
+    const state = useEditor.getState();
+    const sheetId = state.doc?.sheet.id;
+    if (!sheetId) return;
+    const storage = getStorage();
+    const photos: Photo[] = [];
+
+    try {
+      for (const [i, file] of accepted.entries()) {
+        setBusy(`Adding ${i + 1}/${accepted.length}…`);
+        const processed = await processImage(file);
+        const stamp = `${Date.now()}-${i}`;
+        const storagePath = `${sheetId}/${stamp}-${file.name}`;
+        const thumbPath = `${sheetId}/${stamp}-thumb.jpg`;
+        await storage.putAsset(storagePath, processed.preview);
+        await storage.putAsset(thumbPath, processed.thumb);
+        photos.push(
+          createPhoto(sheetId, {
+            storagePath,
+            thumbPath,
+            originalFilename: processed.originalFilename,
+            mimeType: processed.mimeType,
+            width: processed.width,
+            height: processed.height,
+            fileSize: processed.fileSize,
+          }),
+        );
+      }
+      if (photos.length) useEditor.getState().addPhotos(photos);
+      setNote(
+        leftOut > 0
+          ? `Added ${photos.length}. ${leftOut} left out — a sheet holds ${MAX_PHOTOS_PER_SHEET} frames.`
+          : null,
+      );
+    } catch (err) {
+      setNote(err instanceof Error ? err.message : "Could not add those photographs.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return (
+    <div className="flex shrink-0 flex-col justify-center gap-1 pr-1.5">
+      <div className="flex gap-1">
+        <button
+          type="button"
+          onClick={() => filesRef.current?.click()}
+          disabled={Boolean(busy) || room <= 0}
+          aria-label="Add photographs"
+          title={room > 0 ? "Add photographs" : "This sheet is full"}
+          className="h-14 w-14 shrink-0 border border-dashed border-white/25 text-[11px] leading-tight text-smoke transition-colors hover:border-white/60 hover:text-warm disabled:opacity-40"
+        >
+          + Files
+        </button>
+        <button
+          type="button"
+          onClick={() => folderRef.current?.click()}
+          disabled={Boolean(busy) || room <= 0}
+          aria-label="Add a folder of photographs"
+          title={room > 0 ? "Add a folder of photographs" : "This sheet is full"}
+          className="h-14 w-14 shrink-0 border border-dashed border-white/25 text-[11px] leading-tight text-smoke transition-colors hover:border-white/60 hover:text-warm disabled:opacity-40"
+        >
+          + Folder
+        </button>
+      </div>
+      <span className="label max-w-[120px] truncate" role="status">
+        {busy ?? note ?? `${Math.max(0, room)} free`}
+      </span>
+
+      <input
+        ref={filesRef}
+        type="file"
+        multiple
+        accept={ACCEPT_ATTR}
+        className="sr-only"
+        onChange={(e) => {
+          const files = Array.from(e.target.files ?? []);
+          e.target.value = "";
+          void ingest(files);
+        }}
+      />
+      <input
+        ref={folderRef}
+        type="file"
+        multiple
+        className="sr-only"
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        {...({ webkitdirectory: "", directory: "" } as any)}
+        onChange={(e) => {
+          const files = Array.from(e.target.files ?? []);
+          e.target.value = "";
+          void ingest(files);
+        }}
+      />
+    </div>
+  );
+}
 
 /** Compact strip for jumping between frames, plus the review filter. */
 export function FilmstripBar() {
@@ -62,6 +188,7 @@ export function FilmstripBar() {
       </div>
 
       <div className="flex gap-1.5 overflow-x-auto px-2 py-2" role="listbox" aria-label="Frames">
+        <AddPhotos count={doc.photos.length} />
         {doc.photos.map((photo) => {
           const url = urls[photo.thumbPath] ?? urls[photo.storagePath];
           const isSelected = photo.id === selected;

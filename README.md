@@ -12,8 +12,10 @@ export something worth printing.
 
 ## What it does
 
-**Build a sheet.** Drop up to 38 photographs (JPG, PNG, WebP, HEIC where the
-browser can decode it). More than 38 — one 35mm roll — and the upload is split
+**Build a sheet.** Drop up to 38 photographs — or a whole folder, walked
+recursively and sorted the way you numbered them (JPG, PNG, WebP, HEIC where
+the browser can decode it). Photographs can be added to a sheet later from the
+filmstrip, files or folder. More than 38 — one 35mm roll — and the upload is split
 into additional sheets, with the split explained on screen. RAW is rejected with
 a readable message rather than a silent failure.
 

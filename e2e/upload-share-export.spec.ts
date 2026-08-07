@@ -1,10 +1,17 @@
 import { expect, test } from "@playwright/test";
-import { fakeImages, openDemo } from "./helpers";
+import {
+  FILE_INPUT,
+  FOLDER_INPUT,
+  fakeImages,
+  makeImageFolder,
+  openDemo,
+  templateButton,
+} from "./helpers";
 
 test.describe("upload limits", () => {
   test("keeps 38 frames on one sheet", async ({ page }) => {
     await page.goto("/new");
-    await page.setInputFiles('input[type="file"]', fakeImages(38));
+    await page.setInputFiles(FILE_INPUT, fakeImages(38));
     await expect(page.getByText("38 frames ready")).toBeVisible();
     await expect(page.getByText(/split into/)).toBeHidden();
     await expect(page.getByRole("button", { name: /Build the sheet/ })).toBeVisible();
@@ -12,7 +19,7 @@ test.describe("upload limits", () => {
 
   test("splits more than 38 frames into extra sheets and says so", async ({ page }) => {
     await page.goto("/new");
-    await page.setInputFiles('input[type="file"]', fakeImages(40));
+    await page.setInputFiles(FILE_INPUT, fakeImages(40));
 
     await expect(page.getByText(/40 frames is more than one 35mm roll/)).toBeVisible();
     await expect(page.getByText(/2 contact sheets/)).toBeVisible();
@@ -21,16 +28,38 @@ test.describe("upload limits", () => {
     await page.waitForURL(/\/sheet\//, { timeout: 60_000 });
 
     // New sheets start on Classic 35mm; the template is chosen in the editor.
-    await expect(page.getByLabel("Sheet template")).toHaveValue("classic-35mm");
+    await expect(templateButton(page)).toContainText("Classic 35mm");
 
     await page.goto("/projects");
     await expect(page.getByText("Roll 1 of 2")).toBeVisible();
     await expect(page.getByText("Roll 2 of 2")).toBeVisible();
   });
 
+  test("accepts a whole folder, keeping only the photographs", async ({ page }) => {
+    await page.goto("/new");
+    await page.setInputFiles(FOLDER_INPUT, makeImageFolder(6, { withJunk: true }));
+
+    // The two non-images are listed but flagged, so six frames are usable.
+    await expect(page.getByText("6 frames ready")).toBeVisible();
+    await expect(page.getByRole("button", { name: /Build the sheet/ })).toBeVisible();
+  });
+
+  test("adding to a full sheet stops at the 38-frame roll limit", async ({ page }) => {
+    await openDemo(page);
+    await expect(page.locator("[data-frame-index]")).toHaveCount(36);
+    await expect(page.getByText("2 free")).toBeVisible();
+
+    // Five more into a sheet with room for two.
+    await page.setInputFiles(FOLDER_INPUT, makeImageFolder(5));
+
+    await expect(page.locator("[data-frame-index]")).toHaveCount(38, { timeout: 30_000 });
+    await expect(page.getByText(/3 left out/)).toBeVisible();
+    await expect(page.getByRole("button", { name: "Add a folder of photographs" })).toBeDisabled();
+  });
+
   test("rejects a RAW file with a readable message", async ({ page }) => {
     await page.goto("/new");
-    await page.setInputFiles('input[type="file"]', [
+    await page.setInputFiles(FILE_INPUT, [
       { name: "DSC_0001.NEF", mimeType: "image/x-nikon-nef", buffer: Buffer.from("raw") },
     ]);
     await expect(page.getByText(/RAW files aren’t supported/)).toBeVisible();

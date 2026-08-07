@@ -1,6 +1,15 @@
 "use client";
 
-import { useEffect, useId, useRef, type ButtonHTMLAttributes, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ButtonHTMLAttributes,
+  type ReactNode,
+} from "react";
+import { createPortal } from "react-dom";
 
 export function cx(...parts: (string | false | null | undefined)[]): string {
   return parts.filter(Boolean).join(" ");
@@ -74,6 +83,175 @@ export function Field({
 
 export const inputClass =
   "w-full border border-white/12 bg-black/40 px-2.5 py-1.5 text-sm text-warm placeholder:text-smoke/60 focus:border-grease/60 focus:outline-none";
+
+/**
+ * A listbox that always opens downwards.
+ *
+ * A native <select> hands popup placement to the OS, which flips it above the
+ * control when the chosen item is near the end of the list. This renders the
+ * options into a portal pinned under the button and scrolls within whatever
+ * room is left, so the direction never changes.
+ */
+export function Select<T extends string>({
+  id,
+  value,
+  onChange,
+  options,
+  label,
+}: {
+  id?: string;
+  value: T;
+  onChange: (value: T) => void;
+  options: { value: T; label: string }[];
+  label: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(() => Math.max(0, options.findIndex((o) => o.value === value)));
+  const [box, setBox] = useState<{ left: number; top: number; width: number; maxHeight: number } | null>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+  const listId = useId();
+  const selected = options.find((o) => o.value === value);
+
+  const place = useCallback(() => {
+    const el = buttonRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    setBox({
+      left: r.left,
+      top: r.bottom + 4,
+      width: r.width,
+      maxHeight: Math.max(140, window.innerHeight - r.bottom - 16),
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    place();
+    const onDown = (e: MouseEvent) => {
+      if (
+        !listRef.current?.contains(e.target as Node) &&
+        !buttonRef.current?.contains(e.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+    const onScrollOrResize = () => place();
+    document.addEventListener("mousedown", onDown);
+    window.addEventListener("resize", onScrollOrResize);
+    window.addEventListener("scroll", onScrollOrResize, true);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      window.removeEventListener("resize", onScrollOrResize);
+      window.removeEventListener("scroll", onScrollOrResize, true);
+    };
+  }, [open, place]);
+
+  function choose(index: number) {
+    const option = options[index];
+    if (option) onChange(option.value);
+    setOpen(false);
+    buttonRef.current?.focus();
+  }
+
+  function onKeyDown(e: React.KeyboardEvent) {
+    if (!open) {
+      if (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        setActive(Math.max(0, options.findIndex((o) => o.value === value)));
+        setOpen(true);
+      }
+      return;
+    }
+    if (e.key === "Escape" || e.key === "Tab") {
+      setOpen(false);
+      return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActive((i) => Math.min(options.length - 1, i + 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActive((i) => Math.max(0, i - 1));
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      setActive(0);
+    } else if (e.key === "End") {
+      e.preventDefault();
+      setActive(options.length - 1);
+    } else if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      choose(active);
+    }
+  }
+
+  return (
+    <>
+      <button
+        id={id}
+        ref={buttonRef}
+        type="button"
+        role="combobox"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={listId}
+        aria-label={label}
+        onClick={() => {
+          setActive(Math.max(0, options.findIndex((o) => o.value === value)));
+          setOpen((v) => !v);
+        }}
+        onKeyDown={onKeyDown}
+        className={cx(inputClass, "flex items-center justify-between gap-2 text-left")}
+      >
+        <span className="truncate">{selected?.label ?? value}</span>
+        <svg viewBox="0 0 12 12" className="h-3 w-3 shrink-0 text-smoke" aria-hidden="true">
+          <path d="M2 4.5 6 8.5 10 4.5" fill="none" stroke="currentColor" strokeWidth="1.4" />
+        </svg>
+      </button>
+
+      {open && box
+        ? createPortal(
+            <ul
+              ref={listRef}
+              id={listId}
+              role="listbox"
+              aria-label={label}
+              tabIndex={-1}
+              onKeyDown={onKeyDown}
+              className="z-[60] overflow-y-auto border border-white/20 bg-charcoal py-1 shadow-2xl"
+              style={{
+                position: "fixed",
+                left: box.left,
+                top: box.top,
+                width: box.width,
+                maxHeight: box.maxHeight,
+              }}
+            >
+              {options.map((o, i) => (
+                <li key={o.value} role="none">
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={o.value === value}
+                    onMouseEnter={() => setActive(i)}
+                    onClick={() => choose(i)}
+                    className={cx(
+                      "block w-full px-2.5 py-1.5 text-left text-[13px] transition-colors",
+                      o.value === value ? "text-grease" : "text-bone",
+                      i === active && "bg-white/10",
+                    )}
+                  >
+                    {o.label}
+                  </button>
+                </li>
+              ))}
+            </ul>,
+            document.body,
+          )
+        : null}
+    </>
+  );
+}
 
 export function Panel({ title, children, className }: { title?: string; children: ReactNode; className?: string }) {
   return (
