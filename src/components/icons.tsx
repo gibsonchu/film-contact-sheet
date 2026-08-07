@@ -116,10 +116,13 @@ export const IconCheck = (p: P) => (
   </svg>
 );
 
+/** Four corner brackets — what the tool actually stamps, not a crop symbol. */
 export const IconCrop = (p: P) => (
   <svg {...base} {...p}>
-    <path d="M5.4 2.6v12.2h12" />
-    <path d="M2.6 5.4h12.2v12" />
+    <path d="M3.4 7.4V3.4h4" />
+    <path d="M12.6 3.4h4v4" />
+    <path d="M16.6 12.6v4h-4" />
+    <path d="M7.4 16.6h-4v-4" />
   </svg>
 );
 
