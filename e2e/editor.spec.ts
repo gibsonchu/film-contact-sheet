@@ -45,6 +45,27 @@ test.describe("contact sheet editor", () => {
     await expect(page.locator("[data-annotation-id]")).toHaveCount(before + 1);
   });
 
+  test("the eraser removes a drawn stroke without a pixel-perfect click", async ({ page }) => {
+    await openDemo(page);
+    const before = await page.locator("[data-annotation-id]").count();
+
+    await page.getByRole("button", { name: /^Pen/ }).click();
+    const start = await centreOf(page, '[data-frame-index="20"]');
+    const end = { x: start.x + 160, y: start.y };
+    await dragBetween(page, start, end);
+    await expect(page.locator("[data-annotation-id]")).toHaveCount(before + 1);
+
+    await page.getByRole("button", { name: /^Eraser/ }).click();
+
+    // Clicking well clear of the ink must not erase it.
+    await page.mouse.click(start.x + 80, start.y + 90);
+    await expect(page.locator("[data-annotation-id]")).toHaveCount(before + 1);
+
+    // A near miss — how anyone actually aims — does.
+    await page.mouse.click(start.x + 80, start.y + 8);
+    await expect(page.locator("[data-annotation-id]")).toHaveCount(before);
+  });
+
   test("review status can be set from the keyboard and survives a reload", async ({ page }) => {
     await openDemo(page);
     await frame(page, 5).click();

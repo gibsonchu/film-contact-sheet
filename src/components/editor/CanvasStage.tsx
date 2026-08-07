@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnnotationView, annotationBounds, scaleAnnotation, translateAnnotation } from "@/components/annotations/AnnotationView";
 import { SheetSvg } from "@/components/sheet/SheetSvg";
+import { annotationAt } from "@/lib/hit";
 import { computeLayout, frameSlotAt, type SheetLayout } from "@/lib/layout";
 import { FREEHAND_TOOLS } from "@/lib/palette";
 import { decimate } from "@/lib/stroke";
@@ -22,6 +23,9 @@ const DRAG_THRESHOLD = 5;
 
 /** How far past the sheet's edge the view may be pushed, in screen pixels. */
 const OVERSCROLL = 72;
+
+/** Eraser reach, in screen pixels — matches the size of its cursor ring. */
+const ERASER_SCREEN_RADIUS = 13;
 
 export function CanvasStage({ layout }: { layout: SheetLayout }) {
   const doc = useEditor((s) => s.doc);
@@ -198,22 +202,18 @@ export function CanvasStage({ layout }: { layout: SheetLayout }) {
     [anchorFor, color, doc?.sheet.id, opacity, strokeWidth, tapeKind],
   );
 
-  const eraseAt = useCallback(
-    (p: Point) => {
-      const state = useEditor.getState();
-      const hit = [...(state.doc?.annotations ?? [])]
-        .sort((a, b) => b.zIndex - a.zIndex)
-        .find((a) => {
-          if (a.locked) return false;
-          const b = annotationBounds(a);
-          if (!b) return false;
-          const pad = 6;
-          return p.x >= b.x - pad && p.x <= b.x + b.width + pad && p.y >= b.y - pad && p.y <= b.y + b.height + pad;
-        });
-      if (hit) state.deleteAnnotation(hit.id);
-    },
-    [],
-  );
+  /**
+   * Erase whatever ink is under the pointer. The reach is a fixed number of
+   * *screen* pixels converted into sheet units, so the eraser is as easy to
+   * land zoomed out as zoomed in, and it tests the stroke itself rather than
+   * its bounding box.
+   */
+  const eraseAt = useCallback((p: Point) => {
+    const state = useEditor.getState();
+    const radius = ERASER_SCREEN_RADIUS / Math.max(0.05, state.zoom);
+    const hit = annotationAt(state.doc?.annotations ?? [], p, radius);
+    if (hit) state.deleteAnnotation(hit.id);
+  }, []);
 
   /* ------------------------------------------------------ pointer events */
 
@@ -614,10 +614,17 @@ function finalizeDraft(draft: Annotation): Annotation | null {
   };
 }
 
+/** A ring the size of the eraser's actual reach, so its bite is visible. */
+const ERASER_CURSOR = (() => {
+  const d = ERASER_SCREEN_RADIUS * 2;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${d + 4}" height="${d + 4}"><circle cx="${d / 2 + 2}" cy="${d / 2 + 2}" r="${ERASER_SCREEN_RADIUS}" fill="rgba(255,255,255,0.12)" stroke="%23f2c218" stroke-width="1.5"/></svg>`;
+  return `url("data:image/svg+xml,${svg.replace(/#/g, "%23").replace(/"/g, "'")}") ${d / 2 + 2} ${d / 2 + 2}, cell`;
+})();
+
 function cursorFor(tool: ToolId): string {
   if (tool === "pan") return "grab";
   if (tool === "select") return "default";
-  if (tool === "eraser") return "cell";
+  if (tool === "eraser") return ERASER_CURSOR;
   return "crosshair";
 }
 
