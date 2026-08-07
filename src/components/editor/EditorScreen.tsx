@@ -172,19 +172,23 @@ export function EditorScreen({ sheetId }: { sheetId: string }) {
 }
 
 function ViewControls() {
-  const zoom = useEditor((s) => s.zoom);
-  const setZoom = useEditor((s) => s.setZoom);
   const requestFit = useEditor((s) => s.requestFit);
+  // Each step reads the live zoom so a rapid burst of clicks compounds properly
+  // instead of every click starting from the same rendered value.
+  const step = (factor: number) => {
+    const state = useEditor.getState();
+    state.setZoom(state.zoom * factor);
+  };
   return (
     <div className="pointer-events-none absolute bottom-3 right-3 z-10 flex gap-1">
       <div className="pointer-events-auto flex border border-white/10 bg-charcoal/90">
-        <IconButton label="Zoom out" onClick={() => setZoom(zoom / 1.2)}>
+        <IconButton label="Zoom out" onClick={() => step(1 / 1.2)}>
           <IconZoomOut className="h-4 w-4" />
         </IconButton>
         <IconButton label="Fit sheet to screen" onClick={requestFit}>
           <IconFit className="h-4 w-4" />
         </IconButton>
-        <IconButton label="Zoom in" onClick={() => setZoom(zoom * 1.2)}>
+        <IconButton label="Zoom in" onClick={() => step(1.2)}>
           <IconZoomIn className="h-4 w-4" />
         </IconButton>
       </div>

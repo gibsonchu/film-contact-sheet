@@ -85,6 +85,33 @@ test.describe("contact sheet editor", () => {
     await expect(page.locator("[data-annotation-id]")).toHaveCount(annotations);
   });
 
+  test("the sheet cannot be dragged away off the canvas", async ({ page }) => {
+    await openDemo(page);
+
+    const measure = async () => {
+      const stage = await page.getByTestId("canvas-stage").boundingBox();
+      const sheet = await page.getByTestId("canvas-stage").locator("svg").first().boundingBox();
+      if (!stage || !sheet) throw new Error("no bounding boxes");
+      return { stage, sheet, left: sheet.x - stage.x, top: sheet.y - stage.y };
+    };
+
+    const before = await measure();
+
+    // Drag hard from empty canvas beside the sheet, well past any sane bound.
+    const start = { x: before.stage.x + 8, y: before.stage.y + 8 };
+    await dragBetween(page, start, {
+      x: before.stage.x + before.stage.width - 4,
+      y: before.stage.y + before.stage.height - 4,
+    });
+
+    const after = await measure();
+    // Overscroll is capped at 72px per axis, so the sheet stays on screen.
+    expect(Math.abs(after.left - before.left)).toBeLessThanOrEqual(80);
+    expect(Math.abs(after.top - before.top)).toBeLessThanOrEqual(80);
+    expect(after.sheet.x + after.sheet.width).toBeGreaterThan(after.stage.x);
+    expect(after.sheet.y + after.sheet.height).toBeGreaterThan(after.stage.y);
+  });
+
   test("enlarged viewer navigates with the keyboard and closes with escape", async ({ page }) => {
     await openDemo(page);
     await frame(page, 2).dblclick();

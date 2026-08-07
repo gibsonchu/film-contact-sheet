@@ -20,6 +20,9 @@ type Drag =
 
 const DRAG_THRESHOLD = 5;
 
+/** How far past the sheet's edge the view may be pushed, in screen pixels. */
+const OVERSCROLL = 72;
+
 export function CanvasStage({ layout }: { layout: SheetLayout }) {
   const doc = useEditor((s) => s.doc);
   const urls = useEditor((s) => s.urls);
@@ -45,6 +48,8 @@ export function CanvasStage({ layout }: { layout: SheetLayout }) {
   const pinchRef = useRef<{ dist: number; zoom: number } | null>(null);
   const fittedFor = useRef<string>("");
   const lastTap = useRef<{ photoId: string; time: number } | null>(null);
+  /** Cached viewport size so pan clamping never forces a layout read. */
+  const viewport = useRef({ w: 0, h: 0 });
 
   const [draft, setDraftState] = useState<Annotation | null>(null);
   /** Mirror of the in-progress stroke; the ref is authoritative so a pointerup
@@ -95,6 +100,26 @@ export function CanvasStage({ layout }: { layout: SheetLayout }) {
     useEditor.setState({ zoom: Math.max(0.06, Math.min(2, z)), panX: 0, panY: 0 });
   }, [layout.width, layout.height]);
 
+  /**
+   * The sheet can't be thrown off into empty space: panning stops once the
+   * sheet's edge reaches the viewport edge, with a small overscroll so you can
+   * still work comfortably right on the margin. When the sheet is smaller than
+   * the viewport it stays near the middle.
+   */
+  const clampPan = useCallback(
+    (x: number, y: number, z: number) => {
+      const { w, h } = viewport.current;
+      if (!w || !h) return { x, y };
+      const maxX = Math.max(0, (layout.width * z - w) / 2) + OVERSCROLL;
+      const maxY = Math.max(0, (layout.height * z - h) / 2) + OVERSCROLL;
+      return {
+        x: Math.min(maxX, Math.max(-maxX, x)),
+        y: Math.min(maxY, Math.max(-maxY, y)),
+      };
+    },
+    [layout.width, layout.height],
+  );
+
   /* Auto-fit until the photographer takes over the view (any manual zoom or
      pan clears `autoFitView`), and re-fit whenever the sheet's dimensions
      change — template switch, column count, margins. */
@@ -106,13 +131,24 @@ export function CanvasStage({ layout }: { layout: SheetLayout }) {
     }
     const el = containerRef.current;
     if (!el) return;
+    viewport.current = { w: el.clientWidth, h: el.clientHeight };
     if (useEditor.getState().autoFitView) fitToScreen();
     const observer = new ResizeObserver(() => {
+      viewport.current = { w: el.clientWidth, h: el.clientHeight };
       if (useEditor.getState().autoFitView) fitToScreen();
     });
     observer.observe(el);
     return () => observer.disconnect();
   }, [layout.width, layout.height, fitToScreen, fitRequest]);
+
+  /* Catch-all: zooming out, pinching or a window resize can leave the sheet
+     outside the bounds a drag would have respected, so pull it back. */
+  useEffect(() => {
+    const clamped = clampPan(panX, panY, zoom);
+    if (clamped.x !== panX || clamped.y !== panY) {
+      useEditor.setState({ panX: clamped.x, panY: clamped.y });
+    }
+  }, [panX, panY, zoom, clampPan]);
 
   /* ------------------------------------------------------------ helpers */
 
@@ -362,13 +398,17 @@ export function CanvasStage({ layout }: { layout: SheetLayout }) {
     const p = toSheet(e.clientX, e.clientY);
 
     switch (drag.kind) {
-      case "pan":
-        useEditor.setState({
-          panX: drag.panX + (e.clientX - drag.startX),
-          panY: drag.panY + (e.clientY - drag.startY),
-          autoFitView: false,
-        });
+      case "pan": {
+        // Live zoom, not the render-time value: a wheel or button zoom part-way
+        // through a drag must widen or tighten the bounds immediately.
+        const next = clampPan(
+          drag.panX + (e.clientX - drag.startX),
+          drag.panY + (e.clientY - drag.startY),
+          useEditor.getState().zoom,
+        );
+        useEditor.setState({ panX: next.x, panY: next.y, autoFitView: false });
         break;
+      }
       case "erase":
         eraseAt(p);
         break;
@@ -441,11 +481,19 @@ export function CanvasStage({ layout }: { layout: SheetLayout }) {
       // keep the point under the cursor stable
       requestAnimationFrame(() => {
         const after = toSheet(e.clientX, e.clientY);
-        useEditor.getState().nudgeView((after.x - before.x) * next, (after.y - before.y) * next);
+        const state = useEditor.getState();
+        const moved = clampPan(
+          state.panX + (after.x - before.x) * next,
+          state.panY + (after.y - before.y) * next,
+          next,
+        );
+        useEditor.setState({ panX: moved.x, panY: moved.y, autoFitView: false });
       });
       return;
     }
-    useEditor.getState().nudgeView(-e.deltaX, -e.deltaY);
+    const state = useEditor.getState();
+    const scrolled = clampPan(state.panX - e.deltaX, state.panY - e.deltaY, state.zoom);
+    useEditor.setState({ panX: scrolled.x, panY: scrolled.y, autoFitView: false });
   };
 
   const commitText = () => {
