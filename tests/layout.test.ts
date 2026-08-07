@@ -60,6 +60,30 @@ describe("layout engine", () => {
     }
   });
 
+  it("butts Eliz Digital thumbnails edge to edge with no gaps", () => {
+    const layout = computeLayout({ templateId: "eliz-digital", photos: photos(36) });
+    expect(layout.columns).toBe(8);
+    expect(layout.settings.frameGap).toBe(0);
+    expect(layout.settings.stripGap).toBe(0);
+    expect(layout.template.numberStyle).toBe("chip");
+    expect(layout.strips).toHaveLength(0);
+
+    const [first, second] = layout.frames;
+    expect(second.x).toBeCloseTo(first.x + first.width, 5);
+
+    const secondRow = layout.frames[8];
+    expect(secondRow.y).toBeCloseTo(first.y + first.height, 5);
+  });
+
+  it("hides the roll metadata footer on templates that don't print one", () => {
+    expect(computeLayout({ templateId: "eliz-digital", photos: photos(8) }).settings.showMetadata).toBe(
+      false,
+    );
+    expect(computeLayout({ templateId: "classic-35mm", photos: photos(8) }).settings.showMetadata).toBe(
+      true,
+    );
+  });
+
   it("keeps the postcard at its fixed 6:4 card size whatever the frame count", () => {
     for (const n of [4, 12, 36, 38]) {
       const layout = computeLayout({ templateId: "postcard", photos: photos(n) });

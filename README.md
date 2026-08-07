@@ -17,9 +17,11 @@ browser can decode it). More than 38 — one 35mm roll — and the upload is spl
 into additional sheets, with the split explained on screen. RAW is rejected with
 a readable message rather than a silent failure.
 
-**Read the roll.** Six templates, all driven by one geometry engine: Classic
+**Read the roll.** Seven templates, all driven by one geometry engine: Classic
 35mm (sprocket holes, edge printing, six frames to a strip), Darkroom Proof,
-Photographer Edit, Archival Sheet, Lab Print index, and a 6×4 Postcard.
+Photographer Edit, Archival Sheet, Lab Print index, Eliz Digital (a scanning-lab
+index print — thumbnails butted edge to edge, a notes bar and an order slip),
+and a 6×4 Postcard.
 Switching templates keeps order, titles, statuses, notes, annotations and tape;
 frame-anchored annotations are re-expressed against the new frame geometry.
 

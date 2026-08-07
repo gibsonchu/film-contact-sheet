@@ -97,13 +97,33 @@ test.describe("contact sheet editor", () => {
     await openDemo(page);
     const annotations = await page.locator("[data-annotation-id]").count();
 
-    await page.getByRole("button", { name: /Darkroom Proof/ }).click();
-    await expect(page.locator("[data-frame-index]")).toHaveCount(36);
-    await expect(page.locator("[data-annotation-id]")).toHaveCount(annotations);
+    const picker = page.getByLabel("Sheet template");
 
-    await page.getByRole("button", { name: /Archival Sheet/ }).click();
+    for (const template of ["darkroom-proof", "eliz-digital", "archival-sheet"]) {
+      await picker.selectOption(template);
+      await expect(page.locator("[data-frame-index]")).toHaveCount(36);
+      await expect(page.locator("[data-annotation-id]")).toHaveCount(annotations);
+    }
+  });
+
+  test("Eliz Digital prints butted thumbnails with a notes bar and order slip", async ({ page }) => {
+    await openDemo(page);
+    await page.getByLabel("Sheet template").selectOption("eliz-digital");
+
+    await expect(page.locator("text=Notes:")).toBeVisible();
     await expect(page.locator("[data-frame-index]")).toHaveCount(36);
-    await expect(page.locator("[data-annotation-id]")).toHaveCount(annotations);
+
+    // Thumbnails sit edge to edge: no gap between neighbouring frames.
+    const gap = await page.evaluate(() => {
+      const frames = [...document.querySelectorAll("[data-frame-index]")];
+      const a = frames[0].getBoundingClientRect();
+      const b = frames[1].getBoundingClientRect();
+      return b.left - a.right;
+    });
+    expect(Math.abs(gap)).toBeLessThan(2);
+
+    // No roll-metadata footer on this template.
+    await expect(page.locator("text=/\\d+ FRAMES/")).toBeHidden();
   });
 
   test("the sheet cannot be dragged away off the canvas", async ({ page }) => {

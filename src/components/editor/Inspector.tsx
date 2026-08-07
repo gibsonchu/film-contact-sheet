@@ -395,23 +395,23 @@ export function SheetInspector() {
     <>
       <Panel title="Template">
         <div className="space-y-2">
-          {TEMPLATE_LIST.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setTemplate(t.id as TemplateId)}
-              aria-pressed={sheet.templateId === t.id}
-              className={cx(
-                "w-full border px-2.5 py-2 text-left transition-colors",
-                sheet.templateId === t.id
-                  ? "border-grease/70 bg-grease/10"
-                  : "border-white/10 hover:border-white/25",
-              )}
-            >
-              <span className="block text-[13px] text-warm">{t.name}</span>
-              <span className="mt-0.5 block text-[11px] leading-snug text-smoke">{t.blurb}</span>
-            </button>
-          ))}
+          <Field label="Sheet template">
+            {(id) => (
+              <select
+                id={id}
+                className={cx(inputClass, "appearance-none pr-7")}
+                value={sheet.templateId}
+                onChange={(e) => setTemplate(e.target.value as TemplateId)}
+              >
+                {TEMPLATE_LIST.map((t) => (
+                  <option key={t.id} value={t.id} className="bg-charcoal">
+                    {t.name} · {t.format}
+                  </option>
+                ))}
+              </select>
+            )}
+          </Field>
+          <p className="text-[11px] leading-snug text-smoke">{template.blurb}</p>
           <p className="pt-1 text-[11px] text-smoke">
             Switching keeps order, titles, statuses, notes, annotations and tape.
           </p>

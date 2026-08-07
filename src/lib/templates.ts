@@ -7,8 +7,10 @@ import type { TemplateId, TemplateSettings } from "./types";
  * record here — no renderer changes.
  */
 
-export type SheetChrome = "film-strip" | "proof" | "plain" | "index" | "card";
-export type HeaderStyle = "handwritten" | "typeset" | "lab" | "minimal" | "none";
+export type SheetChrome = "film-strip" | "proof" | "plain" | "index" | "card" | "contact";
+export type HeaderStyle = "handwritten" | "typeset" | "lab" | "minimal" | "none" | "order-slip";
+/** How a frame's number is printed: on the film edge, or on a white chip. */
+export type NumberStyle = "edge" | "chip";
 
 export interface TemplatePalette {
   /** Sheet background. */
@@ -64,6 +66,8 @@ export interface TemplateDef {
   autoColumns?: boolean;
   /** Caption band height below each frame, when titles/filenames are shown. */
   captionHeight: number;
+  /** Defaults to "edge". */
+  numberStyle?: NumberStyle;
 }
 
 const FILM_DARK: TemplatePalette = {
@@ -238,6 +242,42 @@ export const TEMPLATES: Record<TemplateId, TemplateDef> = {
       edgeLabel: "PAN 400",
     },
     captionHeight: 20,
+  },
+  "eliz-digital": {
+    id: "eliz-digital",
+    name: "Eliz Digital",
+    blurb: "Scanning-lab index print — thumbnails butted edge to edge, a notes bar and an order slip.",
+    format: "Lab index",
+    chrome: "contact",
+    header: "order-slip",
+    frameAspect: 3 / 2,
+    frameWidth: 152,
+    palette: {
+      paper: "#ffffff",
+      base: "#ffffff",
+      frame: "#efefef",
+      ink: "#101010",
+      inkMuted: "#3c3c3c",
+      accent: "#c8102e",
+      rule: "#111111",
+    },
+    defaults: {
+      columns: 8,
+      // Butted edge to edge: the block of frames reads as one printed sheet.
+      frameGap: 0,
+      stripGap: 0,
+      margin: 64,
+      showSprockets: false,
+      showFrameNumbers: true,
+      showFilenames: false,
+      showTitles: false,
+      showMetadata: false,
+      showEdgeLabel: false,
+      grain: 0.08,
+      edgeLabel: "",
+    },
+    captionHeight: 0,
+    numberStyle: "chip",
   },
   postcard: {
     id: "postcard",

@@ -135,7 +135,9 @@ function SheetSvgImpl({
         );
       })}
 
-      {opts.includeMetadata ? <SheetFooter layout={layout} doc={doc} /> : null}
+      {settings.showMetadata && opts.includeMetadata ? (
+        <SheetFooter layout={layout} doc={doc} />
+      ) : null}
 
       {opts.grain && grainUrl ? (
         <rect
@@ -222,6 +224,77 @@ function SheetHeader({ layout, doc }: { layout: SheetLayout; doc: SheetDocument 
           stroke={palette.rule}
           strokeWidth={1}
         />
+      </g>
+    );
+  }
+
+  if (style === "order-slip") {
+    // A bordered notes bar to write in, and the lab's order number and date in
+    // a box at the top right — the anatomy of a scanning-lab index print.
+    const slipWidth = 132;
+    const barWidth = header.width - slipWidth - 14;
+    const barHeight = header.height - 30;
+    return (
+      <g pointerEvents="none">
+        <rect
+          x={header.x}
+          y={header.y}
+          width={barWidth}
+          height={barHeight}
+          fill="none"
+          stroke={palette.rule}
+          strokeWidth={1.4}
+        />
+        <text
+          x={header.x + 9}
+          y={header.y + 19}
+          fill={palette.ink}
+          fontFamily={SHEET_FONT_SANS}
+          fontSize={13}
+        >
+          Notes:
+        </text>
+        {sheet.description ? (
+          <text
+            x={header.x + 58}
+            y={header.y + 19}
+            fill={palette.inkMuted}
+            fontFamily={SHEET_FONT_SANS}
+            fontSize={12}
+          >
+            {truncate(sheet.description, Math.floor(barWidth / 6))}
+          </text>
+        ) : null}
+
+        <rect
+          x={header.x + header.width - slipWidth}
+          y={header.y}
+          width={slipWidth}
+          height={26}
+          fill="none"
+          stroke={palette.rule}
+          strokeWidth={1.6}
+        />
+        <text
+          x={header.x + header.width - slipWidth + 8}
+          y={header.y + 18}
+          fill={palette.ink}
+          fontFamily={SHEET_FONT_MONO}
+          fontSize={15}
+          letterSpacing="0.6"
+        >
+          {(sheet.rollNumber || "00000000").slice(0, 12)}
+        </text>
+        <text
+          x={header.x + header.width - slipWidth + 8}
+          y={header.y + 44}
+          fill={palette.ink}
+          fontFamily={SHEET_FONT_MONO}
+          fontSize={12}
+          letterSpacing="0.4"
+        >
+          {sheet.dateShot ? sheet.dateShot.replace(/-/g, "/") : ""}
+        </text>
       </g>
     );
   }
@@ -492,7 +565,11 @@ function FrameCell({
 }: FrameCellProps) {
   const { palette, settings, template } = layout;
   const url = photo ? urls[photo.storagePath] ?? urls[photo.thumbPath] ?? null : null;
-  const tilt = photo ? frameTilt(photo.id, template.chrome === "film-strip" ? 0.22 : 0.5) : 0;
+  // Butted thumbnails must not be tilted — the block reads as one printed sheet.
+  const tilt =
+    photo && template.chrome !== "contact"
+      ? frameTilt(photo.id, template.chrome === "film-strip" ? 0.22 : 0.5)
+      : 0;
   const isProofStyle = template.chrome === "proof";
   const border = isProofStyle ? 9 : 0;
 
@@ -586,16 +663,20 @@ function FrameCell({
       ) : null}
 
       {settings.showFrameNumbers && photo && !photo.hidden ? (
-        <text
-          x={frame.numberX}
-          y={frame.numberY}
-          fill={template.chrome === "film-strip" ? palette.inkMuted : palette.inkMuted}
-          fontFamily={SHEET_FONT_MONO}
-          fontSize={template.chrome === "film-strip" ? 11 : 12}
-          letterSpacing="1.2"
-        >
-          {formatFrameNumber(frame.frameNumber)}
-        </text>
+        template.numberStyle === "chip" ? (
+          <NumberChip frame={frame} label={formatFrameNumber(frame.frameNumber)} />
+        ) : (
+          <text
+            x={frame.numberX}
+            y={frame.numberY}
+            fill={palette.inkMuted}
+            fontFamily={SHEET_FONT_MONO}
+            fontSize={template.chrome === "film-strip" ? 11 : 12}
+            letterSpacing="1.2"
+          >
+            {formatFrameNumber(frame.frameNumber)}
+          </text>
+        )
       ) : null}
 
       {label ? (
@@ -639,6 +720,28 @@ function FrameCell({
           pointerEvents="none"
         />
       ) : null}
+    </g>
+  );
+}
+
+/** Lab-print frame number: black on a small white chip, over the frame corner. */
+function NumberChip({ frame, label }: { frame: FrameBox; label: string }) {
+  if (!label) return null;
+  const height = Math.max(11, frame.height * 0.14);
+  const width = 7 + label.length * height * 0.55;
+  const y = frame.y + frame.height - height;
+  return (
+    <g pointerEvents="none">
+      <rect x={frame.x} y={y} width={width} height={height} fill="#ffffff" />
+      <text
+        x={frame.x + 3.5}
+        y={y + height * 0.78}
+        fill="#111111"
+        fontFamily={SHEET_FONT_SANS}
+        fontSize={height * 0.76}
+      >
+        {label}
+      </text>
     </g>
   );
 }

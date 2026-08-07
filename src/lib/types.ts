@@ -182,6 +182,7 @@ export type TemplateId =
   | "photographer-edit"
   | "archival-sheet"
   | "lab-print"
+  | "eliz-digital"
   | "postcard";
 
 /** Per-sheet overrides on top of the template defaults. */

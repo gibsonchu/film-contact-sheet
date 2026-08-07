@@ -64,6 +64,7 @@ const HEADER_HEIGHT: Record<string, number> = {
   typeset: 104,
   handwritten: 126,
   lab: 78,
+  "order-slip": 92,
   minimal: 68,
   none: 0,
 };
