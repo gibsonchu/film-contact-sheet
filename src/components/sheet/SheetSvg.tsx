@@ -4,14 +4,8 @@ import { memo, useMemo, type CSSProperties, type ReactNode, type Ref } from "rea
 import type { FrameBox, SheetLayout } from "@/lib/layout";
 import { cropMarks, frameTilt, handCheck, handEllipse, handQuestion, handX } from "@/lib/hand";
 import { getGrainTexture } from "@/lib/grain";
+import { SHEET_FONT } from "@/lib/fonts";
 import type { Photo, SheetDocument } from "@/lib/types";
-
-export const SHEET_FONT_SANS =
-  "'Helvetica Neue', Helvetica, 'Inter', 'Segoe UI', Arial, sans-serif";
-export const SHEET_FONT_MONO =
-  "ui-monospace, 'SF Mono', 'Roboto Mono', Menlo, Consolas, monospace";
-export const SHEET_FONT_HAND =
-  "'Bradley Hand', 'Segoe Script', 'Snell Roundhand', 'Comic Sans MS', cursive";
 
 export interface SheetRenderOptions {
   includeAnnotations: boolean;
@@ -190,7 +184,7 @@ function SheetHeader({ layout, doc }: { layout: SheetLayout; doc: SheetDocument 
           x={header.x}
           y={baseY}
           fill={palette.ink}
-          fontFamily={SHEET_FONT_HAND}
+          fontFamily={SHEET_FONT}
           fontSize={40}
           letterSpacing="0.5"
         >
@@ -200,7 +194,7 @@ function SheetHeader({ layout, doc }: { layout: SheetLayout; doc: SheetDocument 
           x={header.x}
           y={baseY + 30}
           fill={palette.accent}
-          fontFamily={SHEET_FONT_HAND}
+          fontFamily={SHEET_FONT}
           fontSize={22}
         >
           {[sheet.photographer, sheet.location].filter(Boolean).join("  ·  ")}
@@ -210,7 +204,7 @@ function SheetHeader({ layout, doc }: { layout: SheetLayout; doc: SheetDocument 
           y={baseY}
           textAnchor="end"
           fill={palette.inkMuted}
-          fontFamily={SHEET_FONT_MONO}
+          fontFamily={SHEET_FONT}
           fontSize={15}
           letterSpacing="2"
         >
@@ -249,7 +243,7 @@ function SheetHeader({ layout, doc }: { layout: SheetLayout; doc: SheetDocument 
           x={header.x + 9}
           y={header.y + 19}
           fill={palette.ink}
-          fontFamily={SHEET_FONT_SANS}
+          fontFamily={SHEET_FONT}
           fontSize={13}
         >
           Notes:
@@ -259,7 +253,7 @@ function SheetHeader({ layout, doc }: { layout: SheetLayout; doc: SheetDocument 
             x={header.x + 58}
             y={header.y + 19}
             fill={palette.inkMuted}
-            fontFamily={SHEET_FONT_SANS}
+            fontFamily={SHEET_FONT}
             fontSize={12}
           >
             {truncate(sheet.description, Math.floor(barWidth / 6))}
@@ -279,7 +273,7 @@ function SheetHeader({ layout, doc }: { layout: SheetLayout; doc: SheetDocument 
           x={header.x + header.width - slipWidth + 8}
           y={header.y + 18}
           fill={palette.ink}
-          fontFamily={SHEET_FONT_MONO}
+          fontFamily={SHEET_FONT}
           fontSize={15}
           letterSpacing="0.6"
         >
@@ -289,7 +283,7 @@ function SheetHeader({ layout, doc }: { layout: SheetLayout; doc: SheetDocument 
           x={header.x + header.width - slipWidth + 8}
           y={header.y + 44}
           fill={palette.ink}
-          fontFamily={SHEET_FONT_MONO}
+          fontFamily={SHEET_FONT}
           fontSize={12}
           letterSpacing="0.4"
         >
@@ -314,7 +308,7 @@ function SheetHeader({ layout, doc }: { layout: SheetLayout; doc: SheetDocument 
           x={header.x}
           y={header.height * 0.45}
           fill={palette.ink}
-          fontFamily={SHEET_FONT_MONO}
+          fontFamily={SHEET_FONT}
           fontSize={19}
           letterSpacing="1.5"
         >
@@ -325,7 +319,7 @@ function SheetHeader({ layout, doc }: { layout: SheetLayout; doc: SheetDocument 
           y={header.height * 0.45}
           textAnchor="end"
           fill={palette.inkMuted}
-          fontFamily={SHEET_FONT_MONO}
+          fontFamily={SHEET_FONT}
           fontSize={14}
           letterSpacing="1"
         >
@@ -342,7 +336,7 @@ function SheetHeader({ layout, doc }: { layout: SheetLayout; doc: SheetDocument 
           x={header.x}
           y={baseY + 6}
           fill={palette.ink}
-          fontFamily={SHEET_FONT_SANS}
+          fontFamily={SHEET_FONT}
           fontSize={28}
           letterSpacing="-0.4"
         >
@@ -353,7 +347,7 @@ function SheetHeader({ layout, doc }: { layout: SheetLayout; doc: SheetDocument 
           y={baseY + 6}
           textAnchor="end"
           fill={palette.inkMuted}
-          fontFamily={SHEET_FONT_MONO}
+          fontFamily={SHEET_FONT}
           fontSize={14}
           letterSpacing="2"
         >
@@ -370,7 +364,7 @@ function SheetHeader({ layout, doc }: { layout: SheetLayout; doc: SheetDocument 
         x={header.x}
         y={baseY - 6}
         fill={palette.ink}
-        fontFamily={SHEET_FONT_SANS}
+        fontFamily={SHEET_FONT}
         fontSize={34}
         fontWeight={500}
         letterSpacing="-0.6"
@@ -382,7 +376,7 @@ function SheetHeader({ layout, doc }: { layout: SheetLayout; doc: SheetDocument 
           x={header.x}
           y={baseY + 24}
           fill={palette.inkMuted}
-          fontFamily={SHEET_FONT_SANS}
+          fontFamily={SHEET_FONT}
           fontSize={17}
         >
           {doc.sheet.subtitle}
@@ -393,7 +387,7 @@ function SheetHeader({ layout, doc }: { layout: SheetLayout; doc: SheetDocument 
         y={baseY - 6}
         textAnchor="end"
         fill={palette.inkMuted}
-        fontFamily={SHEET_FONT_MONO}
+        fontFamily={SHEET_FONT}
         fontSize={14}
         letterSpacing="2.2"
       >
@@ -442,7 +436,7 @@ function SheetFooter({ layout, doc }: { layout: SheetLayout; doc: SheetDocument 
         x={footer.x}
         y={footer.y + 24}
         fill={palette.inkMuted}
-        fontFamily={SHEET_FONT_MONO}
+        fontFamily={SHEET_FONT}
         fontSize={13}
         letterSpacing="1.6"
       >
@@ -453,7 +447,7 @@ function SheetFooter({ layout, doc }: { layout: SheetLayout; doc: SheetDocument 
         y={footer.y + 24}
         textAnchor="end"
         fill={palette.inkMuted}
-        fontFamily={SHEET_FONT_MONO}
+        fontFamily={SHEET_FONT}
         fontSize={13}
         letterSpacing="1.6"
       >
@@ -514,7 +508,7 @@ function FilmStrip({ strip, layout }: { strip: SheetLayout["strips"][number]; la
               x={strip.x + 20}
               y={strip.sprocketTopY + strip.sprocketHeight + 11}
               fill={palette.accent}
-              fontFamily={SHEET_FONT_MONO}
+              fontFamily={SHEET_FONT}
               fontSize={9}
               letterSpacing="3.4"
               opacity={0.85}
@@ -670,7 +664,7 @@ function FrameCell({
             x={frame.numberX}
             y={frame.numberY}
             fill={palette.inkMuted}
-            fontFamily={SHEET_FONT_MONO}
+            fontFamily={SHEET_FONT}
             fontSize={template.chrome === "film-strip" ? 11 : 12}
             letterSpacing="1.2"
           >
@@ -684,7 +678,7 @@ function FrameCell({
           x={frame.x}
           y={frame.captionY}
           fill={palette.inkMuted}
-          fontFamily={SHEET_FONT_MONO}
+          fontFamily={SHEET_FONT}
           fontSize={11}
           letterSpacing="0.6"
         >
@@ -737,7 +731,7 @@ function NumberChip({ frame, label }: { frame: FrameBox; label: string }) {
         x={frame.x + 3.5}
         y={y + height * 0.78}
         fill="#111111"
-        fontFamily={SHEET_FONT_SANS}
+        fontFamily={SHEET_FONT}
         fontSize={height * 0.76}
       >
         {label}

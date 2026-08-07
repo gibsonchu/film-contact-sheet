@@ -203,11 +203,11 @@ export function ProjectLibrary() {
                 </div>
                 <div className="p-3">
                   <h2 className="truncate text-[15px] tracking-tight text-warm">{p.title}</h2>
-                  <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-smoke">
+                  <p className="mt-1 font-sans text-[10px] uppercase tracking-[0.14em] text-smoke">
                     {p.photoCount} frames · {TEMPLATES[p.templateId]?.name ?? p.templateId} ·{" "}
                     {p.sharingMode === "private" ? "private" : "shared"}
                   </p>
-                  <p className="mt-0.5 font-mono text-[10px] text-smoke/70">
+                  <p className="mt-0.5 font-sans text-[10px] text-smoke/70">
                     Edited {new Date(p.updatedAt).toLocaleDateString()}
                   </p>
                 </div>

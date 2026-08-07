@@ -129,7 +129,7 @@ export function ExportDialog({ open, onClose }: { open: boolean; onClose: () => 
         <div>
           <span className="label mb-1.5 block">Resolution</span>
           <Segmented label="Resolution" value={scale} onChange={setScale} options={RESOLUTIONS} />
-          <p className="mt-1.5 font-mono text-[11px] text-smoke">
+          <p className="mt-1.5 font-sans text-[11px] text-smoke">
             {outWidth} × {outHeight} px
             {numericScale > 4 ? "  ·  300 dpi print" : ""}
           </p>

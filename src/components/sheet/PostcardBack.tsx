@@ -1,7 +1,7 @@
 "use client";
 
 import type { Ref } from "react";
-import { SHEET_FONT_HAND, SHEET_FONT_MONO, SHEET_FONT_SANS } from "./SheetSvg";
+import { SHEET_FONT } from "@/lib/fonts";
 import type { ContactSheet } from "@/lib/types";
 
 interface Props {
@@ -37,7 +37,7 @@ export function PostcardBack({ sheet, width, height, svgRef, className }: Props)
       <rect x={2} y={2} width={width - 4} height={height - 4} fill="none" stroke="#d8d2c4" strokeWidth={1} />
 
       {/* message side */}
-      <text x={m} y={m + 14} fill="#8a8377" fontFamily={SHEET_FONT_MONO} fontSize={11} letterSpacing="2.4">
+      <text x={m} y={m + 14} fill="#8a8377" fontFamily={SHEET_FONT} fontSize={11} letterSpacing="2.4">
         {(sheet.title || "CONTACT SHEET").toUpperCase()}
       </text>
       {lines.map((line, i) => (
@@ -46,14 +46,14 @@ export function PostcardBack({ sheet, width, height, svgRef, className }: Props)
           x={m}
           y={m + 52 + i * 26}
           fill="#20201e"
-          fontFamily={SHEET_FONT_HAND}
+          fontFamily={SHEET_FONT}
           fontSize={20}
         >
           {line}
         </text>
       ))}
       {p.senderName ? (
-        <text x={m} y={height - m} fill="#4a463e" fontFamily={SHEET_FONT_HAND} fontSize={19}>
+        <text x={m} y={height - m} fill="#4a463e" fontFamily={SHEET_FONT} fontSize={19}>
           — {p.senderName}
         </text>
       ) : null}
@@ -77,7 +77,7 @@ export function PostcardBack({ sheet, width, height, svgRef, className }: Props)
         y={m + 50}
         textAnchor="middle"
         fill="#b3ab9a"
-        fontFamily={SHEET_FONT_MONO}
+        fontFamily={SHEET_FONT}
         fontSize={9}
         letterSpacing="1.4"
       >
@@ -89,7 +89,7 @@ export function PostcardBack({ sheet, width, height, svgRef, className }: Props)
         x={divider + m}
         y={m + 130}
         fill="#20201e"
-        fontFamily={SHEET_FONT_SANS}
+        fontFamily={SHEET_FONT}
         fontSize={17}
       >
         {p.recipientName}
@@ -100,7 +100,7 @@ export function PostcardBack({ sheet, width, height, svgRef, className }: Props)
           x={divider + m}
           y={m + 158 + i * 24}
           fill="#2c2b27"
-          fontFamily={SHEET_FONT_SANS}
+          fontFamily={SHEET_FONT}
           fontSize={15}
         >
           {line}

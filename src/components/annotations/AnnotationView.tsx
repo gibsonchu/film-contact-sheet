@@ -5,7 +5,7 @@ import { cropMarks, handArrow, handCheck, handEllipse, handLine, handRect, handX
 import { TAPE_KINDS } from "@/lib/palette";
 import { strokeOutlinePath } from "@/lib/stroke";
 import type { Annotation } from "@/lib/types";
-import { SHEET_FONT_HAND } from "@/components/sheet/SheetSvg";
+import { SHEET_FONT } from "@/lib/fonts";
 
 interface Props {
   annotation: Annotation;
@@ -89,7 +89,7 @@ function renderBody(a: Annotation) {
         x={x}
         y={y}
         fill={a.color}
-        fontFamily={SHEET_FONT_HAND}
+        fontFamily={SHEET_FONT}
         fontSize={size}
         style={{ userSelect: "none" }}
       >
@@ -215,7 +215,7 @@ function Tape({ annotation: a }: { annotation: Annotation }) {
           y={y + height / 2 + height * 0.16}
           textAnchor="middle"
           fill={kind.ink}
-          fontFamily={SHEET_FONT_HAND}
+          fontFamily={SHEET_FONT}
           fontSize={Math.min(height * 0.62, 26)}
           style={{ userSelect: "none" }}
         >
@@ -240,7 +240,7 @@ function Sticker({ annotation: a }: { annotation: Annotation }) {
           y={y + height / 2 + r * 0.34}
           textAnchor="middle"
           fill="#fff"
-          fontFamily={SHEET_FONT_HAND}
+          fontFamily={SHEET_FONT}
           fontSize={r * 0.95}
           style={{ userSelect: "none" }}
         >

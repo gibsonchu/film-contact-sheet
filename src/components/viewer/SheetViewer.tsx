@@ -146,7 +146,7 @@ export function SheetViewer({ doc, mode, allowComments = false, allowDownload = 
                 .filter((p) => !p.hidden && (p.title || p.publicNote || p.caption))
                 .map((p) => (
                   <li key={p.id} className="flex gap-3 text-[13px]">
-                    <span className="font-mono text-[11px] text-grease">
+                    <span className="font-sans text-[11px] text-grease">
                       {String(p.frameNumber).padStart(2, "0")}
                     </span>
                     <span className="text-bone">
@@ -201,7 +201,7 @@ function CommentPanel({
           return (
             <li key={c.id} className="border border-white/8 p-2.5">
               <p className="text-[13px] text-bone">{c.body}</p>
-              <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-smoke">
+              <p className="mt-1 font-sans text-[10px] uppercase tracking-[0.14em] text-smoke">
                 {c.authorName}
                 {photo ? ` · frame ${photo.frameNumber}` : " · sheet"}
               </p>

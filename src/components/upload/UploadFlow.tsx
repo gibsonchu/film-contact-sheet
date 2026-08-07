@@ -179,7 +179,7 @@ export function UploadFlow() {
                     >
                       ✕
                     </button>
-                    <p className="mt-1 truncate font-mono text-[9px] text-smoke" title={c.file.name}>
+                    <p className="mt-1 truncate font-sans text-[9px] text-smoke" title={c.file.name}>
                       {c.error ?? formatBytes(c.file.size)}
                     </p>
                   </li>

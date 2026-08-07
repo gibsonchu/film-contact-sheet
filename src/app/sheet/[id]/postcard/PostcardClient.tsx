@@ -207,7 +207,7 @@ export function PostcardClient({ sheetId }: { sheetId: string }) {
             <div className="space-y-3">
               <Segmented label="Format" value={format} onChange={setFormat} options={FORMATS} />
               {quote ? (
-                <dl className="space-y-1 font-mono text-[11px] text-smoke">
+                <dl className="space-y-1 font-sans text-[11px] text-smoke">
                   <div className="flex justify-between">
                     <dt>PRINT</dt>
                     <dd>{formatCents(quote.printCents, quote.currency)}</dd>

@@ -182,7 +182,7 @@ export function PhotoInspector() {
       </Panel>
 
       <Panel title="Metadata">
-        <dl className="space-y-1 font-mono text-[11px] text-smoke">
+        <dl className="space-y-1 font-sans text-[11px] text-smoke">
           <Row label="File" value={photo.originalFilename || "—"} />
           <Row label="Pixels" value={`${photo.width}×${photo.height}`} />
           {photo.exifData?.model ? <Row label="Camera" value={photo.exifData.model} /> : null}

@@ -85,12 +85,12 @@ export function FilmstripBar() {
               ) : (
                 <span className="label absolute inset-0 grid place-items-center">—</span>
               )}
-              <span className="absolute bottom-0 left-0 bg-black/70 px-1 font-mono text-[9px] text-bone">
+              <span className="absolute bottom-0 left-0 bg-black/70 px-1 font-sans text-[9px] text-bone">
                 {photo.frameNumber || "–"}
               </span>
               {photo.status !== "unreviewed" ? (
                 <span
-                  className="hand absolute right-0.5 top-0 text-[15px] leading-none text-darkroom drop-shadow"
+                  className="absolute right-0.5 top-0 text-[15px] leading-none text-darkroom drop-shadow"
                   aria-hidden="true"
                 >
                   {STATUS_GLYPH[photo.status]}

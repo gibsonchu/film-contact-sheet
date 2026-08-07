@@ -116,7 +116,7 @@ export function Lightbox() {
       aria-label={`Frame ${photo.frameNumber}${photo.title ? `: ${photo.title}` : ""}`}
     >
       <header className="flex items-center gap-3 border-b border-white/8 px-4 py-2.5">
-        <span className="font-mono text-[13px] tracking-[0.2em] text-grease">
+        <span className="font-sans text-[13px] tracking-[0.2em] text-grease">
           {String(photo.frameNumber).padStart(2, "0")}
         </span>
         <input

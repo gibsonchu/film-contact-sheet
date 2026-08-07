@@ -102,7 +102,7 @@ export function ShareDialog({ open, onClose }: { open: boolean; onClose: () => v
             <Field label="Share link">
               {(id) => (
                 <div className="flex gap-2">
-                  <input id={id} readOnly value={url} className={`${inputClass} font-mono text-[12px]`} />
+                  <input id={id} readOnly value={url} className={`${inputClass} font-sans text-[12px]`} />
                   <Button size="sm" onClick={copyLink}>
                     {copied ? "Copied" : "Copy"}
                   </Button>

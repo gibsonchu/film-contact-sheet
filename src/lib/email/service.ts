@@ -40,8 +40,8 @@ export function renderShareEmail(email: ShareEmail): { html: string; text: strin
     .filter(Boolean)
     .join("\n");
 
-  const html = `<div style="font-family:Helvetica,Arial,sans-serif;background:#0a0a0b;color:#efece5;padding:32px">
-  <p style="font:11px ui-monospace,monospace;letter-spacing:.2em;color:#8b8780;margin:0 0 18px">CONTACT SHEET</p>
+  const html = `<div style="font-family:Helvetica Neue,Helvetica,Arial,sans-serif;background:#0a0a0b;color:#efece5;padding:32px">
+  <p style="font:11px Helvetica Neue,Helvetica,Arial,sans-serif;letter-spacing:.2em;color:#8b8780;margin:0 0 18px">CONTACT SHEET</p>
   <h1 style="font-size:24px;font-weight:500;margin:0 0 8px">${safe(email.sheetTitle)}</h1>
   <p style="color:#d8d3c9;margin:0 0 20px">${safe(email.fromName)} shared this with you.</p>
   ${email.message ? `<p style="color:#d8d3c9;white-space:pre-wrap;border-left:2px solid #d81f26;padding-left:12px">${safe(email.message)}</p>` : ""}

@@ -107,6 +107,7 @@ src/
     templates.ts          template definitions — pure data
     layout.ts             geometry engine: template + photos -> boxes
     hand.ts               seeded hand-drawn path generators
+    fonts.ts              the single Helvetica stack, shared by screen and export
     stroke.ts             pressure-sampled freehand outlines
     store/editor.ts       zustand editor state, history, autosave
     storage/              persistence boundary (local IndexedDB adapter today)

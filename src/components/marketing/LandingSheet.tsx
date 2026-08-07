@@ -1,4 +1,5 @@
 import { cropMarks, handEllipse, handX, rng } from "@/lib/hand";
+import { SHEET_FONT } from "@/lib/fonts";
 
 const COLS = 4;
 const ROWS = 3;
@@ -67,7 +68,7 @@ export function LandingSheet() {
                       y={y + stripH - 4}
                       fill="#8b8780"
                       fontSize={7}
-                      fontFamily="ui-monospace, monospace"
+                      fontFamily={SHEET_FONT}
                       letterSpacing="1"
                     >
                       {i + 1}
@@ -115,7 +116,7 @@ export function LandingSheet() {
             textAnchor="middle"
             fill="#3a3117"
             fontSize={13}
-            fontFamily="'Bradley Hand', 'Segoe Script', cursive"
+            fontFamily={SHEET_FONT}
           >
             roll 017
           </text>
