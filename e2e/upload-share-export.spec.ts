@@ -20,6 +20,12 @@ test.describe("upload limits", () => {
     await page.getByRole("button", { name: /Build 2 sheets/ }).click();
     await page.waitForURL(/\/sheet\//, { timeout: 60_000 });
 
+    // New sheets start on Classic 35mm; the template is chosen in the editor.
+    await expect(page.getByRole("button", { name: /Classic 35mm/ })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+
     await page.goto("/projects");
     await expect(page.getByText("Roll 1 of 2")).toBeVisible();
     await expect(page.getByText("Roll 2 of 2")).toBeVisible();

@@ -4,11 +4,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCallback, useRef, useState } from "react";
 import { Button, Field, Panel, cx, inputClass } from "@/components/ui/primitives";
-import { TEMPLATE_LIST } from "@/lib/templates";
 import { chunkForSheets, createDocument, createPhoto, renumber, sheetTitleForChunk } from "@/lib/document";
 import { ACCEPT_ATTR, formatBytes, processImage, validateFile } from "@/lib/images";
 import { getStorage } from "@/lib/storage/local";
-import { MAX_PHOTOS_PER_SHEET, type TemplateId } from "@/lib/types";
+import { MAX_PHOTOS_PER_SHEET } from "@/lib/types";
 
 interface Candidate {
   id: string;
@@ -22,7 +21,6 @@ export function UploadFlow() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [dragging, setDragging] = useState(false);
-  const [templateId, setTemplateId] = useState<TemplateId>("classic-35mm");
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
   const [meta, setMeta] = useState({
@@ -61,10 +59,11 @@ export function UploadFlow() {
 
     try {
       for (const [batchIndex, batch] of batches.entries()) {
+        // New sheets start on Classic 35mm; the template is switched from the
+        // editor's inspector, where the change can be seen on the sheet.
         const doc = createDocument({
           ...meta,
           title: sheetTitleForChunk(baseTitle, batchIndex, batches.length),
-          templateId,
         });
         for (const [i, candidate] of batch.entries()) {
           const processed = await processImage(candidate.file);
@@ -103,10 +102,7 @@ export function UploadFlow() {
   return (
     <div className="mx-auto max-w-5xl px-5 py-8">
       <header className="mb-8 flex items-baseline justify-between gap-4">
-        <div>
-          <p className="label">New contact sheet</p>
-          <h1 className="mt-2 text-3xl tracking-tight text-warm">Load the roll</h1>
-        </div>
+        <h1 className="text-3xl tracking-tight text-warm">New Contact Sheet</h1>
         <Link href="/projects" className="label hover:text-warm">
           ← All sheets
         </Link>
@@ -284,29 +280,6 @@ export function UploadFlow() {
                   />
                 )}
               </Field>
-            </div>
-          </Panel>
-
-          <Panel title="Starting template">
-            <div className="space-y-2">
-              {TEMPLATE_LIST.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setTemplateId(t.id)}
-                  aria-pressed={templateId === t.id}
-                  className={cx(
-                    "w-full border px-3 py-2 text-left transition-colors",
-                    templateId === t.id ? "border-grease/70 bg-grease/10" : "border-white/10 hover:border-white/30",
-                  )}
-                >
-                  <span className="flex items-baseline justify-between gap-2">
-                    <span className="text-[13px] text-warm">{t.name}</span>
-                    <span className="label">{t.format}</span>
-                  </span>
-                  <span className="mt-0.5 block text-[11px] leading-snug text-smoke">{t.blurb}</span>
-                </button>
-              ))}
             </div>
           </Panel>
 
