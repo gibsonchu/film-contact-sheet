@@ -36,8 +36,14 @@ export const TAPE_KINDS: { id: TapeKind; label: string; fill: string; ink: strin
   { id: "dot", label: "Sticker dot", fill: "#d81f26", ink: "#ffffff" },
 ];
 
-/** Tools that draw a freehand stroke rather than a parametric shape. */
-export const FREEHAND_TOOLS: AnnotationTool[] = ["pen", "grease", "marker", "highlighter", "pencil"];
+/**
+ * Tools that draw a freehand stroke rather than a parametric shape.
+ *
+ * There is one pen. The other freehand ids stay in the type and in TOOL_STYLE
+ * so sheets drawn before the toolbar was simplified still render exactly as
+ * they were saved — they just can't be selected any more.
+ */
+export const FREEHAND_TOOLS: AnnotationTool[] = ["pen"];
 
 export const TOOL_LABELS: Record<string, string> = {
   select: "Select",
@@ -65,7 +71,9 @@ export const TOOL_STYLE: Record<
   string,
   { thinning: number; smoothing: number; streamline: number; opacity: number; widthScale: number }
 > = {
-  pen: { thinning: 0.45, smoothing: 0.5, streamline: 0.5, opacity: 1, widthScale: 0.8 },
+  // The pen is chalky and pressure-sensitive — a grease pencil in feel, which
+  // is what makes a mark read as something drawn on a print.
+  pen: { thinning: 0.6, smoothing: 0.36, streamline: 0.4, opacity: 0.95, widthScale: 1.3 },
   grease: { thinning: 0.65, smoothing: 0.32, streamline: 0.36, opacity: 0.92, widthScale: 1.5 },
   marker: { thinning: 0.15, smoothing: 0.55, streamline: 0.5, opacity: 0.95, widthScale: 1.25 },
   highlighter: { thinning: 0.05, smoothing: 0.6, streamline: 0.55, opacity: 0.38, widthScale: 2.6 },

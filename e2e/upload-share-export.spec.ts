@@ -61,7 +61,7 @@ test.describe("sharing", () => {
     expect(await page.content()).not.toContain("negative is scratched");
 
     // No editing affordances in a shared view.
-    await expect(page.getByRole("button", { name: /Grease pencil/ })).toBeHidden();
+    await expect(page.getByRole("button", { name: /^Pen/ })).toBeHidden();
   });
 });
 

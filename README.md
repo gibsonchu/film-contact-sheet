@@ -23,9 +23,9 @@ Photographer Edit, Archival Sheet, Lab Print index, and a 6×4 Postcard.
 Switching templates keeps order, titles, statuses, notes, annotations and tape;
 frame-anchored annotations are re-expressed against the new frame geometry.
 
-**Mark it up.** Grease pencil, pen, marker, highlighter, pencil, eraser; circle,
-X, check, arrow, rectangle, line, crop marks, text; masking / artist / lab /
-paper / transparent tape, numbered labels and sticker dots. Six inks, four
+**Mark it up.** One pen and an eraser; circle, X, check, arrow, rectangle, line
+and crop marks; masking / artist / lab / paper / transparent tape, numbered
+labels and sticker dots. Six inks, four
 stroke weights, opacity, undo/redo, layer order, lock. Strokes are
 pressure-sampled and re-outlined at render time, so nothing is baked into a
 bitmap — a mark drawn on screen is still a crisp vector at 300 DPI. You can draw

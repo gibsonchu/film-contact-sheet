@@ -62,12 +62,6 @@ export function CanvasStage({ layout }: { layout: SheetLayout }) {
   }, []);
   const [dropIndex, setDropIndex] = useState<number | null>(null);
   const [draggingPhotoId, setDraggingPhotoId] = useState<string | null>(null);
-  const [textEditor, setTextEditor] = useState<{
-    id: string;
-    value: string;
-    left: number;
-    top: number;
-  } | null>(null);
 
   const dimmed = useMemo(() => {
     if (!doc || filter === "all") return undefined;
@@ -328,25 +322,6 @@ export function CanvasStage({ layout }: { layout: SheetLayout }) {
       return true;
     }
 
-    if (tool === "text") {
-      const rect = containerRef.current?.getBoundingClientRect();
-      const id = useEditor.getState().addAnnotation(
-        stripMeta({
-          ...makeDraft(p, "text"),
-          geometry: { kind: "box", x: p.x, y: p.y, width: 200, height: 40 },
-          text: "",
-        }),
-      );
-      setTextEditor({
-        id,
-        value: "",
-        left: e.clientX - (rect?.left ?? 0),
-        top: e.clientY - (rect?.top ?? 0),
-      });
-      useEditor.getState().selectAnnotation(id);
-      return true;
-    }
-
     if (tool === "tape" || tool === "sticker") {
       const isTape = tool === "tape";
       const w = isTape ? 150 : 30;
@@ -496,15 +471,6 @@ export function CanvasStage({ layout }: { layout: SheetLayout }) {
     useEditor.setState({ panX: scrolled.x, panY: scrolled.y, autoFitView: false });
   };
 
-  const commitText = () => {
-    if (!textEditor) return;
-    const state = useEditor.getState();
-    if (textEditor.value.trim() === "") state.deleteAnnotation(textEditor.id);
-    else state.updateAnnotation(textEditor.id, { text: textEditor.value });
-    setTextEditor(null);
-    state.setTool("select");
-  };
-
   if (!doc) return null;
 
   const selectedAnnotation = doc.annotations.find((a) => a.id === selectedAnnotationId) ?? null;
@@ -577,30 +543,6 @@ export function CanvasStage({ layout }: { layout: SheetLayout }) {
           </SheetSvg>
         </div>
       </div>
-
-      {textEditor ? (
-        <textarea
-          autoFocus
-          value={textEditor.value}
-          onChange={(e) => setTextEditor({ ...textEditor, value: e.target.value })}
-          onBlur={commitText}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") {
-              e.preventDefault();
-              commitText();
-            }
-            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-              e.preventDefault();
-              commitText();
-            }
-            e.stopPropagation();
-          }}
-          aria-label="Annotation text"
-          placeholder="type a note…"
-          className="hand absolute z-20 min-h-[44px] w-56 resize border border-grease/70 bg-black/85 p-2 text-lg text-warm outline-none"
-          style={{ left: textEditor.left, top: textEditor.top }}
-        />
-      ) : null}
 
       <div className="pointer-events-none absolute bottom-3 left-3 select-none">
         <span className="label bg-black/60 px-2 py-1">
@@ -676,7 +618,6 @@ function cursorFor(tool: ToolId): string {
   if (tool === "pan") return "grab";
   if (tool === "select") return "default";
   if (tool === "eraser") return "cell";
-  if (tool === "text") return "text";
   return "crosshair";
 }
 

@@ -18,15 +18,12 @@ import { useEditor, type ToolId } from "@/lib/store/editor";
 const SHORTCUT_TOOLS: Record<string, ToolId> = {
   v: "select",
   h: "pan",
-  g: "grease",
   p: "pen",
-  m: "marker",
   e: "eraser",
   o: "ellipse",
   a: "arrow",
   r: "rect",
   c: "crop",
-  t: "text",
 };
 
 export function EditorScreen({ sheetId }: { sheetId: string }) {
@@ -206,12 +203,11 @@ function MobileToolbar() {
   const tools: { id: ToolId; label: string }[] = [
     { id: "select", label: "Select" },
     { id: "pan", label: "Pan" },
-    { id: "grease", label: "Grease" },
+    { id: "pen", label: "Pen" },
+    { id: "eraser", label: "Erase" },
     { id: "ellipse", label: "Circle" },
     { id: "x", label: "X" },
-    { id: "text", label: "Text" },
     { id: "tape", label: "Tape" },
-    { id: "eraser", label: "Erase" },
   ];
 
   return (

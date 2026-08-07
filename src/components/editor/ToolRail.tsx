@@ -9,22 +9,17 @@ import {
   IconEraser,
   IconGrease,
   IconHand,
-  IconHighlighter,
   IconLine,
-  IconMarker,
-  IconPen,
-  IconPencil,
   IconRect,
   IconSticker,
   IconTape,
-  IconText,
   IconX,
 } from "@/components/icons";
 import { IconButton, cx } from "@/components/ui/primitives";
 import { INK_COLORS, STROKE_SIZES, TAPE_KINDS } from "@/lib/palette";
 import { useEditor, type ToolId } from "@/lib/store/editor";
 
-const GROUPS: { label: string; tools: { id: ToolId; icon: typeof IconPen; label: string; key?: string }[] }[] = [
+const GROUPS: { label: string; tools: { id: ToolId; icon: typeof IconGrease; label: string; key?: string }[] }[] = [
   {
     label: "Navigate",
     tools: [
@@ -35,11 +30,7 @@ const GROUPS: { label: string; tools: { id: ToolId; icon: typeof IconPen; label:
   {
     label: "Draw",
     tools: [
-      { id: "grease", icon: IconGrease, label: "Grease pencil", key: "G" },
-      { id: "pen", icon: IconPen, label: "Pen", key: "P" },
-      { id: "marker", icon: IconMarker, label: "Marker", key: "M" },
-      { id: "highlighter", icon: IconHighlighter, label: "Highlighter" },
-      { id: "pencil", icon: IconPencil, label: "Pencil" },
+      { id: "pen", icon: IconGrease, label: "Pen", key: "P" },
       { id: "eraser", icon: IconEraser, label: "Eraser", key: "E" },
     ],
   },
@@ -53,7 +44,6 @@ const GROUPS: { label: string; tools: { id: ToolId; icon: typeof IconPen; label:
       { id: "rect", icon: IconRect, label: "Rectangle", key: "R" },
       { id: "line", icon: IconLine, label: "Line" },
       { id: "crop", icon: IconCrop, label: "Crop marks", key: "C" },
-      { id: "text", icon: IconText, label: "Text", key: "T" },
     ],
   },
   {

@@ -140,7 +140,8 @@ function demoAnnotations(doc: SheetDocument): Annotation[] {
     });
   }
 
-  // An arrow and a note in the margin.
+  // An arrow and a taped-on note in the margin. Everything the demo shows is
+  // something the toolbar can still make.
   const noteFrame = frameOf(26);
   if (noteFrame) {
     out.push({
@@ -166,19 +167,21 @@ function demoAnnotations(doc: SheetDocument): Annotation[] {
       ...base,
       id: uid("anno"),
       photoId: null,
-      type: "text",
-      tool: "text",
-      color: "#d81f26",
-      strokeWidth: 6,
+      type: "tape",
+      tool: "tape",
+      tapeKind: "paper-white",
+      color: "#efece4",
+      strokeWidth: 1,
       opacity: 1,
       geometry: {
         kind: "box",
-        x: noteFrame.x + noteFrame.width + 30,
-        y: noteFrame.y + noteFrame.height + 84,
-        width: 240,
-        height: 40,
+        x: noteFrame.x + noteFrame.width + 22,
+        y: noteFrame.y + noteFrame.height + 62,
+        width: 178,
+        height: 44,
+        rotation: -2.5,
       },
-      text: "print this one\nwarm — dodge sky",
+      text: "print warm",
       zIndex: 3,
     });
   }

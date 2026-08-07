@@ -26,13 +26,13 @@ test.describe("contact sheet editor", () => {
     expect(numbers.slice(0, 5)).toEqual([0, 1, 2, 3, 4]);
   });
 
-  test("drawing with the grease pencil adds an editable annotation, and undo removes it", async ({
+  test("drawing with the pen adds an editable annotation, and undo removes it", async ({
     page,
   }) => {
     await openDemo(page);
     const before = await page.locator("[data-annotation-id]").count();
 
-    await page.getByRole("button", { name: /Grease pencil/ }).click();
+    await page.getByRole("button", { name: /^Pen/ }).click();
     const start = await centreOf(page, '[data-frame-index="30"]');
     await dragBetween(page, start, { x: start.x + 120, y: start.y + 30 });
 
