@@ -88,14 +88,39 @@ export function distanceToSegment(p: Point, a: Point, b: Point): number {
   return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
 }
 
-interface Box {
+export interface Box {
   x: number;
   y: number;
   width: number;
   height: number;
 }
 
+/**
+ * The area a piece of text covers on the sheet.
+ *
+ * Text is stored as an anchor point, not a rectangle — SVG grows it from the
+ * baseline — so its extent has to be estimated from the glyphs. Everything that
+ * needs to know where text *is* (selection, erasing, re-opening it for editing)
+ * comes through here, so those never disagree.
+ */
+export function textBoxOf(a: Annotation): Box {
+  const g = a.geometry;
+  const x = g.kind === "box" ? g.x : 0;
+  const y = g.kind === "box" ? g.y : 0;
+  const size = Math.max(12, a.strokeWidth * 4.2);
+  const lines = (a.text ?? "").split("\n");
+  const widest = Math.max(...lines.map((line) => line.length), 1);
+  return {
+    x,
+    y: y - size,
+    // 0.5em per character is a fair average for Helvetica at these sizes.
+    width: Math.max(widest * size * 0.5, 20),
+    height: size * 1.25 * lines.length,
+  };
+}
+
 function boxOf(a: Annotation): Box {
+  if (a.type === "text") return textBoxOf(a);
   const g = a.geometry;
   if (g.kind === "box") {
     return {

@@ -24,6 +24,7 @@ const SHORTCUT_TOOLS: Record<string, ToolId> = {
   a: "arrow",
   r: "rect",
   c: "crop",
+  t: "text",
 };
 
 export function EditorScreen({ sheetId }: { sheetId: string }) {
@@ -207,6 +208,7 @@ function MobileToolbar() {
     { id: "eraser", label: "Erase" },
     { id: "ellipse", label: "Circle" },
     { id: "x", label: "X" },
+    { id: "text", label: "Text" },
     { id: "tape", label: "Tape" },
   ];
 

@@ -27,8 +27,8 @@ and a 6×4 Postcard.
 Switching templates keeps order, titles, statuses, notes, annotations and tape;
 frame-anchored annotations are re-expressed against the new frame geometry.
 
-**Mark it up.** One pen and an eraser; circle, X, check, arrow, rectangle, line
-and crop marks; masking / artist / lab / paper / transparent tape, numbered
+**Mark it up.** One pen and an eraser; circle, X, check, arrow, rectangle, line,
+crop marks and text; masking / artist / lab / paper / transparent tape, numbered
 labels and sticker dots. Six inks, four
 stroke weights, opacity, undo/redo, layer order, lock. Strokes are
 pressure-sampled and re-outlined at render time, so nothing is baked into a

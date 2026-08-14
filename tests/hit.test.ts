@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { annotationAt, annotationHitTest, distanceToSegment } from "@/lib/hit";
+import { annotationAt, annotationHitTest, distanceToSegment, textBoxOf } from "@/lib/hit";
 import type { Annotation, AnnotationGeometry, AnnotationTool, Point } from "@/lib/types";
 
 function annotation(
@@ -93,6 +93,36 @@ describe("eraser hit testing", () => {
     const crop = annotation("crop", { kind: "box", x: 0, y: 0, width: 200, height: 100 });
     expect(annotationHitTest(crop, { x: 4, y: 4 }, 6)).toBe(true);
     expect(annotationHitTest(crop, { x: 100, y: 50 }, 6)).toBe(false);
+  });
+
+  it("hits text across its glyphs, not just at its anchor point", () => {
+    // Text is stored as an anchor with no width; its extent is derived.
+    const note = annotation("text", { kind: "box", x: 100, y: 200, width: 0, height: 0 }, {
+      type: "text",
+      text: "reprint warmer",
+      strokeWidth: 5,
+    });
+    const box = textBoxOf(note);
+    expect(box.width).toBeGreaterThan(100);
+    expect(box.height).toBeGreaterThan(20);
+
+    // The anchor sits on the baseline: the glyphs are above and to the right.
+    expect(annotationHitTest(note, { x: 100, y: 200 }, 4)).toBe(true);
+    expect(annotationHitTest(note, { x: box.x + box.width / 2, y: box.y + box.height / 2 }, 4)).toBe(true);
+    expect(annotationHitTest(note, { x: box.x + box.width + 60, y: 200 }, 4)).toBe(false);
+  });
+
+  it("grows the text box with longer content and more lines", () => {
+    const one = annotation("text", { kind: "box", x: 0, y: 0, width: 0, height: 0 }, {
+      type: "text",
+      text: "short",
+    });
+    const many = annotation("text", { kind: "box", x: 0, y: 0, width: 0, height: 0 }, {
+      type: "text",
+      text: "a much longer line\nand a second one",
+    });
+    expect(textBoxOf(many).width).toBeGreaterThan(textBoxOf(one).width);
+    expect(textBoxOf(many).height).toBeGreaterThan(textBoxOf(one).height);
   });
 
   it("never erases a locked annotation", () => {

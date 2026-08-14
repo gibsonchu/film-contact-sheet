@@ -3,6 +3,7 @@
 import { memo } from "react";
 import { cropMarks, handArrow, handCheck, handEllipse, handLine, handRect, handX, rng } from "@/lib/hand";
 import { TAPE_KINDS } from "@/lib/palette";
+import { textBoxOf } from "@/lib/hit";
 import { strokeOutlinePath } from "@/lib/stroke";
 import type { Annotation } from "@/lib/types";
 import { SHEET_FONT } from "@/lib/fonts";
@@ -277,12 +278,7 @@ export function annotationBounds(
     const y = Math.min(g.y, g.y + g.height);
     const width = Math.abs(g.width);
     const height = Math.abs(g.height);
-    if (a.type === "text") {
-      const size = Math.max(12, a.strokeWidth * 4.2);
-      const lines = (a.text ?? "").split("\n");
-      const w = Math.max(...lines.map((l) => l.length)) * size * 0.5;
-      return { x, y: y - size, width: Math.max(w, 20), height: size * 1.25 * lines.length };
-    }
+    if (a.type === "text") return textBoxOf(a);
     return { x, y, width, height };
   }
   const x = Math.min(g.x1, g.x2);

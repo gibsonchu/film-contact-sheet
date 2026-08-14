@@ -66,6 +66,12 @@ export function CanvasStage({ layout }: { layout: SheetLayout }) {
   }, []);
   const [dropIndex, setDropIndex] = useState<number | null>(null);
   const [draggingPhotoId, setDraggingPhotoId] = useState<string | null>(null);
+  const [textEditor, setTextEditor] = useState<{
+    id: string;
+    value: string;
+    left: number;
+    top: number;
+  } | null>(null);
 
   const dimmed = useMemo(() => {
     if (!doc || filter === "all") return undefined;
@@ -85,6 +91,32 @@ export function CanvasStage({ layout }: { layout: SheetLayout }) {
     const pt = new DOMPoint(clientX, clientY).matrixTransform(ctm.inverse());
     return { x: pt.x, y: pt.y };
   }, []);
+
+  /** Sheet units back to a position within the stage, for the text overlay. */
+  const toStage = useCallback((p: Point): { left: number; top: number } => {
+    const svg = svgRef.current;
+    const container = containerRef.current;
+    if (!svg || !container) return { left: 0, top: 0 };
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return { left: 0, top: 0 };
+    const screen = new DOMPoint(p.x, p.y).matrixTransform(ctm);
+    const rect = container.getBoundingClientRect();
+    return { left: screen.x - rect.left, top: screen.y - rect.top };
+  }, []);
+
+  /**
+   * Typing happens in a real textarea floated over the sheet — an SVG <text>
+   * has no caret or selection of its own. On commit the value is written back
+   * to the annotation; an empty one is dropped rather than left as an
+   * invisible object you can't find again.
+   */
+  const openTextEditor = useCallback(
+    (id: string, at: Point, value: string) => {
+      const { left, top } = toStage(at);
+      setTextEditor({ id, value, left, top });
+    },
+    [toStage],
+  );
 
   /** Fit the sheet to the viewport. */
   const fitToScreen = useCallback(() => {
@@ -200,6 +232,25 @@ export function CanvasStage({ layout }: { layout: SheetLayout }) {
       };
     },
     [anchorFor, color, doc?.sheet.id, opacity, strokeWidth, tapeKind],
+  );
+
+  /** Places a new, empty piece of text and opens it for typing. */
+  const placeText = useCallback(
+    (clientX: number, clientY: number) => {
+      const state = useEditor.getState();
+      if (state.readOnly) return;
+      const point = toSheet(clientX, clientY);
+      const id = state.addAnnotation(
+        stripMeta({
+          ...makeDraft(point, "text"),
+          geometry: { kind: "box", x: point.x, y: point.y, width: 0, height: 0 },
+          text: "",
+        }),
+      );
+      state.selectAnnotation(id);
+      openTextEditor(id, point, "");
+    },
+    [makeDraft, openTextEditor, toSheet],
   );
 
   /**
@@ -321,6 +372,10 @@ export function CanvasStage({ layout }: { layout: SheetLayout }) {
       eraseAt(p);
       return true;
     }
+
+    // Text is placed on click rather than here — see placeText. Consuming the
+    // press stops it arming a pan on the way.
+    if (tool === "text") return true;
 
     if (tool === "tape" || tool === "sticker") {
       const isTape = tool === "tape";
@@ -471,6 +526,15 @@ export function CanvasStage({ layout }: { layout: SheetLayout }) {
     useEditor.setState({ panX: scrolled.x, panY: scrolled.y, autoFitView: false });
   };
 
+  function commitText() {
+    if (!textEditor) return;
+    const state = useEditor.getState();
+    const value = textEditor.value.trim();
+    if (value === "") state.deleteAnnotation(textEditor.id);
+    else state.updateAnnotation(textEditor.id, { text: textEditor.value });
+    setTextEditor(null);
+  }
+
   if (!doc) return null;
 
   const selectedAnnotation = doc.annotations.find((a) => a.id === selectedAnnotationId) ?? null;
@@ -494,10 +558,32 @@ export function CanvasStage({ layout }: { layout: SheetLayout }) {
           onPointerMove={onPointerMove}
           onPointerUp={endDrag}
           onPointerCancel={endDrag}
+          onClick={(e) => {
+            if (tool === "text" && !readOnly && !textEditor) {
+              placeText(e.clientX, e.clientY);
+            }
+          }}
           onDoubleClick={(e) => {
+            const state = useEditor.getState();
+
+            // Hit-test by geometry rather than by event target: the first of the
+            // two clicks re-renders the mark it selected, so the browser reports
+            // the dblclick against their common ancestor instead of the mark.
+            const point = toSheet(e.clientX, e.clientY);
+            const hit = annotationAt(
+              state.doc?.annotations ?? [],
+              point,
+              6 / Math.max(0.05, state.zoom),
+            );
+            if (!readOnly && hit && hit.type === "text" && hit.geometry.kind === "box") {
+              state.selectAnnotation(hit.id);
+              openTextEditor(hit.id, { x: hit.geometry.x, y: hit.geometry.y }, hit.text ?? "");
+              return;
+            }
+
             const frameEl = (e.target as Element).closest("[data-frame-index]");
             const photoId = frameEl?.getAttribute("data-photo-id");
-            if (photoId) useEditor.getState().openLightbox(photoId);
+            if (photoId) state.openLightbox(photoId);
           }}
           style={{ cursor: cursorFor(tool) }}
           className=""
@@ -543,6 +629,27 @@ export function CanvasStage({ layout }: { layout: SheetLayout }) {
           </SheetSvg>
         </div>
       </div>
+
+      {textEditor ? (
+        <textarea
+          autoFocus
+          value={textEditor.value}
+          onChange={(e) => setTextEditor({ ...textEditor, value: e.target.value })}
+          onBlur={commitText}
+          onKeyDown={(e) => {
+            // Enter breaks the line; Escape and ⌘/Ctrl+Enter both commit.
+            if (e.key === "Escape" || (e.key === "Enter" && (e.metaKey || e.ctrlKey))) {
+              e.preventDefault();
+              commitText();
+            }
+            e.stopPropagation();
+          }}
+          aria-label="Annotation text"
+          placeholder="Type a note"
+          className="absolute z-20 min-h-[42px] w-52 resize border border-warm bg-noir p-1.5 text-[12px] leading-snug text-warm outline-none"
+          style={{ left: textEditor.left, top: textEditor.top - 14 }}
+        />
+      ) : null}
 
       <div className="pointer-events-none absolute bottom-2 left-2 select-none">
         <span className="pill label px-2 py-[3px]">
@@ -625,6 +732,7 @@ function cursorFor(tool: ToolId): string {
   if (tool === "pan") return "grab";
   if (tool === "select") return "default";
   if (tool === "eraser") return ERASER_CURSOR;
+  if (tool === "text") return "text";
   return "crosshair";
 }
 

@@ -56,6 +56,15 @@ export function fakeImages(count: number) {
   }));
 }
 
+/** The words currently drawn on the sheet, including SVG text annotations. */
+export async function sheetText(page: Page): Promise<string> {
+  return page.evaluate(() =>
+    [...document.querySelectorAll("[data-annotation-id] text")]
+      .map((node) => node.textContent ?? "")
+      .join(" | "),
+  );
+}
+
 /** Drives the template listbox, which is a custom control rather than a select. */
 export async function chooseTemplate(page: Page, label: RegExp | string) {
   await page.getByRole("combobox", { name: "Sheet template" }).click();

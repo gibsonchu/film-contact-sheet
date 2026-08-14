@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { centreOf, chooseTemplate, dragBetween, frame, openDemo } from "./helpers";
+import { centreOf, chooseTemplate, dragBetween, frame, openDemo, sheetText } from "./helpers";
 
 test.describe("contact sheet editor", () => {
   test("renders the demo roll as a 36-frame contact sheet", async ({ page }) => {
@@ -75,6 +75,47 @@ test.describe("contact sheet editor", () => {
     // A near miss — how anyone actually aims — erases it.
     await page.mouse.click(start.x + 80, start.y + 8);
     await expect(stroke).toHaveCount(0);
+    await expect(page.locator("[data-annotation-id]")).toHaveCount(before);
+  });
+
+  test("text can be written on the sheet, then re-opened and edited", async ({ page }) => {
+    await openDemo(page);
+    const before = await page.locator("[data-annotation-id]").count();
+
+    await page.getByRole("button", { name: /^Text/ }).click();
+    const spot = await centreOf(page, '[data-frame-index="24"]');
+    await page.mouse.click(spot.x, spot.y);
+
+    const editor = page.getByLabel("Annotation text");
+    await expect(editor).toBeVisible();
+    await editor.fill("reprint warmer");
+    await page.keyboard.press("Escape");
+
+    await expect(editor).toBeHidden();
+    await expect(page.locator("[data-annotation-id]")).toHaveCount(before + 1);
+    await expect.poll(() => sheetText(page)).toContain("reprint warmer");
+
+    // Double-clicking the text puts it back in the editor with its content.
+    await page.getByRole("button", { name: "Select (V)" }).click();
+    await page.locator("[data-annotation-id]").last().dblclick();
+    await expect(editor).toHaveValue("reprint warmer");
+
+    await editor.fill("reprint much warmer");
+    await page.keyboard.press("Escape");
+    await expect.poll(() => sheetText(page)).toContain("reprint much warmer");
+    await expect(page.locator("[data-annotation-id]")).toHaveCount(before + 1);
+  });
+
+  test("empty text is discarded rather than left invisible on the sheet", async ({ page }) => {
+    await openDemo(page);
+    const before = await page.locator("[data-annotation-id]").count();
+
+    await page.getByRole("button", { name: /^Text/ }).click();
+    const spot = await centreOf(page, '[data-frame-index="12"]');
+    await page.mouse.click(spot.x, spot.y);
+    await expect(page.getByLabel("Annotation text")).toBeVisible();
+    await page.keyboard.press("Escape");
+
     await expect(page.locator("[data-annotation-id]")).toHaveCount(before);
   });
 

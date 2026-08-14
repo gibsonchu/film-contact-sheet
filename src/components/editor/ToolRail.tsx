@@ -13,6 +13,7 @@ import {
   IconRect,
   IconSticker,
   IconTape,
+  IconText,
   IconX,
 } from "@/components/icons";
 import { IconButton, cx } from "@/components/ui/primitives";
@@ -44,6 +45,7 @@ const GROUPS: { label: string; tools: { id: ToolId; icon: typeof IconGrease; lab
       { id: "rect", icon: IconRect, label: "Rectangle", key: "R" },
       { id: "line", icon: IconLine, label: "Line" },
       { id: "crop", icon: IconCrop, label: "Crop marks", key: "C" },
+      { id: "text", icon: IconText, label: "Text", key: "T" },
     ],
   },
   {
