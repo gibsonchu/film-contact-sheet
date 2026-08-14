@@ -91,14 +91,14 @@ export function PostcardClient({ sheetId }: { sheetId: string }) {
 
   return (
     <div className="min-h-dvh">
-      <header className="flex flex-wrap items-center gap-3 border-b border-white/8 px-4 py-3">
+      <header className="hair-b flex h-9 flex-wrap items-center gap-4 px-3">
         <Link href={`/sheet/${sheetId}`} className="label hover:text-warm">
-          ← Editor
+          Editor
         </Link>
-        <h1 className="min-w-0 flex-1 truncate text-lg tracking-tight text-warm">
+        <h1 className="min-w-0 flex-1 truncate text-[12px] text-warm">
           Postcard — {doc.sheet.title}
         </h1>
-        <div className="w-44">
+        <div className="w-36">
           <Segmented
             label="Side"
             value={side}
@@ -114,9 +114,9 @@ export function PostcardClient({ sheetId }: { sheetId: string }) {
         </Button>
       </header>
 
-      <main id="main" className="mx-auto grid max-w-6xl gap-6 px-4 py-6 lg:grid-cols-[1.4fr_1fr]">
+      <main id="main" className="mx-auto grid max-w-6xl gap-8 px-4 py-6 lg:grid-cols-[1.4fr_1fr]">
         <div className="space-y-4">
-          <div className="texture-noise shadow-[0_24px_70px_rgba(0,0,0,0.7)]">
+          <div>
             <div style={{ display: side === "front" ? "block" : "none" }}>
               <SheetSvg
                 doc={doc}
@@ -144,7 +144,7 @@ export function PostcardClient({ sheetId }: { sheetId: string }) {
               />
             </div>
           </div>
-          <p className="text-[12px] text-smoke">
+          <p className="label">
             Trim size {format === "postcard-6x4" ? "6 × 4 in" : format === "postcard-7x5" ? "7 × 5 in" : "8 × 10 in"} ·
             exported at 300 DPI with 3 mm bleed and trim marks.
           </p>
@@ -207,16 +207,16 @@ export function PostcardClient({ sheetId }: { sheetId: string }) {
             <div className="space-y-3">
               <Segmented label="Format" value={format} onChange={setFormat} options={FORMATS} />
               {quote ? (
-                <dl className="space-y-1 font-sans text-[11px] text-smoke">
-                  <div className="flex justify-between">
-                    <dt>PRINT</dt>
-                    <dd>{formatCents(quote.printCents, quote.currency)}</dd>
+                <dl>
+                  <div className="row">
+                    <dt className="label">PRINT</dt>
+                    <dd className="text-[11px] text-bone">{formatCents(quote.printCents, quote.currency)}</dd>
                   </div>
-                  <div className="flex justify-between">
-                    <dt>POSTAGE</dt>
-                    <dd>{formatCents(quote.postageCents, quote.currency)}</dd>
+                  <div className="row">
+                    <dt className="label">POSTAGE</dt>
+                    <dd className="text-[11px] text-bone">{formatCents(quote.postageCents, quote.currency)}</dd>
                   </div>
-                  <div className="flex justify-between text-bone">
+                  <div className="row">
                     <dt>TOTAL</dt>
                     <dd>{formatCents(quote.totalCents, quote.currency)}</dd>
                   </div>
@@ -238,7 +238,7 @@ export function PostcardClient({ sheetId }: { sheetId: string }) {
               >
                 Order and mail it
               </Button>
-              <p className="text-[11px] leading-relaxed text-smoke">
+              <p className="label leading-relaxed">
                 {orderNote ??
                   "Physical mailing is unavailable on this deployment — no print provider or payment processor is configured. Prices shown are indicative. Download the print-ready PDF instead."}
               </p>

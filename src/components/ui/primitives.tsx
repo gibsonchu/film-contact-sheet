@@ -22,13 +22,13 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 export function Button({ variant = "outline", size = "md", className, ...props }: ButtonProps) {
   const base =
-    "inline-flex items-center justify-center gap-2 font-medium transition-colors disabled:opacity-40 disabled:pointer-events-none";
-  const sizes = size === "sm" ? "h-8 px-3 text-[13px]" : "h-10 px-4 text-sm";
+    "inline-flex items-center justify-center gap-1.5 whitespace-nowrap transition-colors disabled:opacity-35 disabled:pointer-events-none";
+  const sizes = size === "sm" ? "h-6 px-2 text-[11px]" : "h-7 px-2.5 text-[12px]";
   const variants = {
     primary: "bg-warm text-noir hover:bg-white",
-    ghost: "text-bone hover:bg-white/8 hover:text-warm",
-    outline: "border border-white/15 text-bone hover:border-white/35 hover:text-warm",
-    danger: "border border-darkroom/60 text-darkroom hover:bg-darkroom hover:text-white",
+    ghost: "text-smoke hover:text-warm",
+    outline: "border border-[var(--line)] text-bone hover:border-warm hover:text-warm",
+    danger: "border border-darkroom/70 text-darkroom hover:bg-darkroom hover:text-white",
   }[variant];
   return <button className={cx(base, sizes, variants, className)} {...props} />;
 }
@@ -47,10 +47,8 @@ export function IconButton({
       aria-label={label}
       aria-pressed={active}
       className={cx(
-        "relative grid h-9 w-9 place-items-center border transition-colors",
-        active
-          ? "border-grease/70 bg-grease/15 text-grease"
-          : "border-transparent text-smoke hover:border-white/15 hover:text-warm",
+        "relative grid h-7 w-7 place-items-center transition-colors",
+        active ? "bg-warm text-noir" : "text-smoke hover:text-warm",
         className,
       )}
       {...props}
@@ -71,18 +69,18 @@ export function Field({
 }) {
   const id = useId();
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1">
       <label htmlFor={id} className="label block">
         {label}
       </label>
       {children(id)}
-      {hint ? <p className="text-[11px] leading-snug text-smoke">{hint}</p> : null}
+      {hint ? <p className="text-[11px] leading-snug text-smoke/80">{hint}</p> : null}
     </div>
   );
 }
 
 export const inputClass =
-  "w-full border border-white/12 bg-black/40 px-2.5 py-1.5 text-sm text-warm placeholder:text-smoke/60 focus:border-grease/60 focus:outline-none";
+  "w-full border border-[var(--line)] bg-transparent px-2 py-1 text-[12px] text-warm placeholder:text-smoke/60 focus:border-warm focus:outline-none";
 
 /**
  * A listbox that always opens downwards.
@@ -218,7 +216,7 @@ export function Select<T extends string>({
               aria-label={label}
               tabIndex={-1}
               onKeyDown={onKeyDown}
-              className="z-[60] overflow-y-auto border border-white/20 bg-charcoal py-1 shadow-2xl"
+              className="z-[60] overflow-y-auto border border-[var(--line)] bg-noir"
               style={{
                 position: "fixed",
                 left: box.left,
@@ -236,9 +234,9 @@ export function Select<T extends string>({
                     onMouseEnter={() => setActive(i)}
                     onClick={() => choose(i)}
                     className={cx(
-                      "block w-full px-2.5 py-1.5 text-left text-[13px] transition-colors",
-                      o.value === value ? "text-grease" : "text-bone",
-                      i === active && "bg-white/10",
+                      "block w-full px-2 py-1 text-left text-[12px] transition-colors",
+                      o.value === value ? "text-warm" : "text-smoke",
+                      i === active && "bg-white/10 text-warm",
                     )}
                   >
                     {o.label}
@@ -253,15 +251,16 @@ export function Select<T extends string>({
   );
 }
 
+/**
+ * A section of the interface: a full-bleed hairline, a small caption, then
+ * content. The negative margin lets the rule run to the edge of the column the
+ * way a divider between panes does, rather than floating inside the padding.
+ */
 export function Panel({ title, children, className }: { title?: string; children: ReactNode; className?: string }) {
   return (
-    <section className={cx("border border-white/8 bg-charcoal/70", className)}>
-      {title ? (
-        <header className="border-b border-white/8 px-3 py-2">
-          <h2 className="label">{title}</h2>
-        </header>
-      ) : null}
-      <div className="p-3">{children}</div>
+    <section className={cx("hair-t -mx-3 px-3 pt-2", className)}>
+      {title ? <h2 className="label mb-2">{title}</h2> : null}
+      {children}
     </section>
   );
 }
@@ -302,7 +301,7 @@ export function Dialog({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 p-4 sm:p-8">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/80 p-4 sm:p-10">
       <div
         className="absolute inset-0"
         onClick={onClose}
@@ -314,27 +313,27 @@ export function Dialog({
         aria-modal="true"
         aria-label={title}
         className={cx(
-          "relative z-10 w-full border border-white/12 bg-charcoal shadow-2xl",
-          wide ? "max-w-4xl" : "max-w-lg",
+          "relative z-10 w-full border border-[var(--line)] bg-noir",
+          wide ? "max-w-4xl" : "max-w-md",
         )}
       >
-        <header className="flex items-start justify-between gap-6 border-b border-white/8 px-5 py-4">
+        <header className="hair-b flex items-start justify-between gap-6 px-3 py-2">
           <div>
-            <h2 className="text-lg tracking-tight text-warm">{title}</h2>
-            {description ? <p className="mt-1 text-[13px] text-smoke">{description}</p> : null}
+            <h2 className="text-[13px] text-warm">{title}</h2>
+            {description ? <p className="label mt-0.5 max-w-sm">{description}</p> : null}
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="-mr-1 -mt-1 grid h-8 w-8 place-items-center text-smoke hover:text-warm"
+            className="-mr-1 grid h-5 w-5 place-items-center text-smoke hover:text-warm"
           >
             <svg viewBox="0 0 16 16" className="h-4 w-4" aria-hidden="true">
               <path d="M3 3 L13 13 M13 3 L3 13" stroke="currentColor" strokeWidth="1.5" fill="none" />
             </svg>
           </button>
         </header>
-        <div className="px-5 py-4">{children}</div>
+        <div className="px-3 py-3">{children}</div>
       </div>
     </div>
   );
@@ -353,10 +352,10 @@ export function Toggle({
 }) {
   const id = useId();
   return (
-    <div className="flex items-start justify-between gap-3 py-1">
-      <label htmlFor={id} className="cursor-pointer text-[13px] text-bone">
+    <div className="flex items-start justify-between gap-3 py-[3px]">
+      <label htmlFor={id} className="cursor-pointer text-[12px] text-bone">
         {label}
-        {hint ? <span className="mt-0.5 block text-[11px] text-smoke">{hint}</span> : null}
+        {hint ? <span className="mt-0.5 block text-[11px] text-smoke/80">{hint}</span> : null}
       </label>
       <button
         id={id}
@@ -365,16 +364,13 @@ export function Toggle({
         aria-checked={checked}
         onClick={() => onChange(!checked)}
         className={cx(
-          "mt-0.5 h-4 w-8 shrink-0 border transition-colors",
-          checked ? "border-grease bg-grease/70" : "border-white/20 bg-transparent",
+          "mt-[3px] grid h-3 w-3 shrink-0 place-items-center border transition-colors",
+          checked ? "border-warm bg-warm" : "border-[var(--line)] bg-transparent hover:border-smoke",
         )}
       >
-        <span
-          className={cx(
-            "block h-3 w-3 bg-warm transition-transform",
-            checked ? "translate-x-4" : "translate-x-0.5",
-          )}
-        />
+        <svg viewBox="0 0 10 10" className={cx("h-2 w-2", checked ? "text-noir" : "text-transparent")} aria-hidden="true">
+          <path d="M1.5 5.2 4 7.5 8.5 2.5" fill="none" stroke="currentColor" strokeWidth="1.6" />
+        </svg>
       </button>
     </div>
   );
@@ -392,7 +388,7 @@ export function Segmented<T extends string>({
   label: string;
 }) {
   return (
-    <div role="group" aria-label={label} className="flex flex-wrap gap-px border border-white/12">
+    <div role="group" aria-label={label} className="flex flex-wrap border border-[var(--line)]">
       {options.map((o) => (
         <button
           key={o.value}
@@ -401,8 +397,8 @@ export function Segmented<T extends string>({
           aria-pressed={value === o.value}
           onClick={() => onChange(o.value)}
           className={cx(
-            "flex-1 whitespace-nowrap px-2 py-1.5 text-[11px] uppercase tracking-[0.12em] transition-colors",
-            value === o.value ? "bg-warm text-noir" : "text-smoke hover:bg-white/6 hover:text-warm",
+            "flex-1 whitespace-nowrap px-2 py-1 text-[11px] transition-colors",
+            value === o.value ? "bg-warm text-noir" : "text-smoke hover:text-warm",
           )}
         >
           {o.label}

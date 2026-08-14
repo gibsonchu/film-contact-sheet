@@ -500,7 +500,7 @@ export function CanvasStage({ layout }: { layout: SheetLayout }) {
             if (photoId) useEditor.getState().openLightbox(photoId);
           }}
           style={{ cursor: cursorFor(tool) }}
-          className="shadow-[0_40px_120px_rgba(0,0,0,0.75)]"
+          className=""
         >
           <SheetSvg
             doc={doc}
@@ -544,8 +544,8 @@ export function CanvasStage({ layout }: { layout: SheetLayout }) {
         </div>
       </div>
 
-      <div className="pointer-events-none absolute bottom-3 left-3 select-none">
-        <span className="label bg-black/60 px-2 py-1">
+      <div className="pointer-events-none absolute bottom-2 left-2 select-none">
+        <span className="pill label px-2 py-[3px]">
           {Math.round(zoom * 100)}% · {layout.width}×{layout.height}
         </span>
       </div>

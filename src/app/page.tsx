@@ -12,7 +12,7 @@ export default function HomePage() {
           CTAs stay above the fold on short windows and on mobile. */}
       <div
         className="w-full"
-        style={{ maxWidth: `min(52rem, calc((100dvh - 210px) * ${COVER_ASPECT}))` }}
+        style={{ maxWidth: `min(52rem, calc((100dvh - 150px) * ${COVER_ASPECT}))` }}
       >
         <Image
           src="/landing-cover.jpg"
@@ -21,20 +21,20 @@ export default function HomePage() {
           height={COVER.height}
           priority
           sizes="(max-width: 840px) 100vw, 832px"
-          className="h-auto w-full shadow-[0_30px_80px_rgba(0,0,0,0.65)]"
+          className="h-auto w-full"
         />
       </div>
 
-      <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
         <Link
           href="/new"
-          className="bg-warm px-6 py-3 text-sm font-medium text-noir transition-colors hover:bg-white"
+          className="bg-warm px-3 py-1.5 text-[12px] text-noir transition-colors hover:bg-white"
         >
           Create a Contact Sheet
         </Link>
         <Link
           href="/projects"
-          className="border border-white/20 px-6 py-3 text-sm text-bone transition-colors hover:border-white/50 hover:text-warm"
+          className="border border-[var(--line)] px-3 py-1.5 text-[12px] text-bone transition-colors hover:border-warm hover:text-warm"
         >
           My Sheets
         </Link>

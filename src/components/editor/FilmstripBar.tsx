@@ -91,7 +91,7 @@ function AddPhotos({ count }: { count: number }) {
   }
 
   return (
-    <div className="flex shrink-0 flex-col justify-center gap-1 pr-1.5">
+    <div className="flex shrink-0 flex-col justify-center gap-1 pr-2">
       <div className="flex gap-1">
         <button
           type="button"
@@ -99,7 +99,7 @@ function AddPhotos({ count }: { count: number }) {
           disabled={Boolean(busy) || room <= 0}
           aria-label="Add photographs"
           title={room > 0 ? "Add photographs" : "This sheet is full"}
-          className="h-14 w-14 shrink-0 border border-dashed border-white/25 text-[11px] leading-tight text-smoke transition-colors hover:border-white/60 hover:text-warm disabled:opacity-40"
+          className="h-12 w-12 shrink-0 border border-[var(--line)] text-[10px] leading-tight text-smoke transition-colors hover:border-warm hover:text-warm disabled:opacity-35"
         >
           + Files
         </button>
@@ -109,12 +109,12 @@ function AddPhotos({ count }: { count: number }) {
           disabled={Boolean(busy) || room <= 0}
           aria-label="Add a folder of photographs"
           title={room > 0 ? "Add a folder of photographs" : "This sheet is full"}
-          className="h-14 w-14 shrink-0 border border-dashed border-white/25 text-[11px] leading-tight text-smoke transition-colors hover:border-white/60 hover:text-warm disabled:opacity-40"
+          className="h-12 w-12 shrink-0 border border-[var(--line)] text-[10px] leading-tight text-smoke transition-colors hover:border-warm hover:text-warm disabled:opacity-35"
         >
           + Folder
         </button>
       </div>
-      <span className="label max-w-[120px] truncate" role="status">
+      <span className="label max-w-[104px] truncate" role="status">
         {busy ?? note ?? `${Math.max(0, room)} free`}
       </span>
 
@@ -164,8 +164,8 @@ export function FilmstripBar() {
   }, {});
 
   return (
-    <div className="shrink-0 border-t border-white/8 bg-charcoal">
-      <div className="flex items-center gap-1 overflow-x-auto border-b border-white/8 px-2 py-1.5">
+    <div className="hair-t shrink-0">
+      <div className="hair-b flex items-center gap-3 overflow-x-auto px-3 py-1">
         {FILTERS.map((f) => (
           <button
             key={f.value}
@@ -173,21 +173,21 @@ export function FilmstripBar() {
             onClick={() => setFilter(f.value)}
             aria-pressed={filter === f.value}
             className={cx(
-              "whitespace-nowrap px-2 py-1 text-[11px] uppercase tracking-[0.14em] transition-colors",
-              filter === f.value ? "bg-warm text-noir" : "text-smoke hover:text-warm",
+              "whitespace-nowrap text-[11px] transition-colors",
+              filter === f.value ? "text-warm" : "text-smoke hover:text-warm",
             )}
           >
             {f.label}
             {f.value !== "all" ? (
-              <span className="ml-1.5 opacity-60">{counts[f.value] ?? 0}</span>
+              <span className="ml-1 opacity-50">{counts[f.value] ?? 0}</span>
             ) : (
-              <span className="ml-1.5 opacity-60">{doc.photos.length}</span>
+              <span className="ml-1 opacity-50">{doc.photos.length}</span>
             )}
           </button>
         ))}
       </div>
 
-      <div className="flex gap-1.5 overflow-x-auto px-2 py-2" role="listbox" aria-label="Frames">
+      <div className="flex gap-1 overflow-x-auto px-3 py-2" role="listbox" aria-label="Frames">
         <AddPhotos count={doc.photos.length} />
         {doc.photos.map((photo) => {
           const url = urls[photo.thumbPath] ?? urls[photo.storagePath];
@@ -202,8 +202,8 @@ export function FilmstripBar() {
               onDoubleClick={() => openLightbox(photo.id)}
               title={`${photo.frameNumber || "—"} ${photo.title || photo.originalFilename}`}
               className={cx(
-                "relative h-14 w-20 shrink-0 overflow-hidden border bg-black/60 transition-colors",
-                isSelected ? "border-grease" : "border-white/10 hover:border-white/40",
+                "relative h-12 w-[68px] shrink-0 overflow-hidden border bg-black transition-colors",
+                isSelected ? "border-warm" : "border-transparent hover:border-smoke",
                 photo.hidden && "opacity-35",
               )}
             >
@@ -212,12 +212,12 @@ export function FilmstripBar() {
               ) : (
                 <span className="label absolute inset-0 grid place-items-center">—</span>
               )}
-              <span className="absolute bottom-0 left-0 bg-black/70 px-1 font-sans text-[9px] text-bone">
+              <span className="absolute bottom-0 left-0 bg-black/75 px-1 text-[9px] text-bone">
                 {photo.frameNumber || "–"}
               </span>
               {photo.status !== "unreviewed" ? (
                 <span
-                  className="absolute right-0.5 top-0 text-[15px] leading-none text-darkroom drop-shadow"
+                  className="absolute right-0.5 top-0 text-[13px] leading-none text-darkroom"
                   aria-hidden="true"
                 >
                   {STATUS_GLYPH[photo.status]}

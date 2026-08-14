@@ -28,7 +28,7 @@ export function Inspector() {
 
   return (
     <aside
-      className="hidden h-full w-[290px] shrink-0 flex-col gap-3 overflow-y-auto border-l border-white/8 bg-charcoal p-3 lg:flex"
+      className="hair-l hidden h-full w-[248px] shrink-0 flex-col gap-3 overflow-y-auto p-3 lg:flex"
       aria-label="Inspector"
     >
       {annotation ? <AnnotationInspector /> : photo ? <PhotoInspector /> : <SheetInspector />}
@@ -142,7 +142,7 @@ export function PhotoInspector() {
           </div>
 
           <div className="space-y-2">
-            <span className="label">Crop within frame</span>
+            <span className="label">Crop</span>
             {(
               [
                 ["x", "Left"],
@@ -152,7 +152,7 @@ export function PhotoInspector() {
               ] as const
             ).map(([key, label]) => (
               <label key={key} className="flex items-center gap-2 text-[11px] text-smoke">
-                <span className="w-12">{label}</span>
+                <span className="w-10">{label}</span>
                 <input
                   type="range"
                   min={key === "width" || key === "height" ? 0.1 : 0}
@@ -164,7 +164,7 @@ export function PhotoInspector() {
                       cropData: { ...crop, [key]: Number(e.target.value) },
                     })
                   }
-                  className="flex-1 accent-[#f2c218]"
+                  className="flex-1 accent-white"
                 />
               </label>
             ))}
@@ -182,7 +182,7 @@ export function PhotoInspector() {
       </Panel>
 
       <Panel title="Metadata">
-        <dl className="space-y-1 font-sans text-[11px] text-smoke">
+        <dl>
           <Row label="File" value={photo.originalFilename || "—"} />
           <Row label="Pixels" value={`${photo.width}×${photo.height}`} />
           {photo.exifData?.model ? <Row label="Camera" value={photo.exifData.model} /> : null}
@@ -195,8 +195,8 @@ export function PhotoInspector() {
 
       <div className="pb-4">
         {confirmDelete ? (
-          <div className="space-y-2 border border-darkroom/50 p-3">
-            <p className="text-[13px] text-bone">Remove this frame from the sheet? This can’t be undone from here.</p>
+          <div className="space-y-2 border border-darkroom/50 p-2">
+            <p className="text-[12px] text-bone">Remove this frame from the sheet? This can’t be undone from here.</p>
             <div className="flex gap-2">
               <Button size="sm" variant="danger" onClick={() => removePhoto(photo.id)}>
                 Remove frame
@@ -219,9 +219,9 @@ export function PhotoInspector() {
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between gap-3">
-      <dt className="uppercase tracking-wider">{label}</dt>
-      <dd className="truncate text-bone">{value}</dd>
+    <div className="row">
+      <dt className="label">{label}</dt>
+      <dd className="truncate text-[11px] text-bone">{value}</dd>
     </div>
   );
 }
@@ -256,8 +256,8 @@ export function AnnotationInspector() {
                   aria-pressed={a.color === c.hex}
                   onClick={() => update(a.id, { color: c.hex })}
                   className={cx(
-                    "h-5 w-5 rounded-full border",
-                    a.color === c.hex ? "scale-110 border-warm" : "border-white/25",
+                    "h-4 w-4 border",
+                    a.color === c.hex ? "border-warm" : "border-transparent",
                   )}
                   style={{ background: c.hex }}
                 />
@@ -282,7 +282,7 @@ export function AnnotationInspector() {
                 step={0.05}
                 value={a.opacity}
                 onChange={(e) => update(a.id, { opacity: Number(e.target.value) })}
-                className="w-full accent-[#f2c218]"
+                className="w-full accent-white"
               />
             )}
           </Field>
@@ -312,7 +312,7 @@ export function AnnotationInspector() {
                     aria-label={t.label}
                     aria-pressed={a.tapeKind === t.id}
                     onClick={() => update(a.id, { tapeKind: t.id })}
-                    className={cx("h-5 w-10 border", a.tapeKind === t.id ? "border-grease" : "border-white/15")}
+                    className={cx("h-4 w-8 border", a.tapeKind === t.id ? "border-warm" : "border-transparent")}
                     style={{ background: t.fill, opacity: t.id === "transparent" ? 0.5 : 1 }}
                   />
                 ))}
@@ -335,7 +335,7 @@ export function AnnotationInspector() {
                       geometry: { ...a.geometry, rotation: Number(e.target.value) } as typeof a.geometry,
                     })
                   }
-                  className="w-full accent-[#f2c218]"
+                  className="w-full accent-white"
                 />
               )}
             </Field>
@@ -365,7 +365,7 @@ export function AnnotationInspector() {
           </IconButton>
         </div>
         {a.photoId ? (
-          <p className="mt-2 text-[11px] text-smoke">
+          <p className="label mt-2 leading-snug">
             Anchored to a frame — it follows that photograph when you switch templates.
           </p>
         ) : null}
@@ -409,8 +409,8 @@ export function SheetInspector() {
               />
             )}
           </Field>
-          <p className="text-[11px] leading-snug text-smoke">{template.blurb}</p>
-          <p className="pt-1 text-[11px] text-smoke">
+          <p className="label leading-snug">{template.blurb}</p>
+          <p className="label leading-snug">
             Switching keeps order, titles, statuses, notes, annotations and tape.
           </p>
         </div>
@@ -427,7 +427,7 @@ export function SheetInspector() {
                 max={10}
                 value={get("columns")}
                 onChange={(e) => updateTemplateSettings({ columns: Number(e.target.value) })}
-                className="w-full accent-[#f2c218]"
+                className="w-full accent-white"
               />
             )}
           </Field>
@@ -440,7 +440,7 @@ export function SheetInspector() {
                 max={60}
                 value={get("frameGap")}
                 onChange={(e) => updateTemplateSettings({ frameGap: Number(e.target.value) })}
-                className="w-full accent-[#f2c218]"
+                className="w-full accent-white"
               />
             )}
           </Field>
@@ -453,7 +453,7 @@ export function SheetInspector() {
                 max={80}
                 value={get("stripGap")}
                 onChange={(e) => updateTemplateSettings({ stripGap: Number(e.target.value) })}
-                className="w-full accent-[#f2c218]"
+                className="w-full accent-white"
               />
             )}
           </Field>
@@ -466,7 +466,7 @@ export function SheetInspector() {
                 max={180}
                 value={get("margin")}
                 onChange={(e) => updateTemplateSettings({ margin: Number(e.target.value) })}
-                className="w-full accent-[#f2c218]"
+                className="w-full accent-white"
               />
             )}
           </Field>

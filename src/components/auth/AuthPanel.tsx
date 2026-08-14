@@ -47,16 +47,16 @@ export function AuthPanel({ mode }: { mode: "login" | "signup" }) {
         <Link href="/" className="label">
           ← Film Contact Sheet
         </Link>
-        <h1 className="mt-4 text-3xl tracking-tight text-warm">
+        <h1 className="mt-4 text-[18px] tracking-tight text-warm">
           {mode === "login" ? "Sign in" : "Create an account"}
         </h1>
-        <p className="mt-2 text-[13px] leading-relaxed text-smoke">
+        <p className="label mt-2 leading-relaxed">
           {configured
             ? "Sign in to sync your sheets across devices."
             : "This deployment stores sheets locally in your browser — no account required. Accounts arrive with cloud storage."}
         </p>
 
-        <form onSubmit={onSubmit} className="mt-6 space-y-4">
+        <form onSubmit={onSubmit} className="mt-5 space-y-3">
           {mode === "signup" ? (
             <Field label="Display name">
               {(id) => <input id={id} className={inputClass} {...register("displayName")} />}
@@ -88,7 +88,7 @@ export function AuthPanel({ mode }: { mode: "login" | "signup" }) {
           </Button>
         </form>
 
-        <div className="mt-6 flex items-center justify-between text-[13px]">
+        <div className="mt-5 flex items-center justify-between text-[11px]">
           <Link href={mode === "login" ? "/signup" : "/login"} className="text-smoke hover:text-warm">
             {mode === "login" ? "Create an account" : "I already have an account"}
           </Link>

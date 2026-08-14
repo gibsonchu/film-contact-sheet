@@ -68,9 +68,9 @@ export function ToolRail() {
   const setTapeKind = useEditor((s) => s.setTapeKind);
 
   return (
-    <div className="flex h-full w-[64px] shrink-0 flex-col gap-3 overflow-y-auto border-r border-white/8 bg-charcoal py-3">
+    <div className="hair-r flex h-full w-[46px] shrink-0 flex-col gap-2.5 overflow-y-auto py-2">
       {GROUPS.map((group) => (
-        <div key={group.label} className="flex flex-col items-center gap-0.5">
+        <div key={group.label} className="flex flex-col items-center gap-px">
           <span className="sr-only">{group.label} tools</span>
           {group.tools.map((t) => {
             const Icon = t.icon;
@@ -81,17 +81,16 @@ export function ToolRail() {
                 active={tool === t.id}
                 onClick={() => setTool(t.id)}
               >
-                <Icon className="h-[18px] w-[18px]" />
+                <Icon className="h-[15px] w-[15px]" />
               </IconButton>
             );
           })}
-          <span className="mt-1 h-px w-7 bg-white/8" aria-hidden="true" />
+          <span className="mt-1.5 h-px w-5 bg-[var(--line)]" aria-hidden="true" />
         </div>
       ))}
 
       <div className="flex flex-col items-center gap-1.5 px-2">
-        <span className="label">Ink</span>
-        <div className="grid grid-cols-2 gap-1.5">
+        <div className="grid grid-cols-2 gap-1">
           {INK_COLORS.map((c) => (
             <button
               key={c.id}
@@ -101,8 +100,8 @@ export function ToolRail() {
               aria-pressed={color === c.hex}
               onClick={() => setColor(c.hex)}
               className={cx(
-                "h-5 w-5 rounded-full border transition-transform",
-                color === c.hex ? "scale-110 border-warm" : "border-white/25 hover:scale-105",
+                "h-3.5 w-3.5 border transition-colors",
+                color === c.hex ? "border-warm" : "border-transparent hover:border-smoke",
               )}
               style={{ background: c.hex }}
             />
@@ -111,7 +110,6 @@ export function ToolRail() {
       </div>
 
       <div className="flex flex-col items-center gap-1 px-2">
-        <span className="label">Size</span>
         {STROKE_SIZES.map((s) => (
           <button
             key={s.id}
@@ -121,38 +119,35 @@ export function ToolRail() {
             aria-pressed={strokeWidth === s.value}
             onClick={() => setStrokeWidth(s.value)}
             className={cx(
-              "grid h-6 w-8 place-items-center border",
-              strokeWidth === s.value ? "border-grease/70 bg-grease/10" : "border-transparent hover:border-white/15",
+              "grid h-4 w-7 place-items-center transition-colors",
+              strokeWidth === s.value ? "bg-white/10" : "hover:bg-white/6",
             )}
           >
             <span
-              className="block rounded-full bg-bone"
-              style={{ width: 18, height: Math.max(1.5, s.value * 0.7) }}
+              className={cx("block", strokeWidth === s.value ? "bg-warm" : "bg-smoke")}
+              style={{ width: 16, height: Math.max(1, s.value * 0.55) }}
             />
           </button>
         ))}
       </div>
 
       <div className="flex flex-col items-center gap-1 px-2">
-        <label className="label" htmlFor="tool-opacity">
-          Opac
-        </label>
         <input
           id="tool-opacity"
           type="range"
+          aria-label="Opacity"
           min={0.1}
           max={1}
           step={0.05}
           value={opacity}
           onChange={(e) => setOpacity(Number(e.target.value))}
-          className="w-10 accent-[#f2c218]"
+          className="w-9 accent-white"
         />
         <span className="label">{Math.round(opacity * 100)}</span>
       </div>
 
       {tool === "tape" ? (
         <div className="flex flex-col items-center gap-1 px-2 pb-3">
-          <span className="label">Tape</span>
           {TAPE_KINDS.map((t) => (
             <button
               key={t.id}
@@ -162,8 +157,8 @@ export function ToolRail() {
               aria-pressed={tapeKind === t.id}
               onClick={() => setTapeKind(t.id)}
               className={cx(
-                "h-4 w-9 border",
-                tapeKind === t.id ? "border-grease" : "border-white/15",
+                "h-3 w-7 border",
+                tapeKind === t.id ? "border-warm" : "border-transparent",
               )}
               style={{ background: t.fill, opacity: t.id === "transparent" ? 0.5 : 1 }}
             />

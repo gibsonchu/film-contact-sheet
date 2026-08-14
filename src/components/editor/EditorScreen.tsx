@@ -124,7 +124,7 @@ export function EditorScreen({ sheetId }: { sheetId: string }) {
   if (loadError || !doc || !layout) {
     return (
       <Centered>
-        <p className="mb-4 max-w-sm text-center text-sm text-bone">{loadError ?? "Sheet not found."}</p>
+        <p className="mb-4 max-w-sm text-center text-[12px] text-bone">{loadError ?? "Sheet not found."}</p>
         <div className="flex gap-2">
           <Link href="/projects">
             <Button variant="outline">All sheets</Button>
@@ -177,16 +177,16 @@ function ViewControls() {
     state.setZoom(state.zoom * factor);
   };
   return (
-    <div className="pointer-events-none absolute bottom-3 right-3 z-10 flex gap-1">
-      <div className="pointer-events-auto flex border border-white/10 bg-charcoal/90">
+    <div className="pointer-events-none absolute bottom-2 right-2 z-10 flex gap-1">
+      <div className="pill pointer-events-auto flex px-0.5">
         <IconButton label="Zoom out" onClick={() => step(1 / 1.2)}>
-          <IconZoomOut className="h-4 w-4" />
+          <IconZoomOut className="h-3.5 w-3.5" />
         </IconButton>
         <IconButton label="Fit sheet to screen" onClick={requestFit}>
-          <IconFit className="h-4 w-4" />
+          <IconFit className="h-3.5 w-3.5" />
         </IconButton>
         <IconButton label="Zoom in" onClick={() => step(1.2)}>
-          <IconZoomIn className="h-4 w-4" />
+          <IconZoomIn className="h-3.5 w-3.5" />
         </IconButton>
       </div>
     </div>
@@ -211,16 +211,14 @@ function MobileToolbar() {
   ];
 
   return (
-    <div className="flex items-center gap-1 overflow-x-auto border-t border-white/8 bg-charcoal px-2 py-2 sm:hidden">
+    <div className="hair-t flex items-center gap-2 overflow-x-auto px-3 py-2 sm:hidden">
       {tools.map((t) => (
         <button
           key={t.id}
           type="button"
           onClick={() => setTool(t.id)}
           aria-pressed={tool === t.id}
-          className={`shrink-0 px-2.5 py-1.5 text-[11px] uppercase tracking-[0.14em] ${
-            tool === t.id ? "bg-warm text-noir" : "text-smoke"
-          }`}
+          className={`shrink-0 text-[11px] ${tool === t.id ? "text-warm" : "text-smoke"}`}
         >
           {t.label}
         </button>
@@ -239,7 +237,6 @@ function MobileToolbar() {
 function Centered({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-dvh flex-col items-center justify-center gap-3 bg-noir p-6">
-      <div className="sprocket-rail w-40 opacity-30" aria-hidden="true" />
       <div className="flex flex-col items-center">{children}</div>
     </div>
   );

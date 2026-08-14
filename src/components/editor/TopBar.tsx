@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEditor } from "@/lib/store/editor";
 import { Button, IconButton, cx } from "@/components/ui/primitives";
-import { IconDownload, IconRedo, IconShare, IconUndo } from "@/components/icons";
+import { IconRedo, IconUndo } from "@/components/icons";
 
 export function TopBar({
   onExport,
@@ -24,32 +24,30 @@ export function TopBar({
   if (!doc) return null;
 
   return (
-    <header className="flex h-14 shrink-0 items-center gap-3 border-b border-white/8 bg-charcoal px-3">
+    <header className="hair-b flex h-9 shrink-0 items-center gap-4 px-3">
       <Link
         href="/projects"
         className="label shrink-0 hover:text-warm"
         aria-label="Back to all contact sheets"
       >
-        ← Sheets
+        Sheets
       </Link>
-
-      <div className="h-6 w-px bg-white/10" aria-hidden="true" />
 
       <input
         value={doc.sheet.title}
         onChange={(e) => updateSheet({ title: e.target.value })}
         aria-label="Contact sheet title"
-        className="min-w-0 flex-1 truncate border-none bg-transparent text-[15px] tracking-tight text-warm outline-none focus:bg-white/5 focus:px-2"
+        className="min-w-0 flex-1 truncate border-none bg-transparent text-[12px] text-warm outline-none placeholder:text-smoke"
       />
 
       <SaveIndicator state={saveState} dirty={dirty} />
 
-      <div className="hidden items-center gap-1 sm:flex">
+      <div className="hidden items-center gap-0.5 sm:flex">
         <IconButton label="Undo (⌘Z)" onClick={undo} disabled={past === 0}>
-          <IconUndo className="h-4 w-4" />
+          <IconUndo className="h-3.5 w-3.5" />
         </IconButton>
         <IconButton label="Redo (⇧⌘Z)" onClick={redo} disabled={future === 0}>
-          <IconRedo className="h-4 w-4" />
+          <IconRedo className="h-3.5 w-3.5" />
         </IconButton>
       </div>
 
@@ -66,12 +64,10 @@ export function TopBar({
         Postcard
       </Link>
 
-      <Button variant="ghost" size="sm" onClick={onShare}>
-        <IconShare className="h-4 w-4" />
-        <span className="hidden sm:inline">Share</span>
-      </Button>
+      <button type="button" onClick={onShare} className="label hover:text-warm">
+        Share
+      </button>
       <Button variant="primary" size="sm" onClick={onExport}>
-        <IconDownload className="h-4 w-4" />
         Export
       </Button>
     </header>
@@ -81,9 +77,9 @@ export function TopBar({
 function SaveIndicator({ state, dirty }: { state: string; dirty: boolean }) {
   const map: Record<string, { text: string; tone: string }> = {
     idle: { text: dirty ? "Unsaved" : "Saved", tone: "text-smoke" },
-    saving: { text: "Saving…", tone: "text-grease" },
+    saving: { text: "Saving", tone: "text-smoke" },
     saved: { text: "Saved", tone: "text-smoke" },
-    offline: { text: "Offline — kept locally", tone: "text-grease" },
+    offline: { text: "Offline", tone: "text-smoke" },
     error: { text: "Save failed", tone: "text-darkroom" },
   };
   const s = map[state] ?? map.idle;

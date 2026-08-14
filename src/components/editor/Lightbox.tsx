@@ -115,8 +115,8 @@ export function Lightbox() {
       aria-modal="true"
       aria-label={`Frame ${photo.frameNumber}${photo.title ? `: ${photo.title}` : ""}`}
     >
-      <header className="flex items-center gap-3 border-b border-white/8 px-4 py-2.5">
-        <span className="font-sans text-[13px] tracking-[0.2em] text-grease">
+      <header className="hair-b flex items-center gap-3 px-3 py-1.5">
+        <span className="text-[11px] text-smoke">
           {String(photo.frameNumber).padStart(2, "0")}
         </span>
         <input
@@ -125,13 +125,13 @@ export function Lightbox() {
           placeholder="Untitled frame"
           aria-label="Frame title"
           onChange={(e) => updatePhoto(photo.id, { title: e.target.value })}
-          className="min-w-0 flex-1 border-none bg-transparent text-[15px] text-warm outline-none focus:bg-white/5 focus:px-2"
+          className="min-w-0 flex-1 border-none bg-transparent text-[12px] text-warm outline-none"
         />
         <span className="label hidden sm:inline">
           {index + 1} / {visible.length}
         </span>
         <IconButton label="Zoom out (−)" onClick={() => setZoom((z) => Math.max(1, z / 1.25))}>
-          <IconZoomOut className="h-4 w-4" />
+          <IconZoomOut className="h-3.5 w-3.5" />
         </IconButton>
         <IconButton
           label="Fit to screen (0)"
@@ -140,21 +140,21 @@ export function Lightbox() {
             setPan({ x: 0, y: 0 });
           }}
         >
-          <IconFit className="h-4 w-4" />
+          <IconFit className="h-3.5 w-3.5" />
         </IconButton>
         <IconButton label="Zoom in (+)" onClick={() => setZoom((z) => Math.min(8, z * 1.25))}>
-          <IconZoomIn className="h-4 w-4" />
+          <IconZoomIn className="h-3.5 w-3.5" />
         </IconButton>
         <IconButton label="Fullscreen (Enter)" onClick={toggleFullscreen}>
-          <IconStar className="h-4 w-4" />
+          <IconStar className="h-3.5 w-3.5" />
         </IconButton>
         <button
           type="button"
           onClick={close}
-          className="label px-2 py-1 hover:text-warm"
+          className="label hover:text-warm"
           aria-label="Close viewer (Escape)"
         >
-          Close ✕
+          Close
         </button>
       </header>
 
@@ -185,7 +185,7 @@ export function Lightbox() {
             <img
               src={url}
               alt={photo.title || photo.originalFilename || `Frame ${photo.frameNumber}`}
-              className="max-h-full max-w-full object-contain shadow-[0_20px_80px_rgba(0,0,0,0.8)]"
+              className="max-h-full max-w-full object-contain"
               style={{
                 transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom}) rotate(${photo.rotation}deg)`,
                 transition: panning ? "none" : "transform 120ms ease-out",
@@ -200,7 +200,7 @@ export function Lightbox() {
         <NavButton side="right" onClick={() => step(1)} />
       </div>
 
-      <footer className="flex flex-wrap items-center gap-4 border-t border-white/8 px-4 py-3">
+      <footer className="hair-t flex flex-wrap items-center gap-3 px-3 py-2">
         <div className="min-w-[180px] flex-1">
           <Segmented
             label="Review status"
@@ -221,7 +221,7 @@ export function Lightbox() {
           placeholder="Caption…"
           aria-label="Caption"
           onChange={(e) => updatePhoto(photo.id, { caption: e.target.value })}
-          className="min-w-[160px] flex-1 border border-white/10 bg-black/40 px-2 py-1.5 text-[13px] text-warm outline-none focus:border-grease/60"
+          className="min-w-[160px] flex-1 border border-[var(--line)] bg-transparent px-2 py-1 text-[12px] text-warm outline-none focus:border-warm"
         />
         <span className="label hidden lg:inline">
           ← → navigate · F S M X status · +/− zoom · space pan · esc close
@@ -238,7 +238,7 @@ function NavButton({ side, onClick }: { side: "left" | "right"; onClick: () => v
       onClick={onClick}
       aria-label={side === "left" ? "Previous frame" : "Next frame"}
       className={cx(
-        "absolute top-1/2 z-10 grid h-12 w-12 -translate-y-1/2 place-items-center bg-black/50 text-2xl text-bone transition-colors hover:bg-black/80 hover:text-warm",
+        "absolute top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center text-xl text-smoke transition-colors hover:text-warm",
         side === "left" ? "left-3" : "right-3",
       )}
     >

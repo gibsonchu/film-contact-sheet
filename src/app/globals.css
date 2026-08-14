@@ -1,26 +1,34 @@
 @import "tailwindcss";
 
+/*
+ * The chrome is a frame around photographs, so it stays out of the way: one
+ * neutral ground, hairline rules instead of cards, no shadows, no fills, no
+ * gradients. Colour belongs to the pictures. Hierarchy comes from size and
+ * position, not from boxes.
+ */
 @theme {
-  --color-noir: #0a0a0b;
-  --color-charcoal: #141416;
-  --color-graphite: #1d1d20;
-  --color-slate: #2a2a2e;
-  --color-ash: #3a3a3f;
-  --color-smoke: #8b8780;
-  --color-bone: #d8d3c9;
-  --color-warm: #efece5;
-  --color-paper: #f3eee3;
+  --color-noir: #0b0b0b;
+  --color-charcoal: #101010;
+  --color-graphite: #161616;
+  --color-slate: #1e1e1e;
+  --color-ash: #2a2a2a;
+  --color-smoke: #8a8a86;
+  --color-bone: #b8b8b4;
+  --color-warm: #ededea;
+  --color-paper: #f3f1ec;
   --color-darkroom: #d81f26;
   --color-grease: #f2c218;
   --color-china: #f4f1ea;
 
-  /* One face throughout: Helvetica. The technical and handwritten registers are
-     carried by size, weight and letter-spacing instead of by separate fonts. */
+  /* One face throughout: Helvetica. Registers come from size and tracking. */
   --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 :root {
   color-scheme: dark;
+  /* Every rule in the interface is this one hairline. */
+  --line: rgba(255, 255, 255, 0.14);
+  --line-soft: rgba(255, 255, 255, 0.08);
 }
 
 html,
@@ -32,44 +40,61 @@ body {
   background: var(--color-noir);
   color: var(--color-warm);
   font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.35;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior: none;
 }
 
-/* Paper / film grain applied to large surfaces. Kept as a CSS gradient stack
-   so it costs nothing to paint and never blocks first render. */
-.texture-noise {
-  position: relative;
-}
-.texture-noise::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.5;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.035) 0.5px, transparent 0.6px),
-    radial-gradient(rgba(0, 0, 0, 0.06) 0.5px, transparent 0.6px);
-  background-size: 3px 3px, 5px 5px;
-  background-position: 0 0, 1px 2px;
-}
-
+/* Small caption text: sentence case, no shouting. */
 .label {
-  font-family: var(--font-sans);
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  font-size: 11px;
+  line-height: 1.3;
+  letter-spacing: 0;
   color: var(--color-smoke);
 }
 
-.rule {
-  border-color: rgba(255, 255, 255, 0.08);
+/* Hairlines. */
+.hair {
+  border-color: var(--line);
+}
+.hair-t {
+  border-top: 1px solid var(--line);
+}
+.hair-b {
+  border-bottom: 1px solid var(--line);
+}
+.hair-l {
+  border-left: 1px solid var(--line);
+}
+.hair-r {
+  border-right: 1px solid var(--line);
 }
 
-/* Focus visibility is non-negotiable, including over the film chrome. */
+/* A floating control, as used over a working surface. */
+.pill {
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(16, 16, 16, 0.92);
+  backdrop-filter: blur(6px);
+}
+
+/* Label / value row, the workhorse of the inspector. */
+.row {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 5px 0;
+}
+.row + .row {
+  border-top: 1px solid var(--line-soft);
+}
+
 :focus-visible {
-  outline: 2px solid var(--color-grease);
-  outline-offset: 2px;
-  border-radius: 2px;
+  outline: 1px solid var(--color-warm);
+  outline-offset: 1px;
+  border-radius: 0;
 }
 
 button,
@@ -84,21 +109,70 @@ select {
 }
 
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #2b2b30;
-  border-radius: 999px;
+  background: #262626;
   border: 2px solid transparent;
   background-clip: content-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3d3d44;
+  background: #3a3a3a;
   background-clip: content-box;
+}
+
+/* Sliders: a hairline track and a small square thumb. */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 12px;
+  background: transparent;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 1px;
+  background: var(--line);
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 7px;
+  height: 7px;
+  margin-top: -3px;
+  background: var(--color-warm);
+  border: 0;
+  border-radius: 0;
+}
+input[type="range"]::-moz-range-track {
+  height: 1px;
+  background: var(--line);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 7px;
+  height: 7px;
+  background: var(--color-warm);
+  border: 0;
+  border-radius: 0;
+}
+
+/* Colour wells sit flush, like a swatch card. */
+input[type="color"] {
+  -webkit-appearance: none;
+  appearance: none;
+  padding: 0;
+  border: 1px solid var(--line);
+  background: transparent;
+  cursor: pointer;
+}
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+input[type="color"]::-webkit-color-swatch {
+  border: 0;
 }
 
 .sheet-canvas {
@@ -127,17 +201,4 @@ select {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-}
-
-/* Sprocket-hole rail used as a decorative divider in the marketing pages. */
-.sprocket-rail {
-  background-image: repeating-linear-gradient(
-    to right,
-    transparent 0 9px,
-    rgba(255, 255, 255, 0.9) 9px 21px,
-    transparent 21px 30px
-  );
-  height: 13px;
-  border-radius: 2px;
-  opacity: 0.85;
 }

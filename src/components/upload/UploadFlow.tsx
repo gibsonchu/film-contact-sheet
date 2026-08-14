@@ -105,15 +105,19 @@ export function UploadFlow() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-5 py-8">
-      <header className="mb-8 flex items-baseline justify-between gap-4">
-        <h1 className="text-3xl tracking-tight text-warm">New Contact Sheet</h1>
+    <div className="min-h-dvh">
+      <header className="hair-b flex h-9 items-center gap-4 px-3">
+        <Link href="/" className="text-[12px] text-warm">
+          Film Contact Sheet
+        </Link>
+        <span className="label">New Contact Sheet</span>
+        <div className="flex-1" />
         <Link href="/projects" className="label hover:text-warm">
-          ← All sheets
+          All sheets
         </Link>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[1.25fr_1fr]">
+      <div className="grid gap-6 px-3 py-5 lg:grid-cols-[1.3fr_1fr]">
         <div className="space-y-4">
           <div
             onDragOver={(e) => {
@@ -136,16 +140,15 @@ export function UploadFlow() {
               })();
             }}
             className={cx(
-              "texture-noise flex flex-col items-center justify-center border-2 border-dashed px-6 py-14 text-center transition-colors",
-              dragging ? "border-grease bg-grease/5" : "border-white/15",
+              "flex flex-col items-center justify-center border px-6 py-16 text-center transition-colors",
+              dragging ? "border-warm" : "border-[var(--line)]",
             )}
           >
-            <div className="sprocket-rail mb-5 w-40 opacity-40" aria-hidden="true" />
-            <p className="text-[15px] text-warm">Drop photographs or a folder here</p>
-            <p className="mt-1 text-[13px] text-smoke">
+            <p className="text-[12px] text-warm">Drop photographs or a folder here</p>
+            <p className="label mt-1">
               JPG, PNG, WebP or HEIC · up to {MAX_PHOTOS_PER_SHEET} frames per sheet
             </p>
-            <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
               <Button onClick={() => inputRef.current?.click()}>Choose files</Button>
               <Button variant="ghost" onClick={() => folderRef.current?.click()}>
                 Choose a folder
@@ -184,7 +187,7 @@ export function UploadFlow() {
           </div>
 
           {valid.length > MAX_PHOTOS_PER_SHEET ? (
-            <p className="border border-grease/40 bg-grease/8 p-3 text-[13px] text-grease">
+            <p className="border border-[var(--line)] p-2 text-[11px] text-bone">
               {valid.length} frames is more than one 35mm roll. They’ll be split into{" "}
               <strong>{sheetCount} contact sheets</strong> of up to {MAX_PHOTOS_PER_SHEET} frames
               each — you’ll land on the first one, and the rest are in your library.
@@ -193,16 +196,13 @@ export function UploadFlow() {
 
           {candidates.length > 0 ? (
             <Panel title={`${valid.length} frame${valid.length === 1 ? "" : "s"} ready`}>
-              <ul className="grid grid-cols-4 gap-2 sm:grid-cols-6">
+              <ul className="grid grid-cols-5 gap-1.5 sm:grid-cols-8">
                 {candidates.map((c) => (
                   <li key={c.id} className="relative">
                     <img
                       src={c.previewUrl}
                       alt=""
-                      className={cx(
-                        "aspect-[3/2] w-full border border-white/10 object-cover",
-                        c.error && "opacity-30",
-                      )}
+                      className={cx("aspect-[3/2] w-full bg-[#151515] object-cover", c.error && "opacity-25")}
                     />
                     <button
                       type="button"
@@ -211,11 +211,11 @@ export function UploadFlow() {
                         setCandidates((prev) => prev.filter((x) => x.id !== c.id));
                       }}
                       aria-label={`Remove ${c.file.name}`}
-                      className="absolute right-0 top-0 grid h-5 w-5 place-items-center bg-black/80 text-[11px] text-bone hover:text-darkroom"
+                      className="absolute right-0 top-0 grid h-4 w-4 place-items-center bg-black/80 text-[10px] text-bone hover:text-darkroom"
                     >
                       ✕
                     </button>
-                    <p className="mt-1 truncate font-sans text-[9px] text-smoke" title={pathOf(c.file)}>
+                    <p className="mt-0.5 truncate text-[9px] text-smoke" title={pathOf(c.file)}>
                       {c.error ?? formatBytes(c.file.size)}
                     </p>
                   </li>
@@ -324,9 +324,9 @@ export function UploadFlow() {
               {busy ? `Building… ${progress.done}/${progress.total}` : `Build ${sheetCount > 1 ? `${sheetCount} sheets` : "the sheet"}`}
             </Button>
             {busy ? (
-              <div className="h-1 flex-1 bg-white/10" role="progressbar" aria-valuenow={progress.done} aria-valuemax={progress.total}>
+              <div className="h-px flex-1 bg-white/15" role="progressbar" aria-valuenow={progress.done} aria-valuemax={progress.total}>
                 <div
-                  className="h-full bg-grease transition-[width]"
+                  className="h-full bg-warm transition-[width]"
                   style={{ width: `${progress.total ? (progress.done / progress.total) * 100 : 0}%` }}
                 />
               </div>

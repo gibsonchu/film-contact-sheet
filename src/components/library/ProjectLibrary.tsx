@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Button, Segmented, cx, inputClass } from "@/components/ui/primitives";
+import { Button, Segmented, cx } from "@/components/ui/primitives";
 import { ensureDemoDocument } from "@/lib/demo";
 import { createDocument, uid } from "@/lib/document";
 import { getStorage, summarize } from "@/lib/storage/local";
@@ -117,36 +117,35 @@ export function ProjectLibrary() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-5 py-8">
-      <header className="mb-7 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <Link href="/" className="label hover:text-warm">
-            Film Contact Sheet
-          </Link>
-          <h1 className="mt-2 text-3xl tracking-tight text-warm">Contact sheets</h1>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button onClick={openDemo} disabled={busy}>
-            Demo roll
+    <div className="min-h-dvh">
+      <header className="hair-b flex h-9 items-center gap-4 px-3">
+        <Link href="/" className="text-[12px] text-warm">
+          Film Contact Sheet
+        </Link>
+        <span className="label">Sheets</span>
+        <div className="flex-1" />
+        <button type="button" onClick={openDemo} disabled={busy} className="label hover:text-warm">
+          Demo roll
+        </button>
+        <button type="button" onClick={blankSheet} disabled={busy} className="label hover:text-warm">
+          Blank sheet
+        </button>
+        <Link href="/new">
+          <Button variant="primary" size="sm">
+            Upload
           </Button>
-          <Button onClick={blankSheet} disabled={busy}>
-            Blank sheet
-          </Button>
-          <Link href="/new">
-            <Button variant="primary">Upload photographs</Button>
-          </Link>
-        </div>
+        </Link>
       </header>
 
-      <div className="mb-5 flex flex-wrap items-center gap-3">
+      <div className="hair-b flex flex-wrap items-center gap-3 px-3 py-1.5">
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search sheets…"
+          placeholder="Search"
           aria-label="Search sheets"
-          className={`${inputClass} max-w-xs`}
+          className="w-40 border-none bg-transparent text-[12px] text-warm outline-none placeholder:text-smoke"
         />
-        <div className="w-56">
+        <div className="w-52">
           <Segmented
             label="Sort by"
             value={sort}
@@ -159,7 +158,7 @@ export function ProjectLibrary() {
             ]}
           />
         </div>
-        <div className="w-52">
+        <div className="w-48">
           <Segmented
             label="View"
             value={view}
@@ -174,45 +173,42 @@ export function ProjectLibrary() {
       </div>
 
       {loading ? (
-        <p className="label">Reading the shelf…</p>
+        <p className="label px-3 py-4">Reading the shelf…</p>
       ) : visible.length === 0 ? (
-        <div className="border border-dashed border-white/12 px-6 py-16 text-center">
-          <div className="sprocket-rail mx-auto mb-5 w-40 opacity-30" aria-hidden="true" />
-          <p className="text-[15px] text-warm">
+        <div className="px-3 py-20 text-center">
+          <p className="text-[12px] text-warm">
             {view === "active" ? "Nothing on the light table yet." : `No ${view} sheets.`}
           </p>
           {view === "active" ? (
-            <p className="mx-auto mt-2 max-w-sm text-[13px] text-smoke">
+            <p className="label mx-auto mt-1 max-w-xs">
               Upload a shoot, or open the demo roll to see what a finished sheet looks like.
             </p>
           ) : null}
         </div>
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid grid-cols-2 gap-x-4 gap-y-7 px-3 py-5 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
           {visible.map((p) => (
-            <li key={p.id} className="group border border-white/10 bg-charcoal/60">
+            <li key={p.id} className="group">
               <Link href={`/sheet/${p.id}`} className="block">
-                <div className="texture-noise aspect-[4/3] overflow-hidden border-b border-white/10 bg-black">
+                <div className="flex aspect-[4/3] items-end justify-center overflow-hidden">
                   {thumbs[p.id] ? (
-                    <img src={thumbs[p.id]} alt="" className="h-full w-full object-cover opacity-90" />
+                    <img src={thumbs[p.id]} alt="" className="max-h-full max-w-full object-contain" />
                   ) : (
-                    <div className="grid h-full place-items-center">
-                      <span className="label">No frames</span>
-                    </div>
+                    <span className="label m-auto">Empty</span>
                   )}
                 </div>
-                <div className="p-3">
-                  <h2 className="truncate text-[15px] tracking-tight text-warm">{p.title}</h2>
-                  <p className="mt-1 font-sans text-[10px] uppercase tracking-[0.14em] text-smoke">
-                    {p.photoCount} frames · {TEMPLATES[p.templateId]?.name ?? p.templateId} ·{" "}
-                    {p.sharingMode === "private" ? "private" : "shared"}
+                <div className="mt-1.5 leading-[1.35]">
+                  <p className="truncate text-[11px] text-warm">{p.title}</p>
+                  <p className="label truncate">
+                    {p.photoCount} fr · {TEMPLATES[p.templateId]?.name ?? p.templateId}
                   </p>
-                  <p className="mt-0.5 font-sans text-[10px] text-smoke/70">
-                    Edited {new Date(p.updatedAt).toLocaleDateString()}
+                  <p className="label truncate opacity-70">
+                    {new Date(p.updatedAt).toLocaleDateString()}
+                    {p.sharingMode === "private" ? "" : " · shared"}
                   </p>
                 </div>
               </Link>
-              <div className="flex flex-wrap gap-2 border-t border-white/8 px-3 py-2 text-[11px] text-smoke">
+              <div className="mt-1 flex flex-wrap gap-x-2 text-[10px] text-smoke opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
                 <button type="button" className="hover:text-warm" onClick={() => duplicate(p.id)}>
                   Duplicate
                 </button>
@@ -276,9 +272,8 @@ export function ProjectLibrary() {
         </ul>
       )}
 
-      <p className="mt-8 text-[11px] text-smoke">
-        Sheets are stored in this browser. Connect Supabase to sync them to an account —
-        see the README for the migration and environment variables.
+      <p className="label px-3 pb-6">
+        Sheets are stored in this browser. Connect Supabase to sync them to an account.
       </p>
     </div>
   );
