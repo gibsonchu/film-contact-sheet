@@ -1,5 +1,5 @@
 import { getStroke } from "perfect-freehand";
-import { TOOL_STYLE } from "./palette";
+import { instrumentFor } from "./palette";
 import type { Point } from "./types";
 
 /**
@@ -8,15 +8,20 @@ import type { Point } from "./types";
  * can be re-rendered at any scale — including a 300dpi export — without ever
  * looking like an upscaled bitmap.
  */
-export function strokeOutlinePath(points: Point[], size: number, tool: string): string {
+export function strokeOutlinePath(
+  points: Point[],
+  size: number,
+  tool: string,
+  widthMultiplier = 1,
+): string {
   if (points.length === 0) return "";
-  const style = TOOL_STYLE[tool] ?? TOOL_STYLE.pen;
+  const instrument = instrumentFor(tool);
   const input = points.map((p) => [p.x, p.y, p.p ?? 0.5] as [number, number, number]);
   const outline = getStroke(input, {
-    size: size * style.widthScale,
-    thinning: style.thinning,
-    smoothing: style.smoothing,
-    streamline: style.streamline,
+    size: size * instrument.widthScale * widthMultiplier,
+    thinning: instrument.thinning,
+    smoothing: instrument.smoothing,
+    streamline: instrument.streamline,
     simulatePressure: points.every((p) => p.p === undefined || p.p === 0.5),
     last: true,
   });

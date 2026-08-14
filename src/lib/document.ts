@@ -1,6 +1,7 @@
 import { DEFAULT_TEMPLATE_ID } from "./templates";
 import {
   MAX_PHOTOS_PER_SHEET,
+  type ReviewStatus,
   SCHEMA_VERSION,
   type Annotation,
   type ContactSheet,
@@ -42,6 +43,8 @@ export function createSheet(partial: Partial<ContactSheet> = {}): ContactSheet {
     sharingMode: partial.sharingMode ?? "private",
     commentsEnabled: partial.commentsEnabled ?? false,
     downloadsEnabled: partial.downloadsEnabled ?? true,
+    pickMark: partial.pickMark ?? "circle",
+    autoAdvance: partial.autoAdvance ?? false,
     postcard: partial.postcard ?? {
       message: "",
       senderName: "",
@@ -86,7 +89,7 @@ export function createPhoto(contactSheetId: string, partial: Partial<Photo> = {}
     caption: partial.caption ?? "",
     privateNote: partial.privateNote ?? "",
     publicNote: partial.publicNote ?? "",
-    status: partial.status ?? "unreviewed",
+    status: partial.status ?? "unflagged",
     rotation: partial.rotation ?? 0,
     cropData: partial.cropData ?? null,
     fit: partial.fit ?? "fit",
@@ -205,6 +208,33 @@ export function switchTemplate(doc: SheetDocument, templateId: TemplateId): Shee
   return {
     ...doc,
     sheet: { ...doc.sheet, templateId, updatedAt: nowIso() },
+  };
+}
+
+/**
+ * Brings a stored document up to the current shape.
+ *
+ * Review used to carry five states with a separate "favorite" and "selected";
+ * both meant "keep this", so they fold into Pick. Sheets saved before the
+ * review preferences existed get the defaults.
+ */
+export function migrateDocument(doc: SheetDocument): SheetDocument {
+  const statusMap: Record<string, ReviewStatus> = {
+    favorite: "pick",
+    selected: "pick",
+    rejected: "reject",
+    unreviewed: "unflagged",
+  };
+  return {
+    ...doc,
+    sheet: {
+      ...doc.sheet,
+      pickMark: doc.sheet.pickMark ?? "circle",
+      autoAdvance: doc.sheet.autoAdvance ?? false,
+    },
+    photos: doc.photos.map((p) =>
+      statusMap[p.status] ? { ...p, status: statusMap[p.status] } : p,
+    ),
   };
 }
 

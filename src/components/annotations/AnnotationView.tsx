@@ -1,8 +1,18 @@
 "use client";
 
 import { memo } from "react";
-import { cropMarks, handArrow, handCheck, handEllipse, handLine, handRect, handX, rng } from "@/lib/hand";
-import { TAPE_KINDS } from "@/lib/palette";
+import {
+  cropMarks,
+  handArrow,
+  handCheck,
+  handEllipse,
+  handLine,
+  handQuestion,
+  handRect,
+  handX,
+  rng,
+} from "@/lib/hand";
+import { TAPE_KINDS, fontStack, instrumentFor } from "@/lib/palette";
 import { textBoxOf } from "@/lib/hit";
 import { strokeOutlinePath } from "@/lib/stroke";
 import type { Annotation } from "@/lib/types";
@@ -68,14 +78,7 @@ function renderBody(a: Annotation) {
   };
 
   if (a.type === "stroke" && a.geometry.kind === "points") {
-    const isHighlighter = a.tool === "highlighter";
-    return (
-      <path
-        d={strokeOutlinePath(a.geometry.points, a.strokeWidth, a.tool)}
-        fill={a.color}
-        style={isHighlighter ? { mixBlendMode: "multiply" } : undefined}
-      />
-    );
+    return <Stroke annotation={a} />;
   }
 
   if (a.type === "tape") return <Tape annotation={a} />;
@@ -90,7 +93,7 @@ function renderBody(a: Annotation) {
         x={x}
         y={y}
         fill={a.color}
-        fontFamily={SHEET_FONT}
+        fontFamily={fontStack(a.font)}
         fontSize={size}
         style={{ userSelect: "none" }}
       >
@@ -128,6 +131,16 @@ function renderBody(a: Annotation) {
       }
       case "check":
         return <path {...common} d={handCheck(x, y, Math.min(Math.abs(width), Math.abs(height)) || 30, a.id)} />;
+      case "question": {
+        const size = Math.min(Math.abs(width), Math.abs(height)) || 40;
+        const [hook, dot] = handQuestion(x + Math.abs(width) / 2, y + Math.abs(height) / 2, size, a.id);
+        return (
+          <g>
+            <path {...common} d={hook} />
+            <path {...common} strokeWidth={a.strokeWidth * 1.6} d={dot} />
+          </g>
+        );
+      }
       case "crop":
         return (
           <g>
@@ -156,6 +169,60 @@ function renderBody(a: Annotation) {
   }
 
   return null;
+}
+
+/**
+ * A drawn stroke, rendered according to the instrument that made it.
+ *
+ * The four instruments are not one path under four names — each gets its own
+ * treatment so a pastel could never be mistaken for a sharpie:
+ *
+ *   ink    a single clean path
+ *   wax    the path plus a slightly wider, fainter body, so edges look laid on
+ *   chalk  a grain wash through the stroke, and a broken second pass
+ *   bleed  a soft halo under a dense core, the way solvent ink sits in paper
+ */
+function Stroke({ annotation: a }: { annotation: Annotation }) {
+  const instrument = instrumentFor(a.tool);
+  if (a.geometry.kind !== "points") return null;
+  const points = a.geometry.points;
+  const core = strokeOutlinePath(points, a.strokeWidth, a.tool);
+
+  if (instrument.texture === "wax") {
+    return (
+      <g>
+        <path d={strokeOutlinePath(points, a.strokeWidth, a.tool, 1.18)} fill={a.color} opacity={0.35} />
+        <path d={core} fill={a.color} />
+      </g>
+    );
+  }
+
+  if (instrument.texture === "chalk") {
+    return (
+      <g>
+        <path d={strokeOutlinePath(points, a.strokeWidth, a.tool, 1.1)} fill={a.color} opacity={0.4} />
+        <path d={core} fill={a.color} />
+        {/* Grain through the body: chalk never lays down evenly. */}
+        <path d={core} fill="url(#fcs-chalk)" opacity={0.55} style={{ mixBlendMode: "overlay" }} />
+        <path
+          d={strokeOutlinePath(points, a.strokeWidth * 0.55, a.tool, 0.75)}
+          fill={a.color}
+          opacity={0.5}
+        />
+      </g>
+    );
+  }
+
+  if (instrument.texture === "bleed") {
+    return (
+      <g>
+        <path d={strokeOutlinePath(points, a.strokeWidth, a.tool, 1.22)} fill={a.color} opacity={0.22} />
+        <path d={core} fill={a.color} />
+      </g>
+    );
+  }
+
+  return <path d={core} fill={a.color} />;
 }
 
 /* ------------------------------------------------------------------ tape */

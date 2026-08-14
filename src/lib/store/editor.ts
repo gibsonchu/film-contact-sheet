@@ -13,7 +13,7 @@ import {
 } from "../document";
 import { computeLayout } from "../layout";
 import { getStorage } from "../storage/local";
-import { INK_COLORS, STROKE_SIZES } from "../palette";
+import { DEFAULT_INSTRUMENT, INK_COLORS, STROKE_SIZES } from "../palette";
 import type {
   Annotation,
   AnnotationTool,
@@ -60,7 +60,6 @@ interface EditorState {
   selectedPhotoId: string | null;
   selectedAnnotationId: string | null;
   filter: ReviewStatus | "all";
-  lightboxPhotoId: string | null;
   zoom: number;
   panX: number;
   panY: number;
@@ -106,8 +105,6 @@ interface EditorState {
   selectPhoto: (id: string | null) => void;
   selectAnnotation: (id: string | null) => void;
   setFilter: (f: ReviewStatus | "all") => void;
-  openLightbox: (id: string | null) => void;
-  stepLightbox: (delta: number) => void;
   setZoom: (z: number) => void;
   nudgeView: (dx: number, dy: number) => void;
   resetView: () => void;
@@ -116,6 +113,16 @@ interface EditorState {
   requestFit: () => void;
   /** True while the canvas should keep fitting the sheet to the viewport. */
   autoFitView: boolean;
+
+  /** The instrument the Drawing tool draws with, and the active manual mark. */
+  instrument: AnnotationTool;
+  markTool: AnnotationTool;
+  setInstrument: (tool: AnnotationTool) => void;
+  setMarkTool: (tool: AnnotationTool) => void;
+
+  /** Contact-sheet fullscreen: panels away, the whole sheet on the light table. */
+  sheetFullscreen: boolean;
+  setSheetFullscreen: (on: boolean) => void;
 
   /** Which surrounding panels are showing. */
   showRail: boolean;
@@ -205,12 +212,14 @@ export const useEditor = create<EditorState>()((set, get) => {
     selectedPhotoId: null,
     selectedAnnotationId: null,
     filter: "all",
-    lightboxPhotoId: null,
     zoom: 1,
     panX: 0,
     panY: 0,
     fitRequest: 0,
     autoFitView: true,
+    instrument: DEFAULT_INSTRUMENT,
+    markTool: "ellipse",
+    sheetFullscreen: false,
     showRail: true,
     showInspector: true,
     showFilmstrip: true,
@@ -309,10 +318,13 @@ export const useEditor = create<EditorState>()((set, get) => {
 
     setStatus(id, status) {
       get().updatePhoto(id, { status });
+      // Auto advance keeps a hand moving across the sheet, the way a grease
+      // pencil does — without ever leaving the sheet.
+      if (get().doc?.sheet.autoAdvance && get().selectedPhotoId === id) get().stepSelection(1);
     },
 
     cycleStatus(id) {
-      const order: ReviewStatus[] = ["unreviewed", "favorite", "selected", "maybe", "rejected"];
+      const order: ReviewStatus[] = ["unflagged", "pick", "maybe", "reject"];
       const photo = get().doc?.photos.find((p) => p.id === id);
       if (!photo) return;
       const next = order[(order.indexOf(photo.status) + 1) % order.length];
@@ -463,43 +475,44 @@ export const useEditor = create<EditorState>()((set, get) => {
     selectPhoto: (selectedPhotoId) => set({ selectedPhotoId, selectedAnnotationId: null }),
     selectAnnotation: (selectedAnnotationId) => set({ selectedAnnotationId, selectedPhotoId: null }),
     setFilter: (filter) => set({ filter }),
-    openLightbox: (lightboxPhotoId) => set({ lightboxPhotoId }),
-
-    togglePanel(panel) {
-      if (panel === "rail") set((s) => ({ showRail: !s.showRail }));
-      else if (panel === "inspector") set((s) => ({ showInspector: !s.showInspector }));
-      else set((s) => ({ showFilmstrip: !s.showFilmstrip }));
-    },
-
-    stepSelection(delta) {
-      const { doc, selectedPhotoId } = get();
-      if (!doc) return;
-      const visible = doc.photos.filter((p) => !p.hidden);
-      if (visible.length === 0) return;
-      const current = visible.findIndex((p) => p.id === selectedPhotoId);
-      const next =
-        current === -1
-          ? delta > 0
-            ? 0
-            : visible.length - 1
-          : (current + delta + visible.length) % visible.length;
-      set({ selectedPhotoId: visible[next].id, selectedAnnotationId: null });
-    },
-
-    stepLightbox(delta) {
-      const { doc, lightboxPhotoId } = get();
-      if (!doc || !lightboxPhotoId) return;
-      const visible = doc.photos.filter((p) => !p.hidden);
-      const i = visible.findIndex((p) => p.id === lightboxPhotoId);
-      if (i === -1) return;
-      const next = visible[(i + delta + visible.length) % visible.length];
-      set({ lightboxPhotoId: next.id });
-    },
-
     setZoom: (zoom) => set({ zoom: Math.min(4, Math.max(0.06, zoom)), autoFitView: false }),
     nudgeView: (dx, dy) => set((s) => ({ panX: s.panX + dx, panY: s.panY + dy, autoFitView: false })),
     resetView: () => set({ zoom: 1, panX: 0, panY: 0, autoFitView: false }),
     requestFit: () => set((s) => ({ fitRequest: s.fitRequest + 1, autoFitView: true })),
+
+    // Choosing an instrument also picks up that instrument: reaching into the
+    // pencil case and then not drawing with it would be a strange thing to do.
+    setInstrument: (instrument) => set({ instrument, tool: instrument }),
+    setMarkTool: (markTool) => set({ markTool, tool: markTool }),
+
+    setSheetFullscreen: (sheetFullscreen) =>
+      set((s) => ({
+        sheetFullscreen,
+        // Coming back out, re-fit so the sheet lands where it was left.
+        fitRequest: s.fitRequest + 1,
+        autoFitView: true,
+      })),
+
+    togglePanel: (panel) =>
+      set((s) =>
+        panel === "rail"
+          ? { showRail: !s.showRail }
+          : panel === "inspector"
+            ? { showInspector: !s.showInspector }
+            : { showFilmstrip: !s.showFilmstrip },
+      ),
+
+    stepSelection: (delta) => {
+      const { doc, filter, selectedPhotoId } = get();
+      const photos = filteredPhotos(doc, filter);
+      if (photos.length === 0) return;
+      const at = photos.findIndex((p) => p.id === selectedPhotoId);
+      // With nothing selected, step in from whichever end you came from.
+      const next = at === -1 ? (delta > 0 ? 0 : photos.length - 1) : at + delta;
+      const clamped = Math.min(photos.length - 1, Math.max(0, next));
+      set({ selectedPhotoId: photos[clamped].id, selectedAnnotationId: null });
+    },
+
     toggleGrain: () => set((s) => ({ showGrain: !s.showGrain })),
 
     async save() {

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AnnotationView } from "@/components/annotations/AnnotationView";
-import { Lightbox } from "@/components/editor/Lightbox";
 import { SheetSvg } from "@/components/sheet/SheetSvg";
 import { Button, cx, inputClass } from "@/components/ui/primitives";
 import { downloadBlob, rasterizeSvg, scaleForDpi, slugify } from "@/lib/export/render";
@@ -27,7 +26,6 @@ interface Props {
  */
 export function SheetViewer({ doc, mode, allowComments = false, allowDownload = true }: Props) {
   const urls = useEditor((s) => s.urls);
-  const lightboxPhotoId = useEditor((s) => s.lightboxPhotoId);
   const [svgEl, setSvgEl] = useState<SVGSVGElement | null>(null);
   const [exporting, setExporting] = useState(false);
   const [comments, setComments] = useState<Comment[]>(doc.comments);
@@ -116,9 +114,6 @@ export function SheetViewer({ doc, mode, allowComments = false, allowDownload = 
             onFramePointerDown={(frame) => {
               if (frame.photoId) useEditor.getState().selectPhoto(frame.photoId);
             }}
-            onFrameDoubleClick={(frame) => {
-              if (frame.photoId) useEditor.getState().openLightbox(frame.photoId);
-            }}
           >
             <g>
               {[...doc.annotations]
@@ -170,7 +165,6 @@ export function SheetViewer({ doc, mode, allowComments = false, allowDownload = 
         </section>
       </main>
 
-      {lightboxPhotoId ? <Lightbox /> : null}
     </div>
   );
 }

@@ -72,15 +72,13 @@ export async function ensureDemoDocument(force = false): Promise<SheetDocument> 
         frameNumber: i + 1,
         title: titles[i] ?? "",
         status:
-          [2, 11, 26].includes(i)
-            ? "favorite"
+          [2, 11, 26, 8, 30].includes(i)
+            ? "pick"
             : [5, 19].includes(i)
-              ? "rejected"
-              : [8, 30].includes(i)
-                ? "selected"
-                : i === 22
-                  ? "maybe"
-                  : "unreviewed",
+              ? "reject"
+              : i === 22
+                ? "maybe"
+                : "unflagged",
         exifData: {
           make: "Nikon",
           model: "FM2",

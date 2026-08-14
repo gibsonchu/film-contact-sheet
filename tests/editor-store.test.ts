@@ -59,20 +59,20 @@ describe("editor store", () => {
   it("records titles and statuses on the document", () => {
     const store = useEditor.getState();
     store.updatePhoto("p0", { title: "Slipway" });
-    store.setStatus("p2", "favorite");
+    store.setStatus("p2", "pick");
     const doc = useEditor.getState().doc!;
     expect(doc.photos[0].title).toBe("Slipway");
-    expect(doc.photos[2].status).toBe("favorite");
+    expect(doc.photos[2].status).toBe("pick");
   });
 
   it("cycles review status through every state and back", () => {
     const store = useEditor.getState();
     const seen: string[] = [];
-    for (let i = 0; i < 5; i += 1) {
+    for (let i = 0; i < 4; i += 1) {
       store.cycleStatus("p1");
       seen.push(useEditor.getState().doc!.photos[1].status);
     }
-    expect(seen).toEqual(["favorite", "selected", "maybe", "rejected", "unreviewed"]);
+    expect(seen).toEqual(["pick", "maybe", "reject", "unflagged"]);
   });
 
   it("renumbers frames after a drag reorder", () => {
@@ -142,7 +142,7 @@ describe("editor store", () => {
   });
 
   it("keeps every photo and annotation when the template changes", () => {
-    useEditor.getState().updatePhoto("p0", { title: "Keeper", status: "favorite" });
+    useEditor.getState().updatePhoto("p0", { title: "Keeper", status: "pick" });
     useEditor.getState().addAnnotation({
       photoId: "p0",
       anchor: { x: 0.5, y: 0.5, scale: 1 },
@@ -162,17 +162,17 @@ describe("editor store", () => {
     expect(doc.sheet.templateId).toBe("archival-sheet");
     expect(doc.photos).toHaveLength(6);
     expect(doc.photos[0].title).toBe("Keeper");
-    expect(doc.photos[0].status).toBe("favorite");
+    expect(doc.photos[0].status).toBe("pick");
     expect(doc.annotations).toHaveLength(1);
   });
 
   it("refuses to mutate a read-only (shared) document", async () => {
     await useEditor.getState().adoptDocument(seedDocument(), { readOnly: true });
     useEditor.getState().updatePhoto("p0", { title: "hacked" });
-    useEditor.getState().setStatus("p0", "rejected");
+    useEditor.getState().setStatus("p0", "reject");
     const doc = useEditor.getState().doc!;
     expect(doc.photos[0].title).toBe("");
-    expect(doc.photos[0].status).toBe("unreviewed");
+    expect(doc.photos[0].status).toBe("unflagged");
   });
 
   it("hides a frame without deleting it, and restores it", () => {

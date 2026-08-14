@@ -10,20 +10,18 @@ import { useEditor } from "@/lib/store/editor";
 import { MAX_PHOTOS_PER_SHEET, type Photo, type ReviewStatus } from "@/lib/types";
 
 const STATUS_GLYPH: Record<ReviewStatus, string> = {
-  unreviewed: "",
-  favorite: "★",
-  selected: "✓",
+  unflagged: "",
+  pick: "◯",
   maybe: "?",
-  rejected: "✕",
+  reject: "✕",
 };
 
 const FILTERS: { value: ReviewStatus | "all"; label: string }[] = [
   { value: "all", label: "All" },
-  { value: "favorite", label: "Favourites" },
-  { value: "selected", label: "Selected" },
+  { value: "pick", label: "Picks" },
   { value: "maybe", label: "Maybe" },
-  { value: "rejected", label: "Rejected" },
-  { value: "unreviewed", label: "Unreviewed" },
+  { value: "reject", label: "Rejects" },
+  { value: "unflagged", label: "Unflagged" },
 ];
 
 /**
@@ -155,40 +153,22 @@ export function FilmstripBar() {
   const filter = useEditor((s) => s.filter);
   const setFilter = useEditor((s) => s.setFilter);
   const selectPhoto = useEditor((s) => s.selectPhoto);
-  const openLightbox = useEditor((s) => s.openLightbox);
-  const stepSelection = useEditor((s) => s.stepSelection);
   const stripRef = useRef<HTMLDivElement>(null);
 
   /* Keep the selected frame in view however it was selected — from the strip,
-     from the sheet, or from the keyboard. */
+     from the sheet, or from the keyboard. The arrow keys themselves belong to
+     the editor's global handler, so that they work wherever you are looking;
+     handling them here as well would step the selection twice. */
   useEffect(() => {
     if (!selected) return;
-    stripRef.current
-      ?.querySelector(`[data-strip-photo="${selected}"]`)
-      ?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    const strip = stripRef.current;
+    const el = strip?.querySelector<HTMLElement>(`[data-strip-photo="${selected}"]`);
+    if (!el) return;
+    el.scrollIntoView({ block: "nearest", inline: "nearest" });
+    // Carry focus along with the roving tabstop, but only if it was in the
+    // strip to begin with — otherwise arrowing would steal it from the sheet.
+    if (strip?.contains(document.activeElement)) el.focus();
   }, [selected]);
-
-  function onKeyDown(e: React.KeyboardEvent) {
-    const keys: Record<string, number> = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: 1, ArrowUp: -1 };
-    const delta = keys[e.key];
-    if (delta !== undefined) {
-      e.preventDefault();
-      stepSelection(delta);
-      // Follow the selection so the arrows keep working from the new frame.
-      requestAnimationFrame(() => {
-        const id = useEditor.getState().selectedPhotoId;
-        stripRef.current?.querySelector<HTMLElement>(`[data-strip-photo="${id}"]`)?.focus();
-      });
-      return;
-    }
-    if (e.key === "Enter" || e.key === " ") {
-      const id = useEditor.getState().selectedPhotoId;
-      if (id) {
-        e.preventDefault();
-        openLightbox(id);
-      }
-    }
-  }
 
   if (!doc) return null;
   const counts = doc.photos.reduce<Record<string, number>>((acc, p) => {
@@ -226,7 +206,6 @@ export function FilmstripBar() {
         role="listbox"
         aria-label="Frames"
         aria-activedescendant={selected ? `strip-${selected}` : undefined}
-        onKeyDown={onKeyDown}
       >
         <AddPhotos count={doc.photos.length} />
         {doc.photos.map((photo) => {
@@ -243,7 +222,6 @@ export function FilmstripBar() {
               // Roving tabstop: one stop for the whole strip, then arrow keys.
               tabIndex={isSelected || (!selected && photo.position === 0) ? 0 : -1}
               onClick={() => selectPhoto(photo.id)}
-              onDoubleClick={() => openLightbox(photo.id)}
               title={`${photo.frameNumber || "—"} ${photo.title || photo.originalFilename}`}
               className={cx(
                 "relative h-12 w-[68px] shrink-0 overflow-hidden border bg-black transition-colors",
@@ -259,7 +237,7 @@ export function FilmstripBar() {
               <span className="absolute bottom-0 left-0 bg-black/75 px-1 text-[9px] text-bone">
                 {photo.frameNumber || "–"}
               </span>
-              {photo.status !== "unreviewed" ? (
+              {photo.status !== "unflagged" ? (
                 <span
                   className="absolute right-0.5 top-0 text-[13px] leading-none text-darkroom"
                   aria-hidden="true"

@@ -1,6 +1,7 @@
 "use client";
 
 import { clear, createStore, del, get, keys, set } from "idb-keyval";
+import { migrateDocument } from "../document";
 import type { ProjectSummary, SheetDocument } from "../types";
 import type { StorageAdapter } from "./adapter";
 
@@ -31,7 +32,8 @@ class LocalAdapter implements StorageAdapter {
   }
 
   async loadDocument(id: string): Promise<SheetDocument | null> {
-    return (await get<SheetDocument>(id, docStore)) ?? null;
+    const doc = (await get<SheetDocument>(id, docStore)) ?? null;
+    return doc ? migrateDocument(doc) : null;
   }
 
   async saveDocument(doc: SheetDocument): Promise<void> {

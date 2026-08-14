@@ -32,7 +32,8 @@ test.describe("contact sheet editor", () => {
     await openDemo(page);
     const before = await page.locator("[data-annotation-id]").count();
 
-    await page.getByRole("button", { name: /^Pen/ }).click();
+    await page.getByRole("button", { name: /^Draw —/ }).click();
+    await page.getByRole("menu", { name: "Draw with" }).getByRole("menuitem", { name: "Pen" }).click();
     const start = await centreOf(page, '[data-frame-index="30"]');
     await dragBetween(page, start, { x: start.x + 120, y: start.y + 30 });
 
@@ -49,7 +50,8 @@ test.describe("contact sheet editor", () => {
     await openDemo(page);
     const before = await page.locator("[data-annotation-id]").count();
 
-    await page.getByRole("button", { name: /^Pen/ }).click();
+    await page.getByRole("button", { name: /^Draw —/ }).click();
+    await page.getByRole("menu", { name: "Draw with" }).getByRole("menuitem", { name: "Pen" }).click();
     const start = await centreOf(page, '[data-frame-index="20"]');
     await dragBetween(page, start, { x: start.x + 160, y: start.y });
     await expect(page.locator("[data-annotation-id]")).toHaveCount(before + 1);
@@ -124,13 +126,11 @@ test.describe("contact sheet editor", () => {
     await frame(page, 5).click();
     await page.getByLabel("Title", { exact: true }).fill("Blue hull, reprint");
     await page.keyboard.press("Tab");
-    // Re-focus the sheet without tripping double-click (which would enlarge it).
-    await page.waitForTimeout(500);
     await frame(page, 5).click();
-    await page.keyboard.press("1");
+    await page.keyboard.press("p");
 
     const statusGroup = page.getByRole("group", { name: "Review status" });
-    await expect(statusGroup.getByRole("button", { name: "Fav" })).toHaveAttribute(
+    await expect(statusGroup.getByRole("button", { name: "Pick", exact: true })).toHaveAttribute(
       "aria-pressed",
       "true",
     );
@@ -141,7 +141,9 @@ test.describe("contact sheet editor", () => {
     await page.waitForFunction(() => document.querySelectorAll("[data-frame-index]").length >= 36);
     await frame(page, 5).click();
     await expect(
-      page.getByRole("group", { name: "Review status" }).getByRole("button", { name: "Fav" }),
+      page
+        .getByRole("group", { name: "Review status" })
+        .getByRole("button", { name: "Pick", exact: true }),
     ).toHaveAttribute("aria-pressed", "true");
     await expect(page.getByLabel("Title", { exact: true })).toHaveValue("Blue hull, reprint");
   });
@@ -252,18 +254,56 @@ test.describe("contact sheet editor", () => {
     expect(after.sheet.y + after.sheet.height).toBeGreaterThan(after.stage.y);
   });
 
-  test("enlarged viewer navigates with the keyboard and closes with escape", async ({ page }) => {
+  test("clicking a photograph only selects its frame", async ({ page }) => {
     await openDemo(page);
+    await frame(page, 2).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(page.getByLabel("Title", { exact: true })).toBeVisible();
+
+    // Double-clicking centres the frame rather than enlarging it.
     await frame(page, 2).dblclick();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(page.locator("[data-frame-index]")).toHaveCount(36);
+  });
 
-    const dialog = page.getByRole("dialog");
-    await expect(dialog).toBeVisible();
-    await expect(dialog.getByText("3 / 36")).toBeVisible();
+  test("F puts the whole contact sheet on the light table", async ({ page }) => {
+    await openDemo(page);
+    const rail = page.getByRole("button", { name: "Select (V)" });
+    const inspector = page.getByRole("complementary", { name: "Inspector" });
+    const strip = page.getByRole("listbox", { name: "Frames" });
 
+    await page.locator("[data-frame-index]").first().click();
+    await page.keyboard.press("f");
+
+    // Everything but the sheet gets out of the way.
+    await expect(rail).toBeHidden();
+    await expect(inspector).toBeHidden();
+    await expect(strip).toBeHidden();
+    await expect(page.locator("[data-frame-index]")).toHaveCount(36);
+
+    // Reviewing carries on in fullscreen.
     await page.keyboard.press("ArrowRight");
-    await expect(dialog.getByText("4 / 36")).toBeVisible();
+    await page.keyboard.press("p");
 
     await page.keyboard.press("Escape");
-    await expect(page.getByRole("dialog")).toBeHidden();
+    await expect(rail).toBeVisible();
+    await expect(inspector).toBeVisible();
+    await expect(strip).toBeVisible();
+  });
+
+  test("the toolbar keeps its instruments behind the tool they belong to", async ({ page }) => {
+    await openDemo(page);
+
+    // Eight things in the rail, not thirty.
+    await expect(page.getByRole("button", { name: "Draw — Marker (B)" })).toBeVisible();
+    await page.getByRole("button", { name: "Draw — Marker (B)" }).click();
+
+    const menu = page.getByRole("menu", { name: "Draw with" });
+    await expect(menu).toBeVisible();
+    await menu.getByRole("menuitem", { name: "Pastel" }).click();
+
+    // The rail now shows the instrument in hand.
+    await expect(page.getByRole("button", { name: "Draw — Pastel (B)" })).toBeVisible();
+    await expect(page.getByRole("menu")).toHaveCount(0);
   });
 });

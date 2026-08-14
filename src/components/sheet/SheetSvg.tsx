@@ -2,10 +2,10 @@
 
 import { memo, useMemo, type CSSProperties, type ReactNode, type Ref } from "react";
 import type { FrameBox, SheetLayout } from "@/lib/layout";
-import { cropMarks, frameTilt, handCheck, handEllipse, handQuestion, handX } from "@/lib/hand";
+import { cropMarks, frameTilt, handCheck, handEllipse, handQuestion, handStar, handX } from "@/lib/hand";
 import { getGrainTexture } from "@/lib/grain";
 import { SHEET_FONT } from "@/lib/fonts";
-import type { Photo, SheetDocument } from "@/lib/types";
+import type { PickMark, Photo, SheetDocument } from "@/lib/types";
 
 export interface SheetRenderOptions {
   includeAnnotations: boolean;
@@ -90,9 +90,15 @@ function SheetSvgImpl({
           <feDropShadow dx="0" dy="1.5" stdDeviation="2.5" floodOpacity="0.35" />
         </filter>
         {grainUrl ? (
-          <pattern id="fcs-grain" width="140" height="140" patternUnits="userSpaceOnUse">
-            <image href={grainUrl} width="140" height="140" />
-          </pattern>
+          <>
+            <pattern id="fcs-grain" width="140" height="140" patternUnits="userSpaceOnUse">
+              <image href={grainUrl} width="140" height="140" />
+            </pattern>
+            {/* Reused at a smaller pitch to give pastel its chalky body. */}
+            <pattern id="fcs-chalk" width="46" height="46" patternUnits="userSpaceOnUse">
+              <image href={grainUrl} width="46" height="46" />
+            </pattern>
+          </>
         ) : null}
       </defs>
 
@@ -118,6 +124,7 @@ function SheetSvgImpl({
             showTitles={showTitles}
             showFilenames={showFilenames}
             showStatus={opts.includeStatusMarks}
+            pickMark={doc.sheet.pickMark ?? "circle"}
             selected={Boolean(photo && photo.id === selectedPhotoId)}
             dimmed={Boolean(photo && dimmedPhotoIds?.has(photo.id))}
             dragging={Boolean(photo && photo.id === draggingPhotoId)}
@@ -532,6 +539,7 @@ interface FrameCellProps {
   showTitles: boolean;
   showFilenames: boolean;
   showStatus: boolean;
+  pickMark: PickMark;
   selected: boolean;
   dimmed: boolean;
   dragging: boolean;
@@ -549,6 +557,7 @@ function FrameCell({
   showTitles,
   showFilenames,
   showStatus,
+  pickMark,
   selected,
   dimmed,
   dragging,
@@ -686,7 +695,9 @@ function FrameCell({
         </text>
       ) : null}
 
-      {showStatus && photo ? <StatusMark frame={frame} photo={photo} accent={palette.accent} /> : null}
+      {showStatus && photo ? (
+        <StatusMark frame={frame} photo={photo} accent={palette.accent} pickMark={pickMark} />
+      ) : null}
 
       {selected ? (
         <rect
@@ -742,7 +753,22 @@ function NumberChip({ frame, label }: { frame: FrameBox; label: string }) {
 
 /* ---------------------------------------------------------- status mark */
 
-function StatusMark({ frame, photo, accent }: { frame: FrameBox; photo: Photo; accent: string }) {
+/**
+ * The review mark drawn on a frame. These are structured metadata rendered as
+ * marks, not freehand drawing: they follow the photograph when frames are
+ * reordered, and they are set and cleared with P / M / X / U.
+ */
+function StatusMark({
+  frame,
+  photo,
+  accent,
+  pickMark,
+}: {
+  frame: FrameBox;
+  photo: Photo;
+  accent: string;
+  pickMark: PickMark;
+}) {
   const seed = `${photo.id}:${photo.status}`;
   const stroke = Math.max(2.4, frame.width * 0.016);
   const common = {
@@ -754,41 +780,36 @@ function StatusMark({ frame, photo, accent }: { frame: FrameBox; photo: Photo; a
     opacity: 0.92,
     pointerEvents: "none" as const,
   };
+  const cx = frame.x + frame.width / 2;
+  const cy = frame.y + frame.height / 2;
 
-  if (photo.status === "favorite") {
+  if (photo.status === "pick") {
+    if (pickMark === "check") {
+      const size = Math.min(frame.width, frame.height) * 0.34;
+      return <path {...common} strokeWidth={stroke * 1.15} d={handCheck(cx - size * 0.5, cy - size * 0.3, size, seed)} />;
+    }
+    if (pickMark === "dot") {
+      return <circle cx={cx} cy={cy} r={Math.min(frame.width, frame.height) * 0.11} fill={accent} opacity={0.9} />;
+    }
+    if (pickMark === "star") {
+      return <path {...common} d={handStar(cx, cy, Math.min(frame.width, frame.height) * 0.3, seed)} />;
+    }
+    // The contact-sheet convention, and the default.
     return (
       <path
         {...common}
-        d={handEllipse(
-          frame.x + frame.width / 2,
-          frame.y + frame.height / 2,
-          frame.width * 0.47,
-          frame.height * 0.47,
-          seed,
-          { laps: 1.4, wobble: 0.05 },
-        )}
+        d={handEllipse(cx, cy, frame.width * 0.47, frame.height * 0.47, seed, { laps: 1.4, wobble: 0.05 })}
       />
     );
   }
 
-  if (photo.status === "rejected") {
+  if (photo.status === "reject") {
     const [a, b] = handX(frame.x, frame.y, frame.width, frame.height, seed);
     return (
       <g>
         <path {...common} d={a} />
         <path {...common} d={b} />
       </g>
-    );
-  }
-
-  if (photo.status === "selected") {
-    const size = Math.min(frame.width, frame.height) * 0.3;
-    return (
-      <path
-        {...common}
-        strokeWidth={stroke * 1.15}
-        d={handCheck(frame.x + frame.width - size * 1.5, frame.y + frame.height - size * 1.25, size, seed)}
-      />
     );
   }
 

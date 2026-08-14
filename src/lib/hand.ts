@@ -229,6 +229,18 @@ export function handQuestion(x: number, y: number, size: number, seed: string): 
   return [hook, dot];
 }
 
+/** A five-pointed star, drawn in one wobbling pass. */
+export function handStar(cx: number, cy: number, r: number, seed: string): string {
+  const rand = rng(seed);
+  const pts: P[] = [];
+  for (let i = 0; i < 11; i += 1) {
+    const angle = (Math.PI * 2 * i) / 10 - Math.PI / 2;
+    const radius = (i % 2 === 0 ? r : r * 0.42) * (1 + (rand() - 0.5) * 0.1);
+    pts.push([cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius]);
+  }
+  return pathFrom(pts, true);
+}
+
 /** Deterministic tilt (in degrees) for a frame, for imperfect alignment. */
 export function frameTilt(seed: string, amount = 0.35): number {
   return (rng(seed)() - 0.5) * 2 * amount;

@@ -103,7 +103,7 @@ describe("template switching", () => {
   it("preserves photos, statuses, notes and annotations", () => {
     const doc = createDocument({ title: "Roll" });
     doc.photos = makePhotos(6).map((p, i) =>
-      i === 0 ? { ...p, title: "Slipway", status: "favorite", privateNote: "grainy" } : p,
+      i === 0 ? { ...p, title: "Slipway", status: "pick", privateNote: "grainy" } : p,
     );
     doc.annotations = [annotation("a1", "p0")];
 
@@ -112,7 +112,7 @@ describe("template switching", () => {
     expect(next.sheet.templateId).toBe("darkroom-proof");
     expect(next.photos).toHaveLength(6);
     expect(next.photos[0].title).toBe("Slipway");
-    expect(next.photos[0].status).toBe("favorite");
+    expect(next.photos[0].status).toBe("pick");
     expect(next.photos[0].privateNote).toBe("grainy");
     expect(next.annotations).toHaveLength(1);
   });

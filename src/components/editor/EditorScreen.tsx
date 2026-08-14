@@ -6,7 +6,6 @@ import { CanvasStage } from "./CanvasStage";
 import { ExportDialog } from "./ExportDialog";
 import { FilmstripBar } from "./FilmstripBar";
 import { Inspector } from "./Inspector";
-import { Lightbox } from "./Lightbox";
 import { ShareDialog } from "./ShareDialog";
 import { ToolRail } from "./ToolRail";
 import { TopBar } from "./TopBar";
@@ -16,39 +15,44 @@ import { computeLayout } from "@/lib/layout";
 import { useEditor, type ToolId } from "@/lib/store/editor";
 import type { ReviewStatus } from "@/lib/types";
 
-/**
- * Review shortcuts. Favourite sits on 1 rather than F, which is fullscreen;
- * the numbers run in the order the statuses appear in the filter bar.
- */
+/** Review shortcuts — the four judgements, on the letters that name them. */
 export const STATUS_KEYS: Record<string, ReviewStatus> = {
-  "1": "favorite",
-  "2": "selected",
-  "3": "maybe",
-  "4": "rejected",
-  s: "selected",
+  p: "pick",
   m: "maybe",
-  x: "rejected",
-  u: "unreviewed",
+  x: "reject",
+  u: "unflagged",
 };
 
-async function toggleFullscreen() {
+/**
+ * The browser's own fullscreen is a nicety on top of our sheet-fullscreen mode:
+ * if it is refused, the panels still fold away and the sheet still fills the
+ * window, so there is nothing worth reporting when it fails.
+ */
+async function enterBrowserFullscreen() {
   try {
-    if (document.fullscreenElement) await document.exitFullscreen();
-    else await document.documentElement.requestFullscreen();
+    if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
   } catch {
-    /* the browser may refuse; nothing useful to say about it */
+    /* refused — our own fullscreen mode carries on regardless */
   }
 }
 
+async function exitBrowserFullscreen() {
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+  } catch {
+    /* nothing useful to say about it */
+  }
+}
+
+/**
+ * Tool shortcuts. B and the Marks key reach for whichever instrument is
+ * currently loaded in that family rather than a fixed tool, which is why they
+ * are resolved from the store instead of listed here.
+ */
 const SHORTCUT_TOOLS: Record<string, ToolId> = {
   v: "select",
   h: "pan",
-  p: "pen",
   e: "eraser",
-  o: "ellipse",
-  a: "arrow",
-  r: "rect",
-  c: "crop",
   t: "text",
 };
 
@@ -57,7 +61,7 @@ export function EditorScreen({ sheetId }: { sheetId: string }) {
   const loading = useEditor((s) => s.loading);
   const loadError = useEditor((s) => s.loadError);
   const dirty = useEditor((s) => s.dirty);
-  const lightboxPhotoId = useEditor((s) => s.lightboxPhotoId);
+  const sheetFullscreen = useEditor((s) => s.sheetFullscreen);
   const showRail = useEditor((s) => s.showRail);
   const showInspector = useEditor((s) => s.showInspector);
   const showFilmstrip = useEditor((s) => s.showFilmstrip);
@@ -83,22 +87,31 @@ export function EditorScreen({ sheetId }: { sheetId: string }) {
     const onKey = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement | null;
       if (el && ["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName)) return;
+      if (el?.isContentEditable) return;
       const state = useEditor.getState();
-      if (state.lightboxPhotoId) return;
-
       const meta = e.metaKey || e.ctrlKey;
-      if (meta && e.key.toLowerCase() === "z") {
+      const key = e.key.toLowerCase();
+
+      if (meta && key === "z") {
         e.preventDefault();
         if (e.shiftKey) state.redo();
         else state.undo();
         return;
       }
-      if (meta && e.key.toLowerCase() === "s") {
+      if (meta && key === "s") {
         e.preventDefault();
         void state.save();
         return;
       }
+      if (meta) return;
+
       if (e.key === "Escape") {
+        // Escape backs out of fullscreen first, then out of the selection.
+        if (state.sheetFullscreen) {
+          state.setSheetFullscreen(false);
+          if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
+          return;
+        }
         state.selectAnnotation(null);
         state.selectPhoto(null);
         return;
@@ -108,32 +121,78 @@ export function EditorScreen({ sheetId }: { sheetId: string }) {
         state.deleteAnnotation(state.selectedAnnotationId);
         return;
       }
-      if (e.key === "Enter" && state.selectedPhotoId) {
+
+      // Fullscreen shows the whole contact sheet, never one photograph.
+      if (key === "f") {
         e.preventDefault();
-        state.openLightbox(state.selectedPhotoId);
+        const next = !state.sheetFullscreen;
+        state.setSheetFullscreen(next);
+        void (next ? enterBrowserFullscreen() : exitBrowserFullscreen());
         return;
       }
-      if (e.key.toLowerCase() === "f" && !meta) {
+
+      // Zoom applies to the sheet as a whole.
+      if (e.key === "+" || e.key === "=") {
         e.preventDefault();
-        void toggleFullscreen();
+        state.setZoom(state.zoom * 1.2);
         return;
       }
+      if (e.key === "-" || e.key === "_") {
+        e.preventDefault();
+        state.setZoom(state.zoom / 1.2);
+        return;
+      }
+      if (e.key === "0") {
+        e.preventDefault();
+        state.requestFit();
+        return;
+      }
+
+      // Arrow keys walk the frames of the sheet, wherever the focus happens to be.
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        state.stepSelection(1);
+        return;
+      }
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        state.stepSelection(-1);
+        return;
+      }
+
       if (state.selectedPhotoId) {
-        const status = STATUS_KEYS[e.key.toLowerCase()];
-        if (status && !meta) {
+        const status = STATUS_KEYS[key];
+        if (status) {
           e.preventDefault();
           state.setStatus(state.selectedPhotoId, status);
           return;
         }
       }
-      const tool = SHORTCUT_TOOLS[e.key.toLowerCase()];
-      if (tool && !meta) {
+
+      if (key === "b") {
+        e.preventDefault();
+        state.setTool(state.instrument);
+        return;
+      }
+      const tool = SHORTCUT_TOOLS[key];
+      if (tool) {
         e.preventDefault();
         state.setTool(tool);
       }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
+  }, []);
+
+  /* Leaving browser fullscreen by any other route should leave our own too. */
+  useEffect(() => {
+    const onChange = () => {
+      if (!document.fullscreenElement && useEditor.getState().sheetFullscreen) {
+        useEditor.getState().setSheetFullscreen(false);
+      }
+    };
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
   }, []);
 
   const layout = useMemo(() => {
@@ -167,10 +226,12 @@ export function EditorScreen({ sheetId }: { sheetId: string }) {
 
   return (
     <div className="editor-shell flex h-dvh flex-col overflow-hidden bg-noir">
-      <TopBar onExport={() => setShowExport(true)} onShare={() => setShowShare(true)} />
+      {sheetFullscreen ? null : (
+        <TopBar onExport={() => setShowExport(true)} onShare={() => setShowShare(true)} />
+      )}
 
       <div className="flex min-h-0 flex-1">
-        {showRail ? (
+        {showRail && !sheetFullscreen ? (
           <div className="hidden sm:block">
             <ToolRail />
           </div>
@@ -180,19 +241,24 @@ export function EditorScreen({ sheetId }: { sheetId: string }) {
           <div className="relative flex min-h-0 flex-1 flex-col">
             <CanvasStage layout={layout} />
             <ViewControls />
-            <PanelToggle side="left" open={showRail} />
-            <PanelToggle side="right" open={showInspector} />
-            <PanelToggle side="bottom" open={showFilmstrip} />
+            {sheetFullscreen ? (
+              <FullscreenHint />
+            ) : (
+              <>
+                <PanelToggle side="left" open={showRail} />
+                <PanelToggle side="right" open={showInspector} />
+                <PanelToggle side="bottom" open={showFilmstrip} />
+              </>
+            )}
           </div>
-          {showFilmstrip ? <FilmstripBar /> : null}
+          {showFilmstrip && !sheetFullscreen ? <FilmstripBar /> : null}
         </main>
 
-        {showInspector ? <Inspector /> : null}
+        {showInspector && !sheetFullscreen ? <Inspector /> : null}
       </div>
 
-      <MobileToolbar />
+      {sheetFullscreen ? null : <MobileToolbar />}
 
-      {lightboxPhotoId ? <Lightbox /> : null}
       <ExportDialog open={showExport} onClose={() => setShowExport(false)} />
       <ShareDialog open={showShare} onClose={() => setShowShare(false)} />
 
@@ -200,6 +266,15 @@ export function EditorScreen({ sheetId }: { sheetId: string }) {
         {dirty ? "Unsaved changes" : "All changes saved"}
       </span>
     </div>
+  );
+}
+
+/** A quiet reminder of the way out, since the chrome is gone. */
+function FullscreenHint() {
+  return (
+    <p className="pointer-events-none absolute left-1/2 top-2 z-10 -translate-x-1/2 text-[10px] uppercase tracking-[0.18em] text-smoke/70">
+      F or Esc to exit · ←/→ to review
+    </p>
   );
 }
 
@@ -281,12 +356,12 @@ function MobileToolbar() {
   const tools: { id: ToolId; label: string }[] = [
     { id: "select", label: "Select" },
     { id: "pan", label: "Pan" },
-    { id: "pen", label: "Pen" },
-    { id: "eraser", label: "Erase" },
+    { id: "marker", label: "Draw" },
     { id: "ellipse", label: "Circle" },
     { id: "x", label: "X" },
     { id: "text", label: "Text" },
     { id: "tape", label: "Tape" },
+    { id: "eraser", label: "Erase" },
   ];
 
   return (

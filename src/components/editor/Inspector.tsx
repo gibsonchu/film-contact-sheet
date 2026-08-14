@@ -3,17 +3,17 @@
 import { useState } from "react";
 import { IconEye, IconEyeOff, IconLayers, IconLock, IconRotate, IconTrash } from "@/components/icons";
 import { Button, Field, IconButton, Panel, Segmented, Select, Toggle, cx, inputClass } from "@/components/ui/primitives";
-import { INK_COLORS, STROKE_SIZES, TAPE_KINDS, sizeNames } from "@/lib/palette";
+import { DRAW_INSTRUMENTS, INK_COLORS, STROKE_SIZES, TAPE_KINDS, TEXT_FONTS, sizeNames } from "@/lib/palette";
 import { TEMPLATE_LIST } from "@/lib/templates";
 import { useEditor } from "@/lib/store/editor";
-import type { ReviewStatus, TemplateId } from "@/lib/types";
+import type { PickMark, ReviewStatus, TemplateId } from "@/lib/types";
 
-const STATUS_OPTIONS: { value: ReviewStatus; label: string }[] = [
-  { value: "unreviewed", label: "—" },
-  { value: "favorite", label: "Fav" },
-  { value: "selected", label: "Sel" },
-  { value: "maybe", label: "Maybe" },
-  { value: "rejected", label: "Rej" },
+/** The only four judgements a contact sheet asks for. */
+const STATUS_OPTIONS: { value: ReviewStatus; label: string; title: string }[] = [
+  { value: "pick", label: "Pick", title: "Pick (P)" },
+  { value: "maybe", label: "Maybe", title: "Maybe (M)" },
+  { value: "reject", label: "Reject", title: "Reject (X)" },
+  { value: "unflagged", label: "—", title: "Unflagged (U)" },
 ];
 
 export function Inspector() {
@@ -50,7 +50,6 @@ export function PhotoInspector() {
 
   const photo = doc?.photos.find((p) => p.id === selectedPhotoId);
   if (!photo) return null;
-  const crop = photo.cropData ?? { x: 0, y: 0, width: 1, height: 1 };
 
   return (
     <>
@@ -67,17 +66,18 @@ export function PhotoInspector() {
               />
             )}
           </Field>
-          <Field label="Caption">
-            {(id) => (
-              <input
-                id={id}
-                className={inputClass}
-                value={photo.caption}
-                onChange={(e) => updatePhoto(photo.id, { caption: e.target.value })}
-              />
-            )}
-          </Field>
-          <Field label="Public note" hint="Visible to anyone with the share link.">
+
+          <div>
+            <span className="label mb-1.5 block">Review</span>
+            <Segmented
+              label="Review status"
+              value={photo.status}
+              onChange={(v) => setStatus(photo.id, v)}
+              options={STATUS_OPTIONS}
+            />
+          </div>
+
+          <Field label="Note" hint="Shown with the sheet when you share it.">
             {(id) => (
               <textarea
                 id={id}
@@ -99,30 +99,8 @@ export function PhotoInspector() {
               />
             )}
           </Field>
-        </div>
-      </Panel>
 
-      <Panel title="Review">
-        <Segmented
-          label="Review status"
-          value={photo.status}
-          onChange={(v) => setStatus(photo.id, v)}
-          options={STATUS_OPTIONS}
-        />
-      </Panel>
-
-      <Panel title="Frame">
-        <div className="space-y-3">
-          <Segmented
-            label="Fit mode"
-            value={photo.fit}
-            onChange={(v) => updatePhoto(photo.id, { fit: v })}
-            options={[
-              { value: "fit", label: "Fit" },
-              { value: "fill", label: "Fill" },
-              { value: "original", label: "Orig" },
-            ]}
-          />
+          {/* Orientation and visibility only — nothing that develops the photograph. */}
           <div className="flex items-center gap-2">
             <IconButton label="Rotate left" onClick={() => rotatePhoto(photo.id, -90)}>
               <IconRotate className="h-4 w-4 -scale-x-100" />
@@ -140,49 +118,13 @@ export function PhotoInspector() {
               {photo.hidden ? <IconEyeOff className="h-4 w-4" /> : <IconEye className="h-4 w-4" />}
             </IconButton>
           </div>
-
-          <div className="space-y-2">
-            <span className="label">Crop</span>
-            {(
-              [
-                ["x", "Left"],
-                ["y", "Top"],
-                ["width", "Width"],
-                ["height", "Height"],
-              ] as const
-            ).map(([key, label]) => (
-              <label key={key} className="flex items-center gap-2 text-[11px] text-smoke">
-                <span className="w-10">{label}</span>
-                <input
-                  type="range"
-                  min={key === "width" || key === "height" ? 0.1 : 0}
-                  max={1}
-                  step={0.01}
-                  value={crop[key]}
-                  onChange={(e) =>
-                    updatePhoto(photo.id, {
-                      cropData: { ...crop, [key]: Number(e.target.value) },
-                    })
-                  }
-                  className="flex-1 accent-white"
-                />
-              </label>
-            ))}
-            {photo.cropData ? (
-              <button
-                type="button"
-                className="label hover:text-warm"
-                onClick={() => updatePhoto(photo.id, { cropData: null })}
-              >
-                Reset crop
-              </button>
-            ) : null}
-          </div>
         </div>
       </Panel>
 
-      <Panel title="Metadata">
-        <dl>
+      {/* Metadata is reference material, so it stays folded away until asked for. */}
+      <details className="border-t border-[var(--line)] pt-2">
+        <summary className="label cursor-pointer select-none hover:text-warm">Metadata</summary>
+        <dl className="mt-2">
           <Row label="File" value={photo.originalFilename || "—"} />
           <Row label="Pixels" value={`${photo.width}×${photo.height}`} />
           {photo.exifData?.model ? <Row label="Camera" value={photo.exifData.model} /> : null}
@@ -191,7 +133,7 @@ export function PhotoInspector() {
           {photo.exifData?.shutterSpeed ? <Row label="Shutter" value={photo.exifData.shutterSpeed} /> : null}
           {photo.exifData?.iso ? <Row label="ISO" value={photo.exifData.iso} /> : null}
         </dl>
-      </Panel>
+      </details>
 
       <div className="pb-4">
         {confirmDelete ? (
@@ -238,60 +180,82 @@ export function AnnotationInspector() {
 
   const a = doc?.annotations.find((x) => x.id === id);
   if (!a) return null;
+
   const isText = a.type === "text";
+  const isTape = a.type === "tape";
+  const isSticker = a.type === "sticker";
   const rotation = a.geometry.kind === "box" ? (a.geometry.rotation ?? 0) : 0;
+  const canRotate = a.geometry.kind === "box";
+  // Ink and weight mean nothing on a strip of tape; opacity only matters for
+  // the instruments that actually lay down translucent colour.
+  const hasInk = !isTape;
+  const hasWeight = !isTape && !isSticker;
+  const drawing = DRAW_INSTRUMENTS.find((i) => i.id === a.tool);
+  const hasOpacity = isText || isTape || isSticker || !drawing || drawing.opacityMatters;
+  const title = isText ? "Text" : isTape ? "Tape" : isSticker ? "Sticker" : `${a.tool} mark`;
 
   return (
     <>
-      <Panel title={`${a.tool} annotation`}>
+      <Panel title={title}>
         <div className="space-y-3">
-          <div>
-            <span className="label mb-1.5 block">Colour</span>
-            <div className="flex flex-wrap gap-2">
-              {INK_COLORS.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  aria-label={c.label}
-                  title={c.label}
-                  aria-pressed={a.color === c.hex}
-                  onClick={() => update(a.id, { color: c.hex })}
-                  className={cx(
-                    "h-4 w-4 border",
-                    a.color === c.hex ? "border-warm" : "border-transparent",
-                  )}
-                  style={{ background: c.hex }}
-                />
-              ))}
+          {hasInk ? (
+            <div>
+              <span className="label mb-1.5 block">Colour</span>
+              <div className="flex flex-wrap gap-2">
+                {INK_COLORS.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    aria-label={c.label}
+                    title={c.label}
+                    aria-pressed={a.color === c.hex}
+                    onClick={() => update(a.id, { color: c.hex })}
+                    className={cx(
+                      "h-4 w-4 border",
+                      a.color === c.hex ? "border-warm" : "border-transparent",
+                    )}
+                    style={{ background: c.hex }}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
+          ) : null}
 
-          <Segmented
-            label={isText ? "Text size" : "Stroke size"}
-            value={String(a.strokeWidth)}
-            onChange={(v) => update(a.id, { strokeWidth: Number(v) })}
-            options={STROKE_SIZES.map((s) => {
-              const names = sizeNames(s, isText);
-              return { value: String(s.value), label: names.short, title: names.full };
-            })}
-          />
+          {hasWeight ? (
+            <Segmented
+              label={isText ? "Text size" : "Stroke size"}
+              value={String(a.strokeWidth)}
+              onChange={(v) => update(a.id, { strokeWidth: Number(v) })}
+              options={STROKE_SIZES.map((sz) => {
+                const names = sizeNames(sz, isText);
+                return { value: String(sz.value), label: names.short, title: names.full };
+              })}
+            />
+          ) : null}
 
-          <Field label={`Opacity — ${Math.round(a.opacity * 100)}%`}>
-            {(fid) => (
-              <input
-                id={fid}
-                type="range"
-                min={0.1}
-                max={1}
-                step={0.05}
-                value={a.opacity}
-                onChange={(e) => update(a.id, { opacity: Number(e.target.value) })}
-                className="w-full accent-white"
+          {isText ? (
+            <>
+              <Field label="Text">
+                {(fid) => (
+                  <textarea
+                    id={fid}
+                    rows={2}
+                    className={inputClass}
+                    value={a.text ?? ""}
+                    onChange={(e) => update(a.id, { text: e.target.value })}
+                  />
+                )}
+              </Field>
+              <Segmented
+                label="Lettering"
+                value={a.font ?? "hand"}
+                onChange={(v) => update(a.id, { font: v })}
+                options={TEXT_FONTS.map((ft) => ({ value: ft.id, label: ft.label }))}
               />
-            )}
-          </Field>
+            </>
+          ) : null}
 
-          {a.type === "tape" || a.type === "sticker" || a.type === "text" ? (
+          {isTape || isSticker ? (
             <Field label="Label">
               {(fid) => (
                 <input
@@ -304,7 +268,7 @@ export function AnnotationInspector() {
             </Field>
           ) : null}
 
-          {a.type === "tape" ? (
+          {isTape ? (
             <div>
               <span className="label mb-1.5 block">Tape</span>
               <div className="flex flex-wrap gap-1.5">
@@ -324,7 +288,24 @@ export function AnnotationInspector() {
             </div>
           ) : null}
 
-          {a.geometry.kind === "box" ? (
+          {hasOpacity ? (
+            <Field label={`Opacity — ${Math.round(a.opacity * 100)}%`}>
+              {(fid) => (
+                <input
+                  id={fid}
+                  type="range"
+                  min={0.1}
+                  max={1}
+                  step={0.05}
+                  value={a.opacity}
+                  onChange={(e) => update(a.id, { opacity: Number(e.target.value) })}
+                  className="w-full accent-white"
+                />
+              )}
+            </Field>
+          ) : null}
+
+          {canRotate ? (
             <Field label={`Rotation — ${Math.round(rotation)}°`}>
               {(fid) => (
                 <input
@@ -417,6 +398,28 @@ export function SheetInspector() {
           <p className="label leading-snug">
             Switching keeps order, titles, statuses, notes, annotations and tape.
           </p>
+        </div>
+      </Panel>
+
+      <Panel title="Review">
+        <div className="space-y-2.5">
+          <Segmented
+            label="Picks are marked with"
+            value={sheet.pickMark ?? "circle"}
+            onChange={(v) => updateSheet({ pickMark: v as PickMark })}
+            options={[
+              { value: "circle", label: "◯", title: "Circle" },
+              { value: "check", label: "✓", title: "Check" },
+              { value: "star", label: "★", title: "Star" },
+              { value: "dot", label: "•", title: "Dot" },
+            ]}
+          />
+          <Toggle
+            label="Auto advance"
+            checked={sheet.autoAdvance ?? false}
+            onChange={(v) => updateSheet({ autoAdvance: v })}
+            hint="After flagging a frame, move to the next one."
+          />
         </div>
       </Panel>
 

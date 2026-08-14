@@ -51,9 +51,10 @@ export function CanvasStage({ layout }: { layout: SheetLayout }) {
   const pointers = useRef(new Map<number, { x: number; y: number }>());
   const pinchRef = useRef<{ dist: number; zoom: number } | null>(null);
   const fittedFor = useRef<string>("");
-  const lastTap = useRef<{ photoId: string; time: number } | null>(null);
   /** Cached viewport size so pan clamping never forces a layout read. */
   const viewport = useRef({ w: 0, h: 0 });
+  /** The tool to hand back when the space bar is released. */
+  const spaceHand = useRef<ToolId | null>(null);
 
   const [draft, setDraftState] = useState<Annotation | null>(null);
   /** Mirror of the in-progress stroke; the ref is authoritative so a pointerup
@@ -170,6 +171,81 @@ export function CanvasStage({ layout }: { layout: SheetLayout }) {
     observer.observe(el);
     return () => observer.disconnect();
   }, [layout.width, layout.height, fitToScreen, fitRequest]);
+
+  /**
+   * Bring a frame to the middle of the viewport. The sheet is drawn centred on
+   * the origin, so a frame's offset from the sheet's centre, scaled and
+   * negated, is the pan that puts it under the eye.
+   */
+  const centerOnFrame = useCallback(
+    (photoId: string) => {
+      const frame = layout.frames.find((fr) => fr.photoId === photoId);
+      if (!frame) return;
+      const z = useEditor.getState().zoom;
+      const dx = -(frame.x + frame.width / 2 - layout.width / 2) * z;
+      const dy = -(frame.y + frame.height / 2 - layout.height / 2) * z;
+      const clamped = clampPan(dx, dy, z);
+      useEditor.setState({ panX: clamped.x, panY: clamped.y, autoFitView: false });
+    },
+    [layout, clampPan],
+  );
+
+  /* Arrowing through the roll can walk the selection off-screen; when it does,
+     bring the sheet along so the frame under review is always visible. */
+  useEffect(() => {
+    if (!selectedPhotoId) return;
+    const el = containerRef.current;
+    const frame = layout.frames.find((fr) => fr.photoId === selectedPhotoId);
+    if (!el || !frame) return;
+    const z = useEditor.getState().zoom;
+    const cx = el.clientWidth / 2 + useEditor.getState().panX + (frame.x + frame.width / 2 - layout.width / 2) * z;
+    const cy = el.clientHeight / 2 + useEditor.getState().panY + (frame.y + frame.height / 2 - layout.height / 2) * z;
+    const margin = 24;
+    const outside =
+      cx < margin ||
+      cy < margin ||
+      cx > el.clientWidth - margin ||
+      cy > el.clientHeight - margin;
+    if (outside) centerOnFrame(selectedPhotoId);
+  }, [selectedPhotoId, layout, centerOnFrame]);
+
+  /* Holding space borrows the hand, as it does everywhere else that pans. */
+  useEffect(() => {
+    const isTyping = (el: EventTarget | null) => {
+      const node = el as HTMLElement | null;
+      return Boolean(
+        node && (["INPUT", "TEXTAREA", "SELECT"].includes(node.tagName) || node.isContentEditable),
+      );
+    };
+    const onDown = (e: KeyboardEvent) => {
+      if (e.code !== "Space" || e.repeat || isTyping(e.target)) return;
+      e.preventDefault();
+      const state = useEditor.getState();
+      if (state.tool === "pan") return;
+      spaceHand.current = state.tool;
+      state.setTool("pan");
+    };
+    const onUp = (e: KeyboardEvent) => {
+      if (e.code !== "Space" || !spaceHand.current) return;
+      useEditor.getState().setTool(spaceHand.current);
+      spaceHand.current = null;
+    };
+    // Losing focus mid-pan would otherwise strand us in the hand tool.
+    const onBlur = () => {
+      if (spaceHand.current) {
+        useEditor.getState().setTool(spaceHand.current);
+        spaceHand.current = null;
+      }
+    };
+    document.addEventListener("keydown", onDown);
+    document.addEventListener("keyup", onUp);
+    window.addEventListener("blur", onBlur);
+    return () => {
+      document.removeEventListener("keydown", onDown);
+      document.removeEventListener("keyup", onUp);
+      window.removeEventListener("blur", onBlur);
+    };
+  }, []);
 
   /* Catch-all: zooming out, pinching or a window resize can leave the sheet
      outside the bounds a drag would have respected, so pull it back. */
@@ -334,16 +410,8 @@ export function CanvasStage({ layout }: { layout: SheetLayout }) {
     if (frameEl) {
       const photoId = frameEl.getAttribute("data-photo-id") || "";
       if (photoId) {
-        // Double-click / double-tap opens the enlarged viewer. Detected here
-        // rather than via the dblclick event so touch devices get it too.
-        const last = lastTap.current;
-        const now = e.timeStamp;
-        if (last && last.photoId === photoId && now - last.time < 400) {
-          lastTap.current = null;
-          useEditor.getState().openLightbox(photoId);
-          return;
-        }
-        lastTap.current = { photoId, time: now };
+        // Clicking a photograph selects its frame within the sheet, and that is
+        // all it does — there is no enlarged single-photo view in a review tool.
         useEditor.getState().selectPhoto(photoId);
         if (!readOnly) {
           const fromIndex = doc.photos.findIndex((ph) => ph.id === photoId);
@@ -581,9 +649,14 @@ export function CanvasStage({ layout }: { layout: SheetLayout }) {
               return;
             }
 
+            // Otherwise centre the frame that was double-clicked, which is the
+            // review equivalent of pulling the sheet over to look closer.
             const frameEl = (e.target as Element).closest("[data-frame-index]");
             const photoId = frameEl?.getAttribute("data-photo-id");
-            if (photoId) state.openLightbox(photoId);
+            if (photoId) {
+              state.selectPhoto(photoId);
+              centerOnFrame(photoId);
+            }
           }}
           style={{ cursor: cursorFor(tool) }}
           className=""

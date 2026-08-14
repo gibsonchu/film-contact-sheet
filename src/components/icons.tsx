@@ -140,6 +140,40 @@ export const IconSticker = (p: P) => (
   </svg>
 );
 
+/** Chisel-tip marker: a broad wedge on a barrel. */
+export const IconMarker2 = (p: P) => (
+  <svg {...base} {...p}>
+    <path d="M6.4 15.6h7.2l-1.3-3.4H7.7Z" />
+    <path d="M8 12.2V6.4a2 2 0 0 1 4 0v5.8" />
+    <path d="M5.6 17.6h8.8" strokeWidth={1.8} />
+  </svg>
+);
+
+/** Pastel stick: a blunt, square crayon. */
+export const IconPastel = (p: P) => (
+  <svg {...base} {...p}>
+    <path d="M7 16.6h6V9.4H7Z" />
+    <path d="M7 9.4 8.6 3.6h2.8L13 9.4" />
+    <path d="M7.6 12.6h4.8M7.6 14.6h4.8" strokeWidth={1} opacity={0.6} />
+  </svg>
+);
+
+/** Sharpie: a fat barrel with a conical nib. */
+export const IconSharpie = (p: P) => (
+  <svg {...base} {...p}>
+    <path d="M8.4 16.8 10 13.4l1.6 3.4Z" fill="currentColor" />
+    <path d="M10 13.4 8 9.6h4l-2 3.8Z" />
+    <rect x="7.4" y="3.2" width="5.2" height="6.4" rx="0.6" />
+  </svg>
+);
+
+/** Fullscreen: four corners pushing outward. */
+export const IconFullscreen = (p: P) => (
+  <svg {...base} {...p}>
+    <path d="M3.2 7.4V3.2h4.2M12.6 3.2h4.2v4.2M16.8 12.6v4.2h-4.2M7.4 16.8H3.2v-4.2" />
+  </svg>
+);
+
 export const IconUndo = (p: P) => (
   <svg {...base} {...p}>
     <path d="M6.4 6.2H3.6V3.4" />

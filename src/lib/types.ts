@@ -12,15 +12,16 @@ export const SCHEMA_VERSION = 1;
 
 /* ------------------------------------------------------------------ photos */
 
-export type ReviewStatus = "unreviewed" | "favorite" | "selected" | "maybe" | "rejected";
+/**
+ * Review is deliberately four states, the vocabulary of a grease pencil on a
+ * proof sheet. Anything finer belongs in the notes field, not in metadata.
+ */
+export type ReviewStatus = "unflagged" | "pick" | "maybe" | "reject";
 
-export const REVIEW_STATUSES: ReviewStatus[] = [
-  "unreviewed",
-  "favorite",
-  "selected",
-  "maybe",
-  "rejected",
-];
+export const REVIEW_STATUSES: ReviewStatus[] = ["unflagged", "pick", "maybe", "reject"];
+
+/** How a Pick is drawn on the sheet. Circle is the contact-sheet convention. */
+export type PickMark = "circle" | "check" | "star" | "dot";
 
 export type FitMode = "fit" | "fill" | "original";
 
@@ -80,8 +81,12 @@ export interface Photo {
 
 export type AnnotationTool =
   | "pen"
-  | "grease"
   | "marker"
+  | "pastel"
+  | "sharpie"
+  // Retired instruments, kept so sheets drawn before the toolbar was
+  // reorganised still render exactly as they were saved.
+  | "grease"
   | "highlighter"
   | "pencil"
   | "text"
@@ -91,6 +96,7 @@ export type AnnotationTool =
   | "line"
   | "x"
   | "check"
+  | "question"
   | "crop"
   | "tape"
   | "sticker";
@@ -141,6 +147,8 @@ export interface Annotation {
   geometry: AnnotationGeometry;
   text: string | null;
   tapeKind?: TapeKind;
+  /** Text annotations only. */
+  font?: TextFont;
   zIndex: number;
   locked: boolean;
   createdAt: string;
@@ -148,6 +156,8 @@ export interface Annotation {
 }
 
 /* ---------------------------------------------------------------- comments */
+
+export type TextFont = "hand" | "mono" | "sans";
 
 export interface Comment {
   id: string;
@@ -222,6 +232,9 @@ export interface ContactSheet {
   commentsEnabled: boolean;
   downloadsEnabled: boolean;
   postcard: PostcardData;
+  /** How a Pick is drawn, and whether reviewing walks to the next frame. */
+  pickMark: PickMark;
+  autoAdvance: boolean;
   createdAt: string;
   updatedAt: string;
   archivedAt: string | null;
