@@ -27,8 +27,8 @@ test.describe("upload limits", () => {
     await page.getByRole("button", { name: /Build 2 sheets/ }).click();
     await page.waitForURL(/\/sheet\//, { timeout: 60_000 });
 
-    // New sheets start on Classic 35mm; the template is chosen in the editor.
-    await expect(templateButton(page)).toContainText("Classic 35mm");
+    // New sheets open on the default template; it is changed in the editor.
+    await expect(templateButton(page)).toContainText("Eliz Digital");
 
     await page.goto("/projects");
     await expect(page.getByText("Roll 1 of 2")).toBeVisible();

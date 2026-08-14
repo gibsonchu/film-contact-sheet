@@ -81,6 +81,42 @@ const FILM_DARK: TemplatePalette = {
 };
 
 export const TEMPLATES: Record<TemplateId, TemplateDef> = {
+  "eliz-digital": {
+    id: "eliz-digital",
+    name: "Eliz Digital",
+    blurb: "Scanning-lab index print — thumbnails butted edge to edge, a notes bar and an order slip.",
+    format: "Lab index",
+    chrome: "contact",
+    header: "order-slip",
+    frameAspect: 3 / 2,
+    frameWidth: 152,
+    palette: {
+      paper: "#ffffff",
+      base: "#ffffff",
+      frame: "#efefef",
+      ink: "#101010",
+      inkMuted: "#3c3c3c",
+      accent: "#c8102e",
+      rule: "#111111",
+    },
+    defaults: {
+      columns: 8,
+      // Butted edge to edge: the block of frames reads as one printed sheet.
+      frameGap: 0,
+      stripGap: 0,
+      margin: 64,
+      showSprockets: false,
+      showFrameNumbers: true,
+      showFilenames: false,
+      showTitles: false,
+      showMetadata: false,
+      showEdgeLabel: false,
+      grain: 0.08,
+      edgeLabel: "",
+    },
+    captionHeight: 0,
+    numberStyle: "chip",
+  },
   "classic-35mm": {
     id: "classic-35mm",
     name: "Classic 35mm",
@@ -243,42 +279,6 @@ export const TEMPLATES: Record<TemplateId, TemplateDef> = {
     },
     captionHeight: 20,
   },
-  "eliz-digital": {
-    id: "eliz-digital",
-    name: "Eliz Digital",
-    blurb: "Scanning-lab index print — thumbnails butted edge to edge, a notes bar and an order slip.",
-    format: "Lab index",
-    chrome: "contact",
-    header: "order-slip",
-    frameAspect: 3 / 2,
-    frameWidth: 152,
-    palette: {
-      paper: "#ffffff",
-      base: "#ffffff",
-      frame: "#efefef",
-      ink: "#101010",
-      inkMuted: "#3c3c3c",
-      accent: "#c8102e",
-      rule: "#111111",
-    },
-    defaults: {
-      columns: 8,
-      // Butted edge to edge: the block of frames reads as one printed sheet.
-      frameGap: 0,
-      stripGap: 0,
-      margin: 64,
-      showSprockets: false,
-      showFrameNumbers: true,
-      showFilenames: false,
-      showTitles: false,
-      showMetadata: false,
-      showEdgeLabel: false,
-      grain: 0.08,
-      edgeLabel: "",
-    },
-    captionHeight: 0,
-    numberStyle: "chip",
-  },
   postcard: {
     id: "postcard",
     name: "Postcard",
@@ -318,10 +318,13 @@ export const TEMPLATES: Record<TemplateId, TemplateDef> = {
   },
 };
 
+/** What a new sheet starts on, and the head of the template list. */
+export const DEFAULT_TEMPLATE_ID: TemplateId = "eliz-digital";
+
 export const TEMPLATE_LIST = Object.values(TEMPLATES);
 
 export function getTemplate(id: TemplateId): TemplateDef {
-  return TEMPLATES[id] ?? TEMPLATES["classic-35mm"];
+  return TEMPLATES[id] ?? TEMPLATES[DEFAULT_TEMPLATE_ID];
 }
 
 /** Template defaults merged with the sheet's overrides. */

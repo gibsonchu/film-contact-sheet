@@ -12,6 +12,7 @@ import {
   switchTemplate,
   toSharedDocument,
 } from "@/lib/document";
+import { DEFAULT_TEMPLATE_ID, TEMPLATE_LIST } from "@/lib/templates";
 import { MAX_PHOTOS_PER_SHEET, type Annotation, type Photo } from "@/lib/types";
 
 function makePhotos(n: number): Photo[] {
@@ -60,6 +61,21 @@ describe("frame numbering", () => {
     const photos = makePhotos(3);
     expect(movePhoto(photos, 5, 0)).toBe(photos);
     expect(swapPhotos(photos, 0, 9)).toBe(photos);
+  });
+});
+
+describe("defaults", () => {
+  it("starts a new sheet on the default template", () => {
+    expect(createDocument().sheet.templateId).toBe(DEFAULT_TEMPLATE_ID);
+    expect(DEFAULT_TEMPLATE_ID).toBe("eliz-digital");
+  });
+
+  it("lists the default template first", () => {
+    expect(TEMPLATE_LIST[0].id).toBe(DEFAULT_TEMPLATE_ID);
+  });
+
+  it("still honours an explicitly chosen template", () => {
+    expect(createDocument({ templateId: "classic-35mm" }).sheet.templateId).toBe("classic-35mm");
   });
 });
 

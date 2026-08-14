@@ -17,7 +17,7 @@ import {
   IconX,
 } from "@/components/icons";
 import { IconButton, cx } from "@/components/ui/primitives";
-import { INK_COLORS, STROKE_SIZES, TAPE_KINDS } from "@/lib/palette";
+import { INK_COLORS, STROKE_SIZES, TAPE_KINDS, sizeNames } from "@/lib/palette";
 import { useEditor, type ToolId } from "@/lib/store/editor";
 
 const GROUPS: { label: string; tools: { id: ToolId; icon: typeof IconGrease; label: string; key?: string }[] }[] = [
@@ -112,25 +112,38 @@ export function ToolRail() {
       </div>
 
       <div className="flex flex-col items-center gap-1 px-2">
-        {STROKE_SIZES.map((s) => (
-          <button
-            key={s.id}
-            type="button"
-            title={s.label}
-            aria-label={`${s.label} stroke`}
-            aria-pressed={strokeWidth === s.value}
-            onClick={() => setStrokeWidth(s.value)}
-            className={cx(
-              "grid h-4 w-7 place-items-center transition-colors",
-              strokeWidth === s.value ? "bg-white/10" : "hover:bg-white/6",
-            )}
-          >
-            <span
-              className={cx("block", strokeWidth === s.value ? "bg-warm" : "bg-smoke")}
-              style={{ width: 16, height: Math.max(1, s.value * 0.55) }}
-            />
-          </button>
-        ))}
+        {STROKE_SIZES.map((s) => {
+          const names = sizeNames(s, tool === "text");
+          return (
+            <button
+              key={s.id}
+              type="button"
+              title={names.full}
+              aria-label={tool === "text" ? `${names.full} text` : `${names.full} stroke`}
+              aria-pressed={strokeWidth === s.value}
+              onClick={() => setStrokeWidth(s.value)}
+              className={cx(
+                "grid h-4 w-7 place-items-center transition-colors",
+                strokeWidth === s.value ? "bg-white/10" : "hover:bg-white/6",
+              )}
+            >
+              {tool === "text" ? (
+                <span
+                  className={cx("leading-none", strokeWidth === s.value ? "text-warm" : "text-smoke")}
+                  style={{ fontSize: 7 + STROKE_SIZES.indexOf(s) * 2.5 }}
+                  aria-hidden="true"
+                >
+                  A
+                </span>
+              ) : (
+                <span
+                  className={cx("block", strokeWidth === s.value ? "bg-warm" : "bg-smoke")}
+                  style={{ width: 16, height: Math.max(1, s.value * 0.55) }}
+                />
+              )}
+            </button>
+          );
+        })}
       </div>
 
       <div className="flex flex-col items-center gap-1 px-2">

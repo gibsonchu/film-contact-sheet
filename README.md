@@ -19,11 +19,11 @@ filmstrip, files or folder. More than 38 — one 35mm roll — and the upload is
 into additional sheets, with the split explained on screen. RAW is rejected with
 a readable message rather than a silent failure.
 
-**Read the roll.** Seven templates, all driven by one geometry engine: Classic
-35mm (sprocket holes, edge printing, six frames to a strip), Darkroom Proof,
-Photographer Edit, Archival Sheet, Lab Print index, Eliz Digital (a scanning-lab
-index print — thumbnails butted edge to edge, a notes bar and an order slip),
-and a 6×4 Postcard.
+**Read the roll.** Seven templates, all driven by one geometry engine: Eliz
+Digital (the default — a scanning-lab index print with thumbnails butted edge to
+edge, a notes bar and an order slip), Classic 35mm (sprocket holes, edge
+printing, six frames to a strip), Darkroom Proof, Photographer Edit, Archival
+Sheet, Lab Print index, and a 6×4 Postcard.
 Switching templates keeps order, titles, statuses, notes, annotations and tape;
 frame-anchored annotations are re-expressed against the new frame geometry.
 

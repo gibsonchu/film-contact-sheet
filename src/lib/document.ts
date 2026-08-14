@@ -1,3 +1,4 @@
+import { DEFAULT_TEMPLATE_ID } from "./templates";
 import {
   MAX_PHOTOS_PER_SHEET,
   SCHEMA_VERSION,
@@ -36,7 +37,7 @@ export function createSheet(partial: Partial<ContactSheet> = {}): ContactSheet {
     location: partial.location ?? "",
     camera: partial.camera ?? "",
     filmStock: partial.filmStock ?? "",
-    templateId: partial.templateId ?? "classic-35mm",
+    templateId: partial.templateId ?? DEFAULT_TEMPLATE_ID,
     templateSettings: partial.templateSettings ?? {},
     sharingMode: partial.sharingMode ?? "private",
     commentsEnabled: partial.commentsEnabled ?? false,

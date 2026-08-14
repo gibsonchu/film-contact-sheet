@@ -64,7 +64,7 @@ export function UploadFlow() {
 
     try {
       for (const [batchIndex, batch] of batches.entries()) {
-        // New sheets start on Classic 35mm; the template is switched from the
+        // New sheets start on the default template; it is switched from the
         // editor's inspector, where the change can be seen on the sheet.
         const doc = createDocument({
           ...meta,

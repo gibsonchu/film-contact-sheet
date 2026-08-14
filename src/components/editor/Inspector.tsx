@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { IconEye, IconEyeOff, IconLayers, IconLock, IconRotate, IconTrash } from "@/components/icons";
 import { Button, Field, IconButton, Panel, Segmented, Select, Toggle, cx, inputClass } from "@/components/ui/primitives";
-import { INK_COLORS, STROKE_SIZES, TAPE_KINDS } from "@/lib/palette";
+import { INK_COLORS, STROKE_SIZES, TAPE_KINDS, sizeNames } from "@/lib/palette";
 import { TEMPLATE_LIST } from "@/lib/templates";
 import { useEditor } from "@/lib/store/editor";
 import type { ReviewStatus, TemplateId } from "@/lib/types";
@@ -238,6 +238,7 @@ export function AnnotationInspector() {
 
   const a = doc?.annotations.find((x) => x.id === id);
   if (!a) return null;
+  const isText = a.type === "text";
   const rotation = a.geometry.kind === "box" ? (a.geometry.rotation ?? 0) : 0;
 
   return (
@@ -266,10 +267,13 @@ export function AnnotationInspector() {
           </div>
 
           <Segmented
-            label="Stroke size"
+            label={isText ? "Text size" : "Stroke size"}
             value={String(a.strokeWidth)}
             onChange={(v) => update(a.id, { strokeWidth: Number(v) })}
-            options={STROKE_SIZES.map((s) => ({ value: String(s.value), label: s.label.slice(0, 5) }))}
+            options={STROKE_SIZES.map((s) => {
+              const names = sizeNames(s, isText);
+              return { value: String(s.value), label: names.short, title: names.full };
+            })}
           />
 
           <Field label={`Opacity — ${Math.round(a.opacity * 100)}%`}>

@@ -26,6 +26,26 @@ export const STROKE_SIZES = [
 
 export type StrokeSizeId = (typeof STROKE_SIZES)[number]["id"];
 
+/**
+ * The same four steps drive stroke weight and type size, but they are not the
+ * same idea: a note is small or large, it is not thin or thick. Text gets its
+ * own names so the control reads as what it actually does.
+ */
+const TEXT_SIZE_NAMES: Record<StrokeSizeId, { full: string; short: string }> = {
+  thin: { full: "Small", short: "S" },
+  medium: { full: "Medium", short: "M" },
+  thick: { full: "Large", short: "L" },
+  extra: { full: "Extra large", short: "XL" },
+};
+
+export function sizeNames(
+  size: (typeof STROKE_SIZES)[number],
+  forText: boolean,
+): { full: string; short: string } {
+  if (forText) return TEXT_SIZE_NAMES[size.id];
+  return { full: size.label, short: size.label.slice(0, 5) };
+}
+
 export const TAPE_KINDS: { id: TapeKind; label: string; fill: string; ink: string }[] = [
   { id: "masking", label: "Masking tape", fill: "#d9c69a", ink: "#3a3025" },
   { id: "artist-red", label: "Red artist tape", fill: "#c8232c", ink: "#fff6f4" },
