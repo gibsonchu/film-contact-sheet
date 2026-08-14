@@ -127,7 +127,7 @@ test.describe("contact sheet editor", () => {
     // Re-focus the sheet without tripping double-click (which would enlarge it).
     await page.waitForTimeout(500);
     await frame(page, 5).click();
-    await page.keyboard.press("f");
+    await page.keyboard.press("1");
 
     const statusGroup = page.getByRole("group", { name: "Review status" });
     await expect(statusGroup.getByRole("button", { name: "Fav" })).toHaveAttribute(
@@ -144,6 +144,54 @@ test.describe("contact sheet editor", () => {
       page.getByRole("group", { name: "Review status" }).getByRole("button", { name: "Fav" }),
     ).toHaveAttribute("aria-pressed", "true");
     await expect(page.getByLabel("Title", { exact: true })).toHaveValue("Blue hull, reprint");
+  });
+
+  test("each surrounding panel folds away and comes back", async ({ page }) => {
+    await openDemo(page);
+
+    const rail = page.getByRole("button", { name: "Select (V)" });
+    const inspector = page.getByRole("combobox", { name: "Sheet template" });
+    const strip = page.getByRole("listbox", { name: "Frames" });
+    await expect(rail).toBeVisible();
+    await expect(inspector).toBeVisible();
+    await expect(strip).toBeVisible();
+
+    await page.getByRole("button", { name: "Hide the tools panel" }).click();
+    await expect(rail).toBeHidden();
+
+    await page.getByRole("button", { name: "Hide the inspector panel" }).click();
+    await expect(inspector).toBeHidden();
+
+    await page.getByRole("button", { name: "Hide the filmstrip panel" }).click();
+    await expect(strip).toBeHidden();
+
+    // The sheet keeps rendering with everything folded away.
+    await expect(page.locator("[data-frame-index]")).toHaveCount(36);
+
+    await page.getByRole("button", { name: "Show the tools panel" }).click();
+    await page.getByRole("button", { name: "Show the inspector panel" }).click();
+    await page.getByRole("button", { name: "Show the filmstrip panel" }).click();
+    await expect(rail).toBeVisible();
+    await expect(inspector).toBeVisible();
+    await expect(strip).toBeVisible();
+  });
+
+  test("arrow keys walk the filmstrip", async ({ page }) => {
+    await openDemo(page);
+
+    const frames = page.getByRole("listbox", { name: "Frames" }).getByRole("option");
+    await frames.nth(3).click();
+    await expect(frames.nth(3)).toHaveAttribute("aria-selected", "true");
+
+    await page.keyboard.press("ArrowRight");
+    await expect(frames.nth(4)).toHaveAttribute("aria-selected", "true");
+
+    await page.keyboard.press("ArrowRight");
+    await page.keyboard.press("ArrowLeft");
+    await expect(frames.nth(4)).toHaveAttribute("aria-selected", "true");
+
+    // The selection is what the inspector is showing.
+    await expect(page.getByLabel("Title", { exact: true })).toHaveValue("Harbour wall");
   });
 
   test("switching template keeps frames, statuses and annotations", async ({ page }) => {

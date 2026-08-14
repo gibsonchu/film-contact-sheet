@@ -14,6 +14,31 @@ import { Button, IconButton } from "@/components/ui/primitives";
 import { IconFit, IconRedo, IconUndo, IconZoomIn, IconZoomOut } from "@/components/icons";
 import { computeLayout } from "@/lib/layout";
 import { useEditor, type ToolId } from "@/lib/store/editor";
+import type { ReviewStatus } from "@/lib/types";
+
+/**
+ * Review shortcuts. Favourite sits on 1 rather than F, which is fullscreen;
+ * the numbers run in the order the statuses appear in the filter bar.
+ */
+export const STATUS_KEYS: Record<string, ReviewStatus> = {
+  "1": "favorite",
+  "2": "selected",
+  "3": "maybe",
+  "4": "rejected",
+  s: "selected",
+  m: "maybe",
+  x: "rejected",
+  u: "unreviewed",
+};
+
+async function toggleFullscreen() {
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+    else await document.documentElement.requestFullscreen();
+  } catch {
+    /* the browser may refuse; nothing useful to say about it */
+  }
+}
 
 const SHORTCUT_TOOLS: Record<string, ToolId> = {
   v: "select",
@@ -33,6 +58,9 @@ export function EditorScreen({ sheetId }: { sheetId: string }) {
   const loadError = useEditor((s) => s.loadError);
   const dirty = useEditor((s) => s.dirty);
   const lightboxPhotoId = useEditor((s) => s.lightboxPhotoId);
+  const showRail = useEditor((s) => s.showRail);
+  const showInspector = useEditor((s) => s.showInspector);
+  const showFilmstrip = useEditor((s) => s.showFilmstrip);
   const [showExport, setShowExport] = useState(false);
   const [showShare, setShowShare] = useState(false);
 
@@ -85,14 +113,13 @@ export function EditorScreen({ sheetId }: { sheetId: string }) {
         state.openLightbox(state.selectedPhotoId);
         return;
       }
+      if (e.key.toLowerCase() === "f" && !meta) {
+        e.preventDefault();
+        void toggleFullscreen();
+        return;
+      }
       if (state.selectedPhotoId) {
-        const map: Record<string, "favorite" | "selected" | "maybe" | "rejected" | "unreviewed"> = {
-          f: "favorite",
-          s: "selected",
-          x: "rejected",
-          u: "unreviewed",
-        };
-        const status = map[e.key.toLowerCase()];
+        const status = STATUS_KEYS[e.key.toLowerCase()];
         if (status && !meta) {
           e.preventDefault();
           state.setStatus(state.selectedPhotoId, status);
@@ -143,17 +170,24 @@ export function EditorScreen({ sheetId }: { sheetId: string }) {
       <TopBar onExport={() => setShowExport(true)} onShare={() => setShowShare(true)} />
 
       <div className="flex min-h-0 flex-1">
-        <div className="hidden sm:block">
-          <ToolRail />
-        </div>
+        {showRail ? (
+          <div className="hidden sm:block">
+            <ToolRail />
+          </div>
+        ) : null}
 
         <main id="main" className="relative flex min-w-0 flex-1 flex-col">
-          <CanvasStage layout={layout} />
-          <ViewControls />
-          <FilmstripBar />
+          <div className="relative flex min-h-0 flex-1 flex-col">
+            <CanvasStage layout={layout} />
+            <ViewControls />
+            <PanelToggle side="left" open={showRail} />
+            <PanelToggle side="right" open={showInspector} />
+            <PanelToggle side="bottom" open={showFilmstrip} />
+          </div>
+          {showFilmstrip ? <FilmstripBar /> : null}
         </main>
 
-        <Inspector />
+        {showInspector ? <Inspector /> : null}
       </div>
 
       <MobileToolbar />
@@ -191,6 +225,49 @@ function ViewControls() {
         </IconButton>
       </div>
     </div>
+  );
+}
+
+/**
+ * A chevron on the edge of the working area that folds the panel beside it
+ * away. It stays put when the panel is hidden, pointing the other way, so
+ * there is always something to click to bring it back.
+ */
+function PanelToggle({ side, open }: { side: "left" | "right" | "bottom"; open: boolean }) {
+  const togglePanel = useEditor((s) => s.togglePanel);
+  const panel = side === "left" ? "rail" : side === "right" ? "inspector" : "filmstrip";
+  const names = { left: "tools", right: "inspector", bottom: "filmstrip" } as const;
+
+  // The chevron points the way the panel is about to travel: out towards its
+  // edge to hide it, back in towards the canvas to bring it out again. The
+  // glyph is drawn pointing left, so these are clockwise rotations of that.
+  const rotate = {
+    left: open ? 0 : 180,
+    right: open ? 180 : 0,
+    bottom: open ? 270 : 90,
+  }[side];
+
+  const place = {
+    left: "left-1 top-1/2 -translate-y-1/2",
+    right: "right-1 top-1/2 -translate-y-1/2",
+    bottom: "bottom-2 left-1/2 -translate-x-1/2",
+  }[side];
+
+  return (
+    <button
+      type="button"
+      onClick={() => togglePanel(panel)}
+      aria-expanded={open}
+      aria-label={`${open ? "Hide" : "Show"} the ${names[side]} panel`}
+      title={`${open ? "Hide" : "Show"} the ${names[side]} panel`}
+      className={`pill absolute z-10 grid h-5 w-5 place-items-center text-smoke transition-colors hover:text-warm ${place} ${
+        side === "bottom" ? "h-4 w-8" : ""
+      }`}
+    >
+      <svg viewBox="0 0 12 12" className="h-2.5 w-2.5" style={{ transform: `rotate(${rotate}deg)` }} aria-hidden="true">
+        <path d="M7.5 2 3.5 6l4 4" fill="none" stroke="currentColor" strokeWidth="1.4" />
+      </svg>
+    </button>
   );
 }
 

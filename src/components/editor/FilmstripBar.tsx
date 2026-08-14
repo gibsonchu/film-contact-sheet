@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cx } from "@/components/ui/primitives";
 import { createPhoto } from "@/lib/document";
 import { ACCEPT_ATTR, processImage } from "@/lib/images";
@@ -156,6 +156,39 @@ export function FilmstripBar() {
   const setFilter = useEditor((s) => s.setFilter);
   const selectPhoto = useEditor((s) => s.selectPhoto);
   const openLightbox = useEditor((s) => s.openLightbox);
+  const stepSelection = useEditor((s) => s.stepSelection);
+  const stripRef = useRef<HTMLDivElement>(null);
+
+  /* Keep the selected frame in view however it was selected — from the strip,
+     from the sheet, or from the keyboard. */
+  useEffect(() => {
+    if (!selected) return;
+    stripRef.current
+      ?.querySelector(`[data-strip-photo="${selected}"]`)
+      ?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [selected]);
+
+  function onKeyDown(e: React.KeyboardEvent) {
+    const keys: Record<string, number> = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: 1, ArrowUp: -1 };
+    const delta = keys[e.key];
+    if (delta !== undefined) {
+      e.preventDefault();
+      stepSelection(delta);
+      // Follow the selection so the arrows keep working from the new frame.
+      requestAnimationFrame(() => {
+        const id = useEditor.getState().selectedPhotoId;
+        stripRef.current?.querySelector<HTMLElement>(`[data-strip-photo="${id}"]`)?.focus();
+      });
+      return;
+    }
+    if (e.key === "Enter" || e.key === " ") {
+      const id = useEditor.getState().selectedPhotoId;
+      if (id) {
+        e.preventDefault();
+        openLightbox(id);
+      }
+    }
+  }
 
   if (!doc) return null;
   const counts = doc.photos.reduce<Record<string, number>>((acc, p) => {
@@ -187,7 +220,14 @@ export function FilmstripBar() {
         ))}
       </div>
 
-      <div className="flex gap-1 overflow-x-auto px-3 py-2" role="listbox" aria-label="Frames">
+      <div
+        ref={stripRef}
+        className="flex gap-1 overflow-x-auto px-3 py-2 focus:outline-none"
+        role="listbox"
+        aria-label="Frames"
+        aria-activedescendant={selected ? `strip-${selected}` : undefined}
+        onKeyDown={onKeyDown}
+      >
         <AddPhotos count={doc.photos.length} />
         {doc.photos.map((photo) => {
           const url = urls[photo.thumbPath] ?? urls[photo.storagePath];
@@ -195,9 +235,13 @@ export function FilmstripBar() {
           return (
             <button
               key={photo.id}
+              id={`strip-${photo.id}`}
+              data-strip-photo={photo.id}
               type="button"
               role="option"
               aria-selected={isSelected}
+              // Roving tabstop: one stop for the whole strip, then arrow keys.
+              tabIndex={isSelected || (!selected && photo.position === 0) ? 0 : -1}
               onClick={() => selectPhoto(photo.id)}
               onDoubleClick={() => openLightbox(photo.id)}
               title={`${photo.frameNumber || "—"} ${photo.title || photo.originalFilename}`}

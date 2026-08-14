@@ -38,8 +38,10 @@ in the black margins as well as over the frames.
 **Review it.** Favourite / selected / maybe / rejected / unreviewed, rendered as
 hand-drawn editorial marks rather than badges, with a filter bar over the sheet
 and a filmstrip for jumping about. The enlarged viewer has zoom, pan,
-fullscreen, keyboard navigation (`←/→`, `F` `S` `M` `X` `U`, `+`/`−`, `0`,
-space to pan, `Esc`).
+fullscreen, keyboard navigation (`←/→`, `1` `S` `M` `X` `U` for status, `F`
+for fullscreen, `+`/`−`, `0`, space to pan, `Esc`). The tool rail, inspector and
+filmstrip each fold away behind a chevron on the edge of the canvas, and the
+filmstrip walks frame to frame with the arrow keys.
 
 **Send it on.** 300 DPI PNG/JPEG, PDF with bleed and trim marks, a print-ready
 postcard PDF with the sheet on the front and a message/address block on the

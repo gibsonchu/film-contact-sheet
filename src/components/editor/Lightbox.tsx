@@ -6,8 +6,13 @@ import { IconButton, Segmented, cx } from "@/components/ui/primitives";
 import { useEditor } from "@/lib/store/editor";
 import type { ReviewStatus } from "@/lib/types";
 
+// F is fullscreen here too, so favourite answers to 1 — see STATUS_KEYS in
+// EditorScreen, which this mirrors.
 const STATUS_KEYS: Record<string, ReviewStatus> = {
-  f: "favorite",
+  "1": "favorite",
+  "2": "selected",
+  "3": "maybe",
+  "4": "rejected",
   s: "selected",
   m: "maybe",
   x: "rejected",
@@ -73,6 +78,8 @@ export function Lightbox() {
           setSpaceDown(true);
           break;
         case "Enter":
+        case "f":
+        case "F":
           void toggleFullscreen();
           break;
         default: {
@@ -145,7 +152,7 @@ export function Lightbox() {
         <IconButton label="Zoom in (+)" onClick={() => setZoom((z) => Math.min(8, z * 1.25))}>
           <IconZoomIn className="h-3.5 w-3.5" />
         </IconButton>
-        <IconButton label="Fullscreen (Enter)" onClick={toggleFullscreen}>
+        <IconButton label="Fullscreen (F)" onClick={toggleFullscreen}>
           <IconStar className="h-3.5 w-3.5" />
         </IconButton>
         <button
@@ -208,7 +215,7 @@ export function Lightbox() {
             onChange={(v) => !readOnly && setStatus(photo.id, v)}
             options={[
               { value: "unreviewed", label: "None (U)" },
-              { value: "favorite", label: "Fav (F)" },
+              { value: "favorite", label: "Fav (1)" },
               { value: "selected", label: "Sel (S)" },
               { value: "maybe", label: "Maybe (M)" },
               { value: "rejected", label: "Rej (X)" },
@@ -224,7 +231,7 @@ export function Lightbox() {
           className="min-w-[160px] flex-1 border border-[var(--line)] bg-transparent px-2 py-1 text-[12px] text-warm outline-none focus:border-warm"
         />
         <span className="label hidden lg:inline">
-          ← → navigate · F S M X status · +/− zoom · space pan · esc close
+          ← → navigate · 1 S M X status · F fullscreen · +/− zoom · space pan · esc close
         </span>
       </footer>
     </div>

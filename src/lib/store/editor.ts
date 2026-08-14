@@ -116,6 +116,14 @@ interface EditorState {
   requestFit: () => void;
   /** True while the canvas should keep fitting the sheet to the viewport. */
   autoFitView: boolean;
+
+  /** Which surrounding panels are showing. */
+  showRail: boolean;
+  showInspector: boolean;
+  showFilmstrip: boolean;
+  togglePanel: (panel: "rail" | "inspector" | "filmstrip") => void;
+  /** Moves the selection to the next or previous visible frame. */
+  stepSelection: (delta: number) => void;
   toggleGrain: () => void;
 
   save: () => Promise<void>;
@@ -203,6 +211,9 @@ export const useEditor = create<EditorState>()((set, get) => {
     panY: 0,
     fitRequest: 0,
     autoFitView: true,
+    showRail: true,
+    showInspector: true,
+    showFilmstrip: true,
     showGrain: true,
 
     async loadDocument(id) {
@@ -453,6 +464,27 @@ export const useEditor = create<EditorState>()((set, get) => {
     selectAnnotation: (selectedAnnotationId) => set({ selectedAnnotationId, selectedPhotoId: null }),
     setFilter: (filter) => set({ filter }),
     openLightbox: (lightboxPhotoId) => set({ lightboxPhotoId }),
+
+    togglePanel(panel) {
+      if (panel === "rail") set((s) => ({ showRail: !s.showRail }));
+      else if (panel === "inspector") set((s) => ({ showInspector: !s.showInspector }));
+      else set((s) => ({ showFilmstrip: !s.showFilmstrip }));
+    },
+
+    stepSelection(delta) {
+      const { doc, selectedPhotoId } = get();
+      if (!doc) return;
+      const visible = doc.photos.filter((p) => !p.hidden);
+      if (visible.length === 0) return;
+      const current = visible.findIndex((p) => p.id === selectedPhotoId);
+      const next =
+        current === -1
+          ? delta > 0
+            ? 0
+            : visible.length - 1
+          : (current + delta + visible.length) % visible.length;
+      set({ selectedPhotoId: visible[next].id, selectedAnnotationId: null });
+    },
 
     stepLightbox(delta) {
       const { doc, lightboxPhotoId } = get();
