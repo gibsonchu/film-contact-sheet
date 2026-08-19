@@ -341,12 +341,25 @@ export function CanvasStage({
     [anchorFor, color, doc?.sheet.id, opacity, strokeWidth, tapeKind],
   );
 
-  /** Places a new, empty piece of text and opens it for typing. */
+  /**
+   * With the Text tool active, a click on an existing piece of text reopens
+   * it for editing — the tool is for writing, so clicking words with it
+   * should not require switching to Select first. A click anywhere else
+   * places a new, empty piece of text and opens that for typing instead.
+   */
   const placeText = useCallback(
     (clientX: number, clientY: number) => {
       const state = useEditor.getState();
       if (state.readOnly) return;
       const point = toSheet(clientX, clientY);
+
+      const hit = annotationAt(state.doc?.annotations ?? [], point, 6 / Math.max(0.05, state.zoom));
+      if (hit && hit.type === "text" && hit.geometry.kind === "box") {
+        state.selectAnnotation(hit.id);
+        openTextEditor(hit.id, { x: hit.geometry.x, y: hit.geometry.y }, hit.text ?? "");
+        return;
+      }
+
       const id = state.addAnnotation(
         stripMeta({
           ...makeDraft(point, "text"),

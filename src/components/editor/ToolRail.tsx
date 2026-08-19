@@ -194,6 +194,54 @@ function Divider() {
   return <span className="my-0.5 h-px w-5 bg-[var(--line)]" aria-hidden="true" />;
 }
 
+/**
+ * The six inks as dots.
+ *
+ * Every swatch carries its own hairline: black ink on a near-black panel would
+ * otherwise be an invisible hole in the row. The current one is ringed rather
+ * than merely outlined, so which is chosen survives on the dark colours too.
+ */
+export function InkSwatches({
+  value,
+  onChange,
+  layout = "row",
+  size = "md",
+}: {
+  value: string;
+  onChange: (hex: string) => void;
+  layout?: "row" | "grid";
+  size?: "sm" | "md";
+}) {
+  const dot = size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4";
+  const hit = size === "sm" ? "h-4 w-4" : "h-[18px] w-[18px]";
+  return (
+    <div
+      className={cx("grid gap-2", layout === "row" ? "grid-flow-col grid-rows-1" : "grid-cols-3")}
+    >
+      {INK_COLORS.map((c) => (
+        <button
+          key={c.id}
+          type="button"
+          title={c.label}
+          aria-label={c.label}
+          aria-pressed={value === c.hex}
+          onClick={() => onChange(c.hex)}
+          className={cx(
+            "grid place-items-center rounded-full transition-shadow",
+            hit,
+            value === c.hex ? "ring-1 ring-warm ring-offset-2 ring-offset-charcoal" : "",
+          )}
+        >
+          <span
+            className={cx("block rounded-full border border-white/25", dot)}
+            style={{ background: c.hex }}
+          />
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------- families */
 
 export interface FamilyItem {
@@ -362,27 +410,7 @@ export function InkAndSize({ layout = "column" }: { layout?: "column" | "row" } 
     >
       <section className={row ? "shrink-0" : "w-full"}>
         <h3 className="label mb-1.5">Ink</h3>
-        <div className={cx("grid gap-2", row ? "grid-flow-col grid-rows-1" : "grid-cols-3")}>
-          {INK_COLORS.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              title={c.label}
-              aria-label={c.label}
-              aria-pressed={color === c.hex}
-              onClick={() => setColor(c.hex)}
-              className={cx(
-                "grid h-[18px] w-[18px] place-items-center rounded-full transition-shadow",
-                color === c.hex ? "ring-1 ring-warm ring-offset-2 ring-offset-charcoal" : "",
-              )}
-            >
-              <span
-                className="block h-4 w-4 rounded-full border border-white/20"
-                style={{ background: c.hex }}
-              />
-            </button>
-          ))}
-        </div>
+        <InkSwatches value={color} onChange={setColor} layout={row ? "row" : "grid"} />
       </section>
 
       {row ? <span className="mt-1 h-8 w-px shrink-0 bg-[var(--line)]" aria-hidden="true" /> : null}

@@ -11,9 +11,13 @@ import type { Annotation, Point } from "./types";
  * `radius` is in sheet units and should be derived from a screen-pixel reach
  * divided by the current zoom, so the eraser feels the same at any zoom.
  */
-export function annotationHitTest(a: Annotation, p: Point, radius: number): boolean {
+export function annotationHitTest(a: Annotation, point: Point, radius: number): boolean {
   const reach = radius + a.strokeWidth / 2;
   const g = a.geometry;
+  // Rotation is applied to the rendered object, so test against the object's
+  // own frame: turn the query point back by the same angle and everything
+  // below can go on working in unrotated coordinates.
+  const p = unrotatePoint(point, a);
 
   // Tape, stickers and text are solid objects: anywhere inside counts.
   if (a.type === "tape" || a.type === "sticker" || a.type === "text") {
@@ -55,6 +59,34 @@ export function annotationHitTest(a: Annotation, p: Point, radius: number): bool
       // Check marks and anything unrecognised: small enough that the box is fine.
       return withinBox(p, box, radius);
   }
+}
+
+/**
+ * The point a box annotation turns about — the middle of what it draws, which
+ * for text is the box its lettering fills rather than its stored geometry.
+ */
+export function rotationOriginOf(a: Annotation): Point | null {
+  if (a.geometry.kind !== "box") return null;
+  const box = boxOf(a);
+  return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+}
+
+export function rotationOf(a: Annotation): number {
+  return a.geometry.kind === "box" ? (a.geometry.rotation ?? 0) : 0;
+}
+
+/** Takes a point in sheet space into the annotation's own unrotated frame. */
+function unrotatePoint(p: Point, a: Annotation): Point {
+  const angle = rotationOf(a);
+  const origin = rotationOriginOf(a);
+  if (!angle || !origin) return p;
+  const rad = (-angle * Math.PI) / 180;
+  const dx = p.x - origin.x;
+  const dy = p.y - origin.y;
+  return {
+    x: origin.x + dx * Math.cos(rad) - dy * Math.sin(rad),
+    y: origin.y + dx * Math.sin(rad) + dy * Math.cos(rad),
+  };
 }
 
 /** Topmost unlocked annotation under the point, or null. */

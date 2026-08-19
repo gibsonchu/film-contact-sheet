@@ -13,7 +13,7 @@ import {
   rng,
 } from "@/lib/hand";
 import { TAPE_KINDS, fontStack, instrumentFor } from "@/lib/palette";
-import { textBoxOf } from "@/lib/hit";
+import { rotationOf, rotationOriginOf, textBoxOf } from "@/lib/hit";
 import { strokeOutlinePath } from "@/lib/stroke";
 import type { Annotation } from "@/lib/types";
 import { SHEET_FONT } from "@/lib/fonts";
@@ -30,10 +30,16 @@ function AnnotationViewImpl({ annotation: a, selected, interactive, onPointerDow
   const body = renderBody(a);
   const bounds = annotationBounds(a);
 
+  // Turning the whole group takes the hit area and the selection outline round
+  // with the object, so a rotated annotation is still grabbed where it looks.
+  const angle = rotationOf(a);
+  const origin = angle ? rotationOriginOf(a) : null;
+
   return (
     <g
       data-annotation-id={a.id}
       opacity={a.opacity}
+      transform={origin ? `rotate(${angle} ${origin.x} ${origin.y})` : undefined}
       style={interactive && !a.locked ? { cursor: "move" } : undefined}
       onPointerDown={interactive && onPointerDown ? (e) => onPointerDown(a, e) : undefined}
       pointerEvents={interactive ? "auto" : "none"}
@@ -230,7 +236,7 @@ function Stroke({ annotation: a }: { annotation: Annotation }) {
 
 function Tape({ annotation: a }: { annotation: Annotation }) {
   if (a.geometry.kind !== "box") return null;
-  const { x, y, width, height, rotation = 0 } = a.geometry;
+  const { x, y, width, height } = a.geometry;
   const kind = TAPE_KINDS.find((t) => t.id === (a.tapeKind ?? "masking")) ?? TAPE_KINDS[0];
   const rand = rng(a.id);
   const isTransparent = kind.id === "transparent";
@@ -255,7 +261,7 @@ function Tape({ annotation: a }: { annotation: Annotation }) {
   ].join(" ");
 
   return (
-    <g transform={`rotate(${rotation} ${x + width / 2} ${y + height / 2})`}>
+    <g>
       <path
         d={path}
         fill={kind.fill}

@@ -108,6 +108,64 @@ test.describe("contact sheet editor — panelled layout", () => {
     await expect(page.locator("[data-annotation-id]")).toHaveCount(before + 1);
   });
 
+  test("clicking existing text with the Text tool still active reopens it, rather than stamping a new one", async ({ page }) => {
+    await openDemoPanels(page);
+    const before = await page.locator("[data-annotation-id]").count();
+
+    await page.getByRole("button", { name: /^Text/ }).click();
+    const spot = await centreOf(page, '[data-frame-index="18"]');
+    await page.mouse.click(spot.x, spot.y);
+
+    const editor = page.getByLabel("Annotation text");
+    await editor.fill("scratch on neg");
+    await page.keyboard.press("Escape");
+    await expect(page.locator("[data-annotation-id]")).toHaveCount(before + 1);
+
+    // The Text tool is still selected — clicking the words themselves should
+    // reopen them for editing, not lay a second, empty label on top.
+    await expect(page.getByRole("button", { name: /^Text/ })).toHaveAttribute("aria-pressed", "true");
+    await page.mouse.click(spot.x, spot.y);
+    await expect(editor).toBeVisible();
+    await expect(editor).toHaveValue("scratch on neg");
+
+    await editor.fill("scratch on negative, frame 19");
+    await page.keyboard.press("Escape");
+    await expect(page.locator("[data-annotation-id]")).toHaveCount(before + 1);
+    await expect.poll(() => sheetText(page)).toContain("scratch on negative, frame 19");
+  });
+
+  test("rotating a mark turns where it can be grabbed and erased along with how it looks", async ({ page }) => {
+    await openDemoPanels(page);
+
+    await page.getByRole("button", { name: /^Marks/ }).click();
+    await page.getByRole("menu", { name: "Mark" }).getByRole("menuitem", { name: "Rectangle" }).click();
+    const spot = await centreOf(page, '[data-frame-index="26"]');
+    await page.mouse.move(spot.x - 40, spot.y - 25);
+    await page.mouse.down();
+    await page.mouse.move(spot.x + 40, spot.y + 25, { steps: 8 });
+    await page.mouse.up();
+
+    await page.getByRole("button", { name: "Select (V)" }).click();
+    const mark = page.locator("[data-annotation-id]").last();
+    await mark.click();
+
+    const rotation = page.getByLabel(/Rotation/);
+    await rotation.fill("40");
+    await rotation.dispatchEvent("change");
+    await expect(rotation).toHaveValue("40");
+
+    // The rendered box actually turned...
+    const box = await mark.boundingBox();
+    expect(box).not.toBeNull();
+
+    // ...and the selection still holds after a click square in the rotated
+    // shape's middle, proving the hit area turned with it rather than staying
+    // axis-aligned. Reload first so the click isn't read as "deselect".
+    await page.keyboard.press("Escape");
+    await mark.click();
+    await expect(rotation).toHaveValue("40");
+  });
+
   test("empty text is discarded rather than left invisible on the sheet", async ({ page }) => {
     await openDemoPanels(page);
     const before = await page.locator("[data-annotation-id]").count();

@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { IconEye, IconEyeOff, IconLayers, IconLock, IconRotate, IconTrash } from "@/components/icons";
 import { Button, Field, IconButton, Panel, Segmented, Select, Toggle, cx, inputClass } from "@/components/ui/primitives";
-import { DRAW_INSTRUMENTS, INK_COLORS, TAPE_KINDS, TEXT_FONTS, nearestSize, sizeOptions } from "@/lib/palette";
+import { DRAW_INSTRUMENTS, TAPE_KINDS, TEXT_FONTS, nearestSize, sizeOptions } from "@/lib/palette";
+import { InkSwatches } from "./ToolRail";
 import { TEMPLATE_LIST } from "@/lib/templates";
 import { useEditor } from "@/lib/store/editor";
 import type { PickMark, ReviewStatus, TemplateId } from "@/lib/types";
@@ -201,23 +202,7 @@ export function AnnotationInspector() {
           {hasInk ? (
             <div>
               <span className="label mb-1.5 block">Colour</span>
-              <div className="flex flex-wrap gap-2">
-                {INK_COLORS.map((c) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    aria-label={c.label}
-                    title={c.label}
-                    aria-pressed={a.color === c.hex}
-                    onClick={() => update(a.id, { color: c.hex })}
-                    className={cx(
-                      "h-4 w-4 border",
-                      a.color === c.hex ? "border-warm" : "border-transparent",
-                    )}
-                    style={{ background: c.hex }}
-                  />
-                ))}
-              </div>
+              <InkSwatches value={a.color} onChange={(hex) => update(a.id, { color: hex })} />
             </div>
           ) : null}
 

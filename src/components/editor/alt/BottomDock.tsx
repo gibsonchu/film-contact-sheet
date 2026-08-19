@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Family, InkAndSize } from "../ToolRail";
+import { Family, InkAndSize, InkSwatches } from "../ToolRail";
 import {
   IconArrow,
   IconCheck,
@@ -469,22 +469,12 @@ function AnnotationControls() {
           ))}
         </div>
       ) : (
-        <div className="flex shrink-0 gap-1">
-          {INK_COLORS.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              title={c.label}
-              aria-label={c.label}
-              aria-pressed={a.color === c.hex}
-              onClick={() => update(a.id, { color: c.hex })}
-              className={cx(
-                "h-4 w-4 rounded-full border",
-                a.color === c.hex ? "border-warm" : "border-transparent",
-              )}
-              style={{ background: c.hex }}
-            />
-          ))}
+        <div className="shrink-0">
+          <InkSwatches
+            value={a.color}
+            onChange={(hex) => update(a.id, { color: hex })}
+            size="sm"
+          />
         </div>
       )}
 
