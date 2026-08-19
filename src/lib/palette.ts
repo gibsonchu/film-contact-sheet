@@ -38,12 +38,21 @@ const TEXT_SIZE_NAMES: Record<StrokeSizeId, { full: string; short: string }> = {
   extra: { full: "Extra large", short: "XL" },
 };
 
+/** Abbreviations, written out rather than sliced — "Medium" cut to five
+ *  characters reads as a mistake, not as a short label. */
+const STROKE_SIZE_SHORT: Record<StrokeSizeId, string> = {
+  thin: "Thin",
+  medium: "Med",
+  thick: "Thick",
+  extra: "X-thick",
+};
+
 export function sizeNames(
   size: (typeof STROKE_SIZES)[number],
   forText: boolean,
 ): { full: string; short: string } {
   if (forText) return TEXT_SIZE_NAMES[size.id];
-  return { full: size.label, short: size.label.slice(0, 5) };
+  return { full: size.label, short: STROKE_SIZE_SHORT[size.id] };
 }
 
 export const TAPE_KINDS: { id: TapeKind; label: string; fill: string; ink: string }[] = [

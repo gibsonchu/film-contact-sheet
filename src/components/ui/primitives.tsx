@@ -36,10 +36,16 @@ export function Button({ variant = "outline", size = "md", className, ...props }
 export function IconButton({
   label,
   active,
+  size = "sm",
   className,
   children,
   ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { label: string; active?: boolean }) {
+}: Omit<ButtonHTMLAttributes<HTMLButtonElement>, "size"> & {
+  label: string;
+  active?: boolean;
+  /** The dock wants a larger, more tactile target than the rail does. */
+  size?: "sm" | "md";
+}) {
   return (
     <button
       type="button"
@@ -47,7 +53,8 @@ export function IconButton({
       aria-label={label}
       aria-pressed={active}
       className={cx(
-        "relative grid h-7 w-7 place-items-center transition-colors",
+        "relative grid place-items-center transition-colors",
+        size === "md" ? "h-9 w-9 rounded-full" : "h-7 w-7",
         active ? "bg-warm text-noir" : "text-smoke hover:text-warm",
         className,
       )}

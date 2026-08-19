@@ -196,7 +196,7 @@ function Divider() {
 
 /* ------------------------------------------------------------- families */
 
-interface FamilyItem {
+export interface FamilyItem {
   id: string;
   label: string;
   hint?: string;
@@ -206,10 +206,12 @@ interface FamilyItem {
 }
 
 /**
- * A rail button that both selects its family's current tool and, from the small
- * corner marker, opens the family to change which one that is.
+ * A tool button that both selects its family's current tool and, from the small
+ * corner marker, opens the family to change which one that is. The popup goes
+ * beside the button in the vertical rail and above it in the bottom dock, so
+ * that it never opens off the edge of the window.
  */
-function Family({
+export function Family({
   label,
   title,
   active,
@@ -217,6 +219,8 @@ function Family({
   onOpen,
   onPick,
   items,
+  placement = "right",
+  size = "sm",
   children,
 }: {
   label: string;
@@ -226,6 +230,8 @@ function Family({
   onOpen: (open: boolean) => void;
   onPick: () => void;
   items: FamilyItem[];
+  placement?: "right" | "above";
+  size?: "sm" | "md";
   children: React.ReactNode;
 }) {
   const anchorRef = useRef<HTMLDivElement>(null);
@@ -235,7 +241,14 @@ function Family({
   useEffect(() => {
     if (!open) return;
     const rect = anchorRef.current?.getBoundingClientRect();
-    if (rect) setBox({ left: rect.right + 6, top: rect.top });
+    if (rect) {
+      setBox(
+        placement === "above"
+          ? // Centred over the button, kept clear of the window's left edge.
+            { left: Math.max(8, rect.left + rect.width / 2 - 88), top: rect.top - 8 }
+          : { left: rect.right + 6, top: rect.top },
+      );
+    }
     const onDown = (e: MouseEvent) => {
       if (!popRef.current?.contains(e.target as Node) && !anchorRef.current?.contains(e.target as Node)) {
         onOpen(false);
@@ -250,13 +263,14 @@ function Family({
       document.removeEventListener("mousedown", onDown);
       document.removeEventListener("keydown", onKey);
     };
-  }, [open, onOpen]);
+  }, [open, onOpen, placement]);
 
   return (
     <div ref={anchorRef} className="relative">
       <IconButton
         label={label}
         active={active}
+        size={size}
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => {
@@ -282,7 +296,11 @@ function Family({
               role="menu"
               aria-label={title}
               className="fixed z-[60] w-44 border border-[var(--line)] bg-noir py-1"
-              style={{ left: box.left, top: box.top }}
+              style={
+                placement === "above"
+                  ? { left: box.left, top: box.top, transform: "translateY(-100%)" }
+                  : { left: box.left, top: box.top }
+              }
             >
               <p className="label px-2 pb-1 pt-0.5">{title}</p>
               {items.map((item) => (
@@ -315,7 +333,7 @@ function Family({
 /* ------------------------------------------------------- ink and weight */
 
 /** The analog palette, the four weights, and opacity only when it matters. */
-function InkAndSize() {
+export function InkAndSize({ layout = "column" }: { layout?: "column" | "row" } = {}) {
   const tool = useEditor((s) => s.tool);
   const color = useEditor((s) => s.color);
   const setColor = useEditor((s) => s.setColor);
@@ -328,9 +346,11 @@ function InkAndSize() {
   const drawing = DRAW_INSTRUMENTS.find((i) => i.id === tool);
   const showOpacity = Boolean(drawing?.opacityMatters);
 
+  const row = layout === "row";
+
   return (
-    <div className="flex flex-col items-center gap-2 px-2 pb-2">
-      <div className="grid grid-cols-2 gap-1">
+    <div className={cx("flex items-center gap-2", row ? "flex-row px-1" : "flex-col px-2 pb-2")}>
+      <div className={cx("grid gap-1", row ? "grid-cols-3" : "grid-cols-2")}>
         {INK_COLORS.map((c) => (
           <button
             key={c.id}
@@ -348,7 +368,7 @@ function InkAndSize() {
         ))}
       </div>
 
-      <div className="flex flex-col items-center gap-1">
+      <div className={cx("flex items-center gap-1", row ? "flex-row" : "flex-col")}>
         {STROKE_SIZES.map((s, i) => {
           const names = sizeNames(s, isText);
           return (
@@ -384,7 +404,7 @@ function InkAndSize() {
       </div>
 
       {showOpacity ? (
-        <div className="flex flex-col items-center gap-1">
+        <div className={cx("flex items-center gap-1", row ? "flex-row" : "flex-col")}>
           <input
             type="range"
             aria-label="Opacity"
@@ -393,7 +413,7 @@ function InkAndSize() {
             step={0.05}
             value={opacity}
             onChange={(e) => setOpacity(Number(e.target.value))}
-            className="w-9"
+            className={row ? "w-16" : "w-9"}
           />
           <span className="label">{Math.round(opacity * 100)}</span>
         </div>

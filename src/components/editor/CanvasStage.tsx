@@ -27,7 +27,27 @@ const OVERSCROLL = 72;
 /** Eraser reach, in screen pixels — matches the size of its cursor ring. */
 const ERASER_SCREEN_RADIUS = 13;
 
-export function CanvasStage({ layout }: { layout: SheetLayout }) {
+/**
+ * Room to leave for chrome that floats over the canvas rather than sitting
+ * beside it, so the sheet is fitted and centred in the space you can actually
+ * see. The panelled layout has no such chrome and leaves this at zero.
+ */
+export interface CanvasInsets {
+  top?: number;
+  right?: number;
+  bottom?: number;
+  left?: number;
+}
+
+const NO_INSETS: Required<CanvasInsets> = { top: 0, right: 0, bottom: 0, left: 0 };
+
+export function CanvasStage({
+  layout,
+  insets,
+}: {
+  layout: SheetLayout;
+  insets?: CanvasInsets;
+}) {
   const doc = useEditor((s) => s.doc);
   const urls = useEditor((s) => s.urls);
   const tool = useEditor((s) => s.tool);
@@ -119,17 +139,28 @@ export function CanvasStage({ layout }: { layout: SheetLayout }) {
     [toStage],
   );
 
-  /** Fit the sheet to the viewport. */
+  const inset = { ...NO_INSETS, ...insets };
+  const { top: insetTop, right: insetRight, bottom: insetBottom, left: insetLeft } = inset;
+
+  /** Fit the sheet to the part of the viewport that isn't under something. */
   const fitToScreen = useCallback(() => {
     const el = containerRef.current;
     if (!el || el.clientWidth < 80 || el.clientHeight < 80) return;
     const pad = 56;
-    const z = Math.min(
-      (el.clientWidth - pad) / layout.width,
-      (el.clientHeight - pad) / layout.height,
-    );
-    useEditor.setState({ zoom: Math.max(0.06, Math.min(2, z)), panX: 0, panY: 0 });
-  }, [layout.width, layout.height]);
+    const free = {
+      w: el.clientWidth - insetLeft - insetRight - pad,
+      h: el.clientHeight - insetTop - insetBottom - pad,
+    };
+    if (free.w < 40 || free.h < 40) return;
+    const z = Math.min(free.w / layout.width, free.h / layout.height);
+    useEditor.setState({
+      zoom: Math.max(0.06, Math.min(2, z)),
+      // The sheet is drawn about the container's centre, so shift it by half
+      // the difference between the insets to sit in the middle of what's free.
+      panX: (insetLeft - insetRight) / 2,
+      panY: (insetTop - insetBottom) / 2,
+    });
+  }, [layout.width, layout.height, insetTop, insetRight, insetBottom, insetLeft]);
 
   /**
    * The sheet can't be thrown off into empty space: panning stops once the

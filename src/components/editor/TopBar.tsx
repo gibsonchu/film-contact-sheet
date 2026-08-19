@@ -51,6 +51,14 @@ export function TopBar({
         </IconButton>
       </div>
 
+      {/* Layout trial: the same sheet with the furniture rearranged. */}
+      <Link
+        href={`/sheet/${doc.sheet.id}/alt`}
+        className="label hidden hover:text-warm md:inline"
+        title="Try the alternative layout — tools on the desk, roll down the side"
+      >
+        Dock layout
+      </Link>
       <Link
         href={`/sheet/${doc.sheet.id}/preview`}
         className="label hidden hover:text-warm md:inline"

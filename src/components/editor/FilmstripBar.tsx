@@ -29,7 +29,7 @@ const FILTERS: { value: ReviewStatus | "all"; label: string }[] = [
  * folder. The 38-frame roll limit still holds: anything over the remaining
  * room is left out and said so plainly rather than silently dropped.
  */
-function AddPhotos({ count }: { count: number }) {
+export function AddPhotos({ count }: { count: number }) {
   const filesRef = useRef<HTMLInputElement>(null);
   const folderRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState<string | null>(null);

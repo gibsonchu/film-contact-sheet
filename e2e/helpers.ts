@@ -94,3 +94,16 @@ export function makeImageFolder(count: number, opts?: { withJunk?: boolean }): s
   }
   return dir;
 }
+
+/** Opens the demo roll in the alternative dock layout. */
+export async function openDemoAlt(page: Page) {
+  await openDemo(page);
+  const url = page.url();
+  await page.goto(`${url}/alt`);
+  await expect(page.getByTestId("canvas-stage").locator("svg").first()).toBeVisible();
+  await page.waitForFunction(
+    () => document.querySelectorAll("[data-frame-index]").length >= 36,
+    undefined,
+    { timeout: 60_000 },
+  );
+}
