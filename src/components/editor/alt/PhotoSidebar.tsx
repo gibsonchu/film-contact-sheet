@@ -75,7 +75,7 @@ export function PhotoSidebar() {
 
   return (
     <aside
-      className="hair-r flex h-full w-[212px] shrink-0 flex-col bg-charcoal"
+      className="hair-r flex h-full min-h-0 w-[212px] shrink-0 flex-col bg-charcoal"
       aria-label="Frames"
     >
       <div className="hair-b flex items-start gap-1 p-2.5 pb-2">
@@ -118,7 +118,10 @@ export function PhotoSidebar() {
         role="listbox"
         aria-label="Frames"
         aria-activedescendant={selected ? `strip-${selected}` : undefined}
-        className="flex-1 overflow-y-auto px-2.5 py-3"
+        // min-h-0 overrides the flex default of min-height:auto — without it
+        // this list refuses to shrink below its content height, which pushes
+        // the whole page taller instead of scrolling within its own bounds.
+        className="min-h-0 flex-1 overflow-y-auto px-2.5 py-3"
       >
         {shown.map((photo) => {
           const url = urls[photo.thumbPath] ?? urls[photo.storagePath];
@@ -133,7 +136,12 @@ export function PhotoSidebar() {
               aria-selected={isSelected}
               tabIndex={isSelected || (!selected && photo.position === 0) ? 0 : -1}
               onClick={() => selectPhoto(photo.id)}
-              className="mb-3 block w-full text-center"
+              // Establishes the containing block for the sr-only status span
+              // below — without it, that absolutely-positioned span's layout
+              // box escapes all the way to the document root (it has no other
+              // positioned ancestor), inflating the whole page's scrollable
+              // height by the sum of every thumbnail's position in the list.
+              className="relative mb-3 block w-full text-center"
             >
               <span
                 className={cx(

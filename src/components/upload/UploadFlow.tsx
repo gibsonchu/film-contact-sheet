@@ -117,7 +117,7 @@ export function UploadFlow() {
         </Link>
       </header>
 
-      <div className="grid gap-6 px-3 py-5 lg:grid-cols-[1.3fr_1fr]">
+      <div className="mx-auto grid max-w-4xl gap-6 px-3 py-5 lg:grid-cols-[1.3fr_1fr]">
         <div className="space-y-4">
           <div
             onDragOver={(e) => {

@@ -137,45 +137,47 @@ export function ProjectLibrary() {
         </Link>
       </header>
 
-      <div className="hair-b flex flex-wrap items-center gap-3 px-3 py-1.5">
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search"
-          aria-label="Search sheets"
-          className="w-40 border-none bg-transparent text-[12px] text-warm outline-none placeholder:text-smoke"
-        />
-        <div className="w-52">
-          <Segmented
-            label="Sort by"
-            value={sort}
-            onChange={setSort}
-            options={[
-              { value: "updated", label: "Edited" },
-              { value: "created", label: "Created" },
-              { value: "title", label: "Title" },
-              { value: "photos", label: "Frames" },
-            ]}
+      <div className="hair-b px-3 py-1.5">
+        <div className="mx-auto flex max-w-4xl flex-wrap items-center gap-3">
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search"
+            aria-label="Search sheets"
+            className="w-40 border-none bg-transparent text-[12px] text-warm outline-none placeholder:text-smoke"
           />
-        </div>
-        <div className="w-48">
-          <Segmented
-            label="View"
-            value={view}
-            onChange={setView}
-            options={[
-              { value: "active", label: "Active" },
-              { value: "archived", label: "Archived" },
-              { value: "deleted", label: "Deleted" },
-            ]}
-          />
+          <div className="w-52">
+            <Segmented
+              label="Sort by"
+              value={sort}
+              onChange={setSort}
+              options={[
+                { value: "updated", label: "Edited" },
+                { value: "created", label: "Created" },
+                { value: "title", label: "Title" },
+                { value: "photos", label: "Frames" },
+              ]}
+            />
+          </div>
+          <div className="w-48">
+            <Segmented
+              label="View"
+              value={view}
+              onChange={setView}
+              options={[
+                { value: "active", label: "Active" },
+                { value: "archived", label: "Archived" },
+                { value: "deleted", label: "Deleted" },
+              ]}
+            />
+          </div>
         </div>
       </div>
 
       {loading ? (
         <p className="label px-3 py-4">Reading the shelf…</p>
       ) : visible.length === 0 ? (
-        <div className="px-3 py-20 text-center">
+        <div className="mx-auto max-w-4xl px-3 py-20 text-center">
           <p className="text-[12px] text-warm">
             {view === "active" ? "Nothing on the light table yet." : `No ${view} sheets.`}
           </p>
@@ -186,7 +188,7 @@ export function ProjectLibrary() {
           ) : null}
         </div>
       ) : (
-        <ul className="grid grid-cols-2 gap-x-4 gap-y-7 px-3 py-5 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
+        <ul className="mx-auto grid max-w-4xl grid-cols-2 gap-x-4 gap-y-7 px-3 py-5 sm:grid-cols-3">
           {visible.map((p) => (
             <li key={p.id} className="group">
               <Link href={`/sheet/${p.id}`} className="block">
@@ -272,7 +274,7 @@ export function ProjectLibrary() {
         </ul>
       )}
 
-      <p className="label px-3 pb-6">
+      <p className="label mx-auto max-w-4xl px-3 pb-6">
         Sheets are stored in this browser. Connect Supabase to sync them to an account.
       </p>
     </div>

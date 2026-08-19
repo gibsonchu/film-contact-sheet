@@ -1,47 +1,139 @@
 import Link from "next/link";
-import { handEllipse, handLine, handRect, rng } from "@/lib/hand";
+import { rng } from "@/lib/hand";
+import { strokeOutlinePath } from "@/lib/stroke";
 import { CrayonFilter } from "@/components/CrayonFilter";
+import type { Point } from "@/lib/types";
 
 const VB_W = 320;
 const VB_H = 200;
 
-/** The wax build-up used everywhere else the pastel hand appears: a faint
- *  wide halo, a solid body, and a denser core, all crumbled by the same
- *  crayon filter so this reads as the same hand as the rest of the product. */
+/**
+ * The mark itself runs through the exact same pipeline a live pastel stroke
+ * does — perfect-freehand's pressure-simulated outline — rather than a fixed
+ * SVG stroke-width. That's what makes a real crayon mark read as drawn:
+ * the line breathes, thickening and thinning as if a hand had actually
+ * pressed and eased along it, not just traced at one constant weight.
+ */
 function WaxPath({
-  d,
+  points,
   color,
   filterId,
-  weight = "heavy",
+  size = 11,
 }: {
-  d: string;
+  points: Point[];
   color: string;
   filterId: string;
-  /** A "light" pass reads as a quick flick of the wrist rather than a bearing-down loop —
-   *  used for small marks where the loop's full-weight halo would blob into one mass. */
-  weight?: "heavy" | "light";
+  size?: number;
 }) {
-  const widths = weight === "heavy" ? [20, 12, 6.5] : [8, 4.5, 2.4];
+  const core = strokeOutlinePath(points, size, "pastel");
+  const halo = strokeOutlinePath(points, size, "pastel", 1.5);
+  const dense = strokeOutlinePath(points, size, "pastel", 0.55);
   return (
     <g filter={`url(#${filterId})`}>
-      <path d={d} stroke={color} strokeWidth={widths[0]} fill="none" strokeLinecap="round" strokeLinejoin="round" opacity={0.22} />
-      <path d={d} stroke={color} strokeWidth={widths[1]} fill="none" strokeLinecap="round" strokeLinejoin="round" opacity={0.88} />
-      <path d={d} stroke={color} strokeWidth={widths[2]} fill="none" strokeLinecap="round" strokeLinejoin="round" opacity={0.55} />
+      <path d={halo} fill={color} opacity={0.22} />
+      <path d={core} fill={color} opacity={0.85} />
+      <path d={dense} fill={color} opacity={0.55} />
     </g>
   );
 }
 
-/** A lasso that doesn't quite close, with a couple of quick flicks where the
- *  stick left the paper — the loose, energetic mark a grease pencil makes
- *  circling a frame worth a second look. */
+/** A wobbling loop, sampled as raw points rather than collapsed into a smooth
+ *  path — perfect-freehand wants the samples themselves so it can vary the
+ *  width along their curvature, the way a hand varies pressure on a turn. */
+function loopPoints(
+  cx: number,
+  cy: number,
+  rx: number,
+  ry: number,
+  seed: string,
+  opts: { wobble: number; overshoot: number },
+): Point[] {
+  const rand = rng(seed);
+  const steps = 90;
+  const start = rand() * Math.PI * 2;
+  const end = start + Math.PI * 2 + opts.overshoot;
+  const tilt = (rand() - 0.5) * 0.14;
+  const pts: Point[] = [];
+  for (let i = 0; i <= steps; i += 1) {
+    const t = start + ((end - start) * i) / steps;
+    const jitter = 1 + (rand() - 0.5) * opts.wobble * 2;
+    const drift = Math.sin(t * 1.7 + i * 0.3) * opts.wobble * 0.6;
+    const x = Math.cos(t) * rx * (jitter + drift);
+    const y = Math.sin(t) * ry * (jitter - drift);
+    pts.push({
+      x: cx + x * Math.cos(tilt) - y * Math.sin(tilt),
+      y: cy + x * Math.sin(tilt) + y * Math.cos(tilt),
+    });
+  }
+  return pts;
+}
+
+/** A rounded, bowed rectangle, the same way handRect draws one, but as the
+ *  raw sampled points along each side rather than four collapsed curves. */
+function rectPoints(x: number, y: number, w: number, h: number, seed: string): Point[] {
+  const rand = rng(seed);
+  const jx = Math.min(w * 0.025, 5);
+  const jy = Math.min(h * 0.025, 5);
+  const corners: Point[] = [
+    { x: x + (rand() - 0.5) * jx, y: y + (rand() - 0.5) * jy },
+    { x: x + w + (rand() - 0.5) * jx, y: y + (rand() - 0.5) * jy },
+    { x: x + w + (rand() - 0.5) * jx, y: y + h + (rand() - 0.5) * jy },
+    { x: x + (rand() - 0.5) * jx, y: y + h + (rand() - 0.5) * jy },
+  ];
+  const pts: Point[] = [];
+  const perSide = 16;
+  for (let i = 0; i < 4; i += 1) {
+    const a = corners[i];
+    const b = corners[(i + 1) % 4];
+    const bow = (rand() - 0.5) * Math.min(w, h) * 0.045;
+    for (let s = 0; s <= perSide; s += 1) {
+      const t = s / perSide;
+      const bowAmt = Math.sin(t * Math.PI) * bow;
+      // Perpendicular to this side, so the bow reads as a genuine outward/
+      // inward belly rather than a diagonal smear.
+      const nx = -(b.y - a.y);
+      const ny = b.x - a.x;
+      const len = Math.hypot(nx, ny) || 1;
+      pts.push({
+        x: a.x + (b.x - a.x) * t + (nx / len) * bowAmt,
+        y: a.y + (b.y - a.y) * t + (ny / len) * bowAmt,
+      });
+    }
+  }
+  pts.push(pts[0]);
+  return pts;
+}
+
+/** A handful of points along a short straight run, with a little life in the
+ *  middle — enough for perfect-freehand to find a genuine taper rather than
+ *  rendering a dead-straight sliver. */
+function flickPoints(x1: number, y1: number, x2: number, y2: number, seed: string): Point[] {
+  const rand = rng(seed);
+  const steps = 5;
+  const nx = -(y2 - y1);
+  const ny = x2 - x1;
+  const len = Math.hypot(nx, ny) || 1;
+  const bow = (rand() - 0.5) * 3;
+  const pts: Point[] = [];
+  for (let i = 0; i <= steps; i += 1) {
+    const t = i / steps;
+    const b = Math.sin(t * Math.PI) * bow;
+    pts.push({
+      x: x1 + (x2 - x1) * t + (nx / len) * b,
+      y: y1 + (y2 - y1) * t + (ny / len) * b,
+    });
+  }
+  return pts;
+}
+
+/** A lasso that doesn't quite close, with a fanned crown of quick flicks
+ *  where the stick left the paper — the loose, energetic mark a grease
+ *  pencil makes circling a frame worth a second look. */
 function LoopMark({ seed, color, filterId }: { seed: string; color: string; filterId: string }) {
-  const loop = handEllipse(VB_W / 2, VB_H / 2 + 4, 122, 76, seed, { wobble: 0.085, overshoot: 0.85, laps: 1 });
+  const loop = loopPoints(VB_W / 2, VB_H / 2 + 4, 122, 76, seed, { wobble: 0.11, overshoot: 0.85 });
   const r = rng(`${seed}:flourish`);
   const baseX = VB_W / 2 + 104;
   const baseY = VB_H / 2 - 62;
-  // A fanned-out crown of quick ticks, each starting from its own point along
-  // a short arc rather than one shared origin — a shared origin is what
-  // makes a fan of short strokes read as a single blob instead of a spray.
   const flicks = [0, 1, 2, 3].map((i) => {
     const spread = -1.15 + i * 0.36;
     const originAngle = spread + (r() - 0.5) * 0.08;
@@ -51,13 +143,13 @@ function LoopMark({ seed, color, filterId }: { seed: string; color: string; filt
     const len = 22 + r() * 12;
     const x2 = x1 + Math.cos(spread) * len;
     const y2 = y1 + Math.sin(spread) * len;
-    return handLine(x1, y1, x2, y2, `${seed}:flick${i}`);
+    return flickPoints(x1, y1, x2, y2, `${seed}:flick${i}`);
   });
   return (
     <>
-      <WaxPath d={loop} color={color} filterId={filterId} />
-      {flicks.map((d, i) => (
-        <WaxPath key={i} d={d} color={color} filterId={filterId} weight="light" />
+      <WaxPath points={loop} color={color} filterId={filterId} />
+      {flicks.map((pts, i) => (
+        <WaxPath key={i} points={pts} color={color} filterId={filterId} size={5} />
       ))}
     </>
   );
@@ -67,7 +159,7 @@ function LoopMark({ seed, color, filterId }: { seed: string; color: string; filt
  *  punched dots stemming off the top edge — the sprocket holes of a strip
  *  of film. */
 function FrameMark({ seed, color, filterId }: { seed: string; color: string; filterId: string }) {
-  const rect = handRect(28, 22, VB_W - 56, VB_H - 44, seed);
+  const rect = rectPoints(28, 22, VB_W - 56, VB_H - 44, seed);
   const r = rng(`${seed}:dots`);
   const dots = [
     { cx: 96, cy: 18, r: 10, stemY: 28 },
@@ -75,20 +167,23 @@ function FrameMark({ seed, color, filterId }: { seed: string; color: string; fil
   ];
   return (
     <>
-      <WaxPath d={rect} color={color} filterId={filterId} />
-      {dots.map((dot, i) => (
-        <g key={i} filter={`url(#${filterId})`}>
-          <path
-            d={handLine(dot.cx + (r() - 0.5) * 3, dot.cy, dot.cx + (r() - 0.5) * 3, dot.stemY, `${seed}:stem${i}`)}
-            stroke={color}
-            strokeWidth={5}
-            fill="none"
-            strokeLinecap="round"
-            opacity={0.7}
-          />
-          <circle cx={dot.cx} cy={dot.cy} r={dot.r} fill={color} opacity={0.92} />
-        </g>
-      ))}
+      <WaxPath points={rect} color={color} filterId={filterId} />
+      {dots.map((dot, i) => {
+        const jx = (r() - 0.5) * 3;
+        return (
+          <g key={i}>
+            <WaxPath
+              points={flickPoints(dot.cx + jx, dot.cy, dot.cx + jx, dot.stemY, `${seed}:stem${i}`)}
+              color={color}
+              filterId={filterId}
+              size={4}
+            />
+            <g filter={`url(#${filterId})`}>
+              <circle cx={dot.cx} cy={dot.cy} r={dot.r} fill={color} opacity={0.92} />
+            </g>
+          </g>
+        );
+      })}
     </>
   );
 }

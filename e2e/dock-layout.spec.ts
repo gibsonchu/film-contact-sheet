@@ -213,4 +213,27 @@ test.describe("dock layout", () => {
     await expect(page.getByRole("complementary", { name: "Frames" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Select (V)" })).toBeVisible();
   });
+
+  test("the page itself never scrolls — only the roll in the left panel does", async ({ page }) => {
+    await openDemo(page);
+
+    // Every thumbnail carries an invisible sr-only status span; if its button
+    // isn't a positioned ancestor, that span's layout box escapes to the
+    // document root and silently makes the whole page scrollable by
+    // thousands of pixels, even though nothing visible moves.
+    const canScrollPage = await page.evaluate(
+      () => document.scrollingElement!.scrollHeight > document.scrollingElement!.clientHeight,
+    );
+    expect(canScrollPage).toBe(false);
+
+    // The roll itself still scrolls internally.
+    const list = page.getByRole("listbox", { name: "Frames" });
+    const before = await list.evaluate((el) => el.scrollTop);
+    await list.evaluate((el) => { el.scrollTop = 400; });
+    const after = await list.evaluate((el) => el.scrollTop);
+    expect(after).toBeGreaterThan(before);
+
+    // Scrolling never moved the document itself.
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  });
 });
