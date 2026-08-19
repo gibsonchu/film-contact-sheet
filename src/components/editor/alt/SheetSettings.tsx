@@ -26,7 +26,15 @@ export function SheetSettings() {
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
-      if (!panelRef.current?.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (panelRef.current?.contains(target)) return;
+      // The template dropdown (and anything else that renders its options
+      // into a portal) paints outside this panel's own DOM subtree even
+      // while logically part of it — without this, choosing an option read
+      // as a click outside, and closed the panel out from under the click
+      // before it could land.
+      if (target instanceof Element && target.closest("[data-floating-content]")) return;
+      setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);

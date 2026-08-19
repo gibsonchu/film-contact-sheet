@@ -223,6 +223,13 @@ export function Select<T extends string>({
               aria-label={label}
               tabIndex={-1}
               onKeyDown={onKeyDown}
+              // Marks this as floating content rendered outside its owner's DOM
+              // subtree, so an ancestor panel with its own "click outside to
+              // close" listener (e.g. a disclosure this select lives inside)
+              // can recognise a click here as still inside, rather than racing
+              // to close itself — and unmount this list — before the option's
+              // own click can land.
+              data-floating-content=""
               className="z-[60] overflow-y-auto border border-[var(--line)] bg-noir"
               style={{
                 position: "fixed",

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { frame, openDemo } from "./helpers";
+import { chooseTemplate, frame, openDemo, templateButton } from "./helpers";
 
 /**
  * The default arrangement: the roll and the sheet's settings down the left,
@@ -50,6 +50,22 @@ test.describe("dock layout", () => {
 
     await page.keyboard.press("Escape");
     await expect(template).toBeHidden();
+  });
+
+  test("choosing a template from the dropdown actually applies it, without the panel closing out from under the click", async ({ page }) => {
+    await openDemo(page);
+    await page.getByRole("button", { name: "Contact sheet settings" }).click();
+
+    // The template's options render into a portal outside this disclosure's
+    // own DOM subtree — the regression this guards against closed the panel,
+    // and unmounted the dropdown, before the option's click could land.
+    await expect(templateButton(page)).toBeVisible();
+    await chooseTemplate(page, /Eliz Digital/);
+
+    await expect(templateButton(page)).toContainText("Eliz Digital");
+    // The settings panel is still open afterwards — a stray outside-click
+    // closer would have folded the whole column away, not just the list.
+    await expect(page.getByRole("group", { name: "Picks are marked with" })).toBeVisible();
   });
 
   test("selecting a frame brings its review controls up over the dock", async ({ page }) => {
