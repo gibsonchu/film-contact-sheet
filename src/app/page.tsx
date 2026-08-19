@@ -1,43 +1,37 @@
-import Image from "next/image";
-import Link from "next/link";
+import { HandDrawnCTA } from "@/components/landing/HandDrawnCTA";
 
-/** Intrinsic size of public/landing-cover.jpg. */
-const COVER = { width: 1800, height: 1247 };
-const COVER_ASPECT = COVER.width / COVER.height;
-
+/**
+ * A section-divider page, the way Magnum Contact Sheets breaks between
+ * decades: a single field of red with nothing on it but a title and, here,
+ * the two things worth doing next — each circled in wax the way a real
+ * editor would mark a frame.
+ */
 export default function HomePage() {
   return (
-    <main id="main" className="flex min-h-dvh flex-col items-center justify-center px-5 py-10">
-      {/* Width is capped against the height available so the cover and both
-          CTAs stay above the fold on short windows and on mobile. */}
-      <div
-        className="w-full"
-        style={{ maxWidth: `min(52rem, calc((100dvh - 150px) * ${COVER_ASPECT}))` }}
-      >
-        <Image
-          src="/landing-cover.jpg"
-          alt="A photographic lab index print resting on a concrete floor: rows of small colour frames, each numbered, with a notes bar and an order number along the top."
-          width={COVER.width}
-          height={COVER.height}
-          priority
-          sizes="(max-width: 840px) 100vw, 832px"
-          className="h-auto w-full"
-        />
-      </div>
+    <main
+      id="main"
+      className="flex min-h-dvh flex-col px-6 py-8 sm:px-10 sm:py-10"
+      style={{ background: "var(--color-darkroom)" }}
+    >
+      <h1 className="text-[11vw] leading-none text-warm sm:text-6xl md:text-7xl">
+        Film Contact Sheet
+      </h1>
 
-      <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-        <Link
+      <div className="mt-10 flex flex-1 flex-wrap content-center items-center justify-center gap-10 sm:mt-16 sm:gap-12">
+        <HandDrawnCTA
           href="/new"
-          className="bg-warm px-3 py-1.5 text-[12px] text-noir transition-colors hover:bg-white"
-        >
-          Create a Contact Sheet
-        </Link>
-        <Link
+          label="Create a Contact Sheet"
+          word="New"
+          variant="loop"
+          seed="landing-new"
+        />
+        <HandDrawnCTA
           href="/projects"
-          className="border border-[var(--line)] px-3 py-1.5 text-[12px] text-bone transition-colors hover:border-warm hover:text-warm"
-        >
-          My Sheets
-        </Link>
+          label="My Sheets"
+          word="Past"
+          variant="frame"
+          seed="landing-past"
+        />
       </div>
     </main>
   );

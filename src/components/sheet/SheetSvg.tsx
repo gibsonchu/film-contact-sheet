@@ -5,6 +5,7 @@ import type { FrameBox, SheetLayout } from "@/lib/layout";
 import { cropMarks, frameTilt, handCheck, handEllipse, handQuestion, handStar, handX } from "@/lib/hand";
 import { getGrainTexture } from "@/lib/grain";
 import { SHEET_FONT } from "@/lib/fonts";
+import { CrayonFilter } from "@/components/CrayonFilter";
 import type { PickMark, Photo, SheetDocument } from "@/lib/types";
 
 export interface SheetRenderOptions {
@@ -90,50 +91,7 @@ function SheetSvgImpl({
           <feDropShadow dx="0" dy="1.5" stdDeviation="2.5" floodOpacity="0.35" />
         </filter>
 
-        {/*
-          Wax on paper. Three things make a crayon read as one: the edge
-          crumbles instead of cutting clean, the stick only touches the high
-          points of the paper so the sheet shows through in flecks, and being
-          dragged smears those flecks into streaks along the direction of
-          travel.
-
-          The first turbulence ruffles the outline. The second is stretched
-          along x, hardened into coarse speckle, and punched out of the
-          deposit — coarse enough to see, not so coarse it eats the stroke.
-
-          Built from noise rather than the grain image so a pastel still looks
-          like one when film grain is switched off.
-        */}
-        <filter
-          id="fcs-crayon"
-          x="-14%"
-          y="-14%"
-          width="128%"
-          height="128%"
-          primitiveUnits="userSpaceOnUse"
-        >
-          <feTurbulence type="fractalNoise" baseFrequency="0.22" numOctaves="3" seed="7" result="edge" />
-          <feDisplacementMap
-            in="SourceGraphic"
-            in2="edge"
-            scale="3.4"
-            xChannelSelector="R"
-            yChannelSelector="G"
-            result="ragged"
-          />
-          <feTurbulence
-            type="fractalNoise"
-            baseFrequency="0.14 0.44"
-            numOctaves="3"
-            seed="19"
-            result="tooth"
-          />
-          <feColorMatrix in="tooth" type="luminanceToAlpha" result="toothLum" />
-          <feComponentTransfer in="toothLum" result="toothMask">
-            <feFuncA type="discrete" tableValues="1 1 0 0 0 0 0" />
-          </feComponentTransfer>
-          <feComposite in="ragged" in2="toothMask" operator="out" />
-        </filter>
+        <CrayonFilter id="fcs-crayon" />
         {grainUrl ? (
           <>
             <pattern id="fcs-grain" width="140" height="140" patternUnits="userSpaceOnUse">
