@@ -6,7 +6,7 @@ import { createPhoto } from "@/lib/document";
 import { ACCEPT_ATTR, processImage } from "@/lib/images";
 import { getStorage } from "@/lib/storage/local";
 import { keepImages, sortFiles } from "@/lib/upload";
-import { useEditor } from "@/lib/store/editor";
+import { filteredPhotos, useEditor } from "@/lib/store/editor";
 import { MAX_PHOTOS_PER_SHEET, type Photo, type ReviewStatus } from "@/lib/types";
 
 const STATUS_GLYPH: Record<ReviewStatus, string> = {
@@ -29,7 +29,7 @@ const FILTERS: { value: ReviewStatus | "all"; label: string }[] = [
  * folder. The 38-frame roll limit still holds: anything over the remaining
  * room is left out and said so plainly rather than silently dropped.
  */
-export function AddPhotos({ count }: { count: number }) {
+export function AddPhotos({ count, layout = "strip" }: { count: number; layout?: "strip" | "wide" }) {
   const filesRef = useRef<HTMLInputElement>(null);
   const folderRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -88,32 +88,37 @@ export function AddPhotos({ count }: { count: number }) {
     }
   }
 
+  const wide = layout === "wide";
+  const buttonClass = wide
+    ? "flex-1 border border-[var(--line)] px-2 py-1.5 text-[11px] text-smoke transition-colors hover:border-warm hover:text-warm disabled:opacity-35"
+    : "h-12 w-12 shrink-0 border border-[var(--line)] text-[10px] leading-tight text-smoke transition-colors hover:border-warm hover:text-warm disabled:opacity-35";
+
   return (
-    <div className="flex shrink-0 flex-col justify-center gap-1 pr-2">
+    <div className={cx("flex flex-col gap-1", wide ? "w-full" : "shrink-0 justify-center pr-2")}>
       <div className="flex gap-1">
         <button
           type="button"
           onClick={() => filesRef.current?.click()}
           disabled={Boolean(busy) || room <= 0}
-          aria-label="Add photographs"
-          title={room > 0 ? "Add photographs" : "This sheet is full"}
-          className="h-12 w-12 shrink-0 border border-[var(--line)] text-[10px] leading-tight text-smoke transition-colors hover:border-warm hover:text-warm disabled:opacity-35"
+          aria-label="Add photos"
+          title={room > 0 ? "Add photos" : "This sheet is full"}
+          className={buttonClass}
         >
-          + Files
+          {wide ? "Add photos" : "+ Photos"}
         </button>
         <button
           type="button"
           onClick={() => folderRef.current?.click()}
           disabled={Boolean(busy) || room <= 0}
-          aria-label="Add a folder of photographs"
-          title={room > 0 ? "Add a folder of photographs" : "This sheet is full"}
-          className="h-12 w-12 shrink-0 border border-[var(--line)] text-[10px] leading-tight text-smoke transition-colors hover:border-warm hover:text-warm disabled:opacity-35"
+          aria-label="Add a folder of photos"
+          title={room > 0 ? "Add a folder of photos" : "This sheet is full"}
+          className={buttonClass}
         >
-          + Folder
+          {wide ? "Add folder" : "+ Folder"}
         </button>
       </div>
-      <span className="label max-w-[104px] truncate" role="status">
-        {busy ?? note ?? `${Math.max(0, room)} free`}
+      <span className={cx("label truncate", wide ? "" : "max-w-[104px]")} role="status">
+        {busy ?? note ?? `${Math.max(0, room)} of ${MAX_PHOTOS_PER_SHEET} free`}
       </span>
 
       <input
@@ -208,7 +213,7 @@ export function FilmstripBar() {
         aria-activedescendant={selected ? `strip-${selected}` : undefined}
       >
         <AddPhotos count={doc.photos.length} />
-        {doc.photos.map((photo) => {
+        {filteredPhotos(doc, filter).map((photo) => {
           const url = urls[photo.thumbPath] ?? urls[photo.storagePath];
           const isSelected = photo.id === selected;
           return (

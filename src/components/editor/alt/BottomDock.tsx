@@ -31,11 +31,11 @@ import {
   DRAW_INSTRUMENTS,
   INK_COLORS,
   MARK_TOOLS,
-  STROKE_SIZES,
   TAPE_KINDS,
   TEXT_FONTS,
   instrumentFor,
-  sizeNames,
+  nearestSize,
+  sizeOptions,
 } from "@/lib/palette";
 import { useEditor } from "@/lib/store/editor";
 import type { ReviewStatus } from "@/lib/types";
@@ -89,6 +89,16 @@ export function BottomDock() {
 
   return (
     <div className="pointer-events-none absolute bottom-4 left-1/2 z-30 flex -translate-x-1/2 flex-col items-center gap-2">
+      {open === "ink" ? (
+        <div
+          role="dialog"
+          aria-label="Ink and width"
+          className="pointer-events-auto rounded-[2px] border border-[var(--line)] bg-charcoal/95 px-3 py-2.5 backdrop-blur"
+        >
+          <InkAndSize layout="row" />
+        </div>
+      ) : null}
+
       <ContextStrip />
 
       <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-[var(--line)] bg-charcoal/95 px-2 py-1.5 backdrop-blur">
@@ -211,7 +221,7 @@ export function BottomDock() {
         <Rule />
 
         {/* The ink lives behind its own colour, so the dock stays one row. */}
-        <InkPopover open={open === "ink"} onOpen={(next) => setOpen(next ? "ink" : null)} />
+        <InkButton open={open === "ink"} onOpen={(next) => setOpen(next ? "ink" : null)} />
 
         <IconButton
           label="Fullscreen contact sheet (F)"
@@ -232,14 +242,18 @@ function Rule() {
 
 /* ----------------------------------------------------------------- ink */
 
-function InkPopover({ open, onOpen }: { open: boolean; onOpen: (v: boolean) => void }) {
+function InkButton({ open, onOpen }: { open: boolean; onOpen: (v: boolean) => void }) {
   const color = useEditor((s) => s.color);
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
-      if (!ref.current?.contains(e.target as Node)) onOpen(false);
+      const target = e.target as Node;
+      // The panel is a sibling up the column rather than a child, so ask it
+      // directly whether the click landed inside.
+      const panel = document.querySelector('[role="dialog"][aria-label="Ink and width"]');
+      if (!ref.current?.contains(target) && !panel?.contains(target)) onOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onOpen(false);
@@ -255,30 +269,24 @@ function InkPopover({ open, onOpen }: { open: boolean; onOpen: (v: boolean) => v
   const name = INK_COLORS.find((c) => c.hex === color)?.label ?? "Ink";
 
   return (
-    <div ref={ref} className="relative">
-      <button
-        type="button"
-        onClick={() => onOpen(!open)}
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        aria-label={`Ink and weight — ${name}`}
-        title={`Ink and weight — ${name}`}
-        className={cx(
-          "grid h-9 w-9 place-items-center rounded-full transition-colors",
-          open ? "bg-white/10" : "hover:bg-white/6",
-        )}
-      >
-        <span
-          className="block h-4 w-4 rounded-full border border-white/25"
-          style={{ background: color }}
-        />
-      </button>
-      {open ? (
-        <div className="absolute bottom-[calc(100%+10px)] left-1/2 -translate-x-1/2 rounded-[2px] border border-[var(--line)] bg-noir p-2">
-          <InkAndSize layout="row" />
-        </div>
-      ) : null}
-    </div>
+    <button
+      ref={ref}
+      type="button"
+      onClick={() => onOpen(!open)}
+      aria-haspopup="dialog"
+      aria-expanded={open}
+      aria-label={`Ink and width — ${name}`}
+      title={`Ink and width — ${name}`}
+      className={cx(
+        "grid h-9 w-9 place-items-center rounded-full transition-colors",
+        open ? "bg-white/10" : "hover:bg-white/6",
+      )}
+    >
+      <span
+        className="block h-4 w-4 rounded-full border border-white/25"
+        style={{ background: color }}
+      />
+    </button>
   );
 }
 
@@ -483,22 +491,26 @@ function AnnotationControls() {
       {!isTape && !isSticker ? (
         <>
           <Rule />
-          <div className="flex shrink-0 gap-0.5" role="group" aria-label={isText ? "Text size" : "Stroke size"}>
-            {STROKE_SIZES.map((s) => {
-              const names = sizeNames(s, isText);
+          <div
+            className="flex shrink-0 gap-0.5"
+            role="group"
+            aria-label={isText ? "Text size" : "Stroke width"}
+          >
+            {sizeOptions(isText).map((o) => {
+              const active = nearestSize(a.strokeWidth, isText).id === o.id;
               return (
                 <button
-                  key={s.id}
+                  key={o.id}
                   type="button"
-                  title={names.full}
-                  aria-pressed={a.strokeWidth === s.value}
-                  onClick={() => update(a.id, { strokeWidth: s.value })}
+                  title={o.label}
+                  aria-pressed={active}
+                  onClick={() => update(a.id, { strokeWidth: o.value })}
                   className={cx(
-                    "rounded-full px-2 py-1 text-[11px] transition-colors",
-                    a.strokeWidth === s.value ? "bg-warm text-noir" : "text-smoke hover:text-warm",
+                    "rounded-full px-2.5 py-1 text-[11px] transition-colors",
+                    active ? "bg-warm text-noir" : "text-smoke hover:text-warm",
                   )}
                 >
-                  {names.short}
+                  {isText ? o.short : o.label}
                 </button>
               );
             })}

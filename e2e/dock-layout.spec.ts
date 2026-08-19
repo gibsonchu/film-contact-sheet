@@ -1,16 +1,16 @@
 import { expect, test } from "@playwright/test";
-import { frame, openDemoAlt } from "./helpers";
+import { frame, openDemo } from "./helpers";
 
 /**
- * The alternative arrangement: sheet settings top left, the roll down the left
- * side, the tools on the desk at the bottom. Same editor underneath, so these
- * check the furniture rather than re-testing the drawing engine.
+ * The default arrangement: the roll and the sheet's settings down the left,
+ * the tools on the desk at the bottom. Same editor underneath, so these check
+ * the furniture rather than re-testing the drawing engine.
  */
 test.describe("dock layout", () => {
-  test("puts the settings top left, the roll left, and the tools at the bottom", async ({
+  test("puts the roll and its settings left, and the tools at the bottom", async ({
     page,
   }) => {
-    await openDemoAlt(page);
+    await openDemo(page);
 
     const card = page.getByLabel("Contact sheet title");
     const sidebar = page.getByRole("complementary", { name: "Frames" });
@@ -24,8 +24,9 @@ test.describe("dock layout", () => {
     const dockBox = (await select.boundingBox())!;
     const viewport = page.viewportSize()!;
 
-    // Settings in the top-left corner.
-    expect(cardBox.y).toBeLessThan(viewport.height / 3);
+    // The sheet's settings head the column, above the roll.
+    expect(cardBox.y).toBeLessThan(viewport.height / 4);
+    expect(cardBox.x).toBeLessThan(sidebarBox.x + sidebarBox.width);
     // The roll runs down the left-hand edge, full height.
     expect(sidebarBox.x).toBeLessThan(40);
     expect(sidebarBox.height).toBeGreaterThan(viewport.height * 0.8);
@@ -37,8 +38,8 @@ test.describe("dock layout", () => {
     await expect(page.getByRole("complementary", { name: "Inspector" })).toHaveCount(0);
   });
 
-  test("the settings for the sheet drop out of the corner card", async ({ page }) => {
-    await openDemoAlt(page);
+  test("the settings for the sheet drop out of the head of the column", async ({ page }) => {
+    await openDemo(page);
 
     const template = page.getByRole("combobox", { name: "Sheet template" });
     await expect(template).toBeHidden();
@@ -52,7 +53,7 @@ test.describe("dock layout", () => {
   });
 
   test("selecting a frame brings its review controls up over the dock", async ({ page }) => {
-    await openDemoAlt(page);
+    await openDemo(page);
     await expect(page.getByRole("group", { name: "Review status" })).toHaveCount(0);
 
     await frame(page, 3).click();
@@ -76,7 +77,7 @@ test.describe("dock layout", () => {
   });
 
   test("the tool families open upwards out of the dock", async ({ page }) => {
-    await openDemoAlt(page);
+    await openDemo(page);
 
     const draw = page.getByRole("button", { name: /^Draw —/ });
     await draw.click();
@@ -92,7 +93,7 @@ test.describe("dock layout", () => {
   });
 
   test("clicking a thumbnail in the roll selects that frame on the sheet", async ({ page }) => {
-    await openDemoAlt(page);
+    await openDemo(page);
 
     const options = page.getByRole("listbox", { name: "Frames" }).getByRole("option");
     await options.nth(4).click();
@@ -104,8 +105,86 @@ test.describe("dock layout", () => {
     await expect(options.nth(5)).toHaveAttribute("aria-selected", "true");
   });
 
+  test("the roll folds away and comes back", async ({ page }) => {
+    await openDemo(page);
+    const sidebar = page.getByRole("complementary", { name: "Frames" });
+    const before = (await sidebar.boundingBox())!.width;
+    expect(before).toBeGreaterThan(150);
+
+    await page.getByRole("button", { name: "Hide the frames panel" }).click();
+    await expect(sidebar).toHaveCount(0);
+    // The sheet keeps rendering, with more room than it had.
+    await expect(page.locator("[data-frame-index]")).toHaveCount(36);
+
+    await page.getByRole("button", { name: "Show the frames panel" }).click();
+    await expect(sidebar).toBeVisible();
+  });
+
+  test("the review filters are pills that narrow the roll", async ({ page }) => {
+    await openDemo(page);
+    const options = page.getByRole("listbox", { name: "Frames" }).getByRole("option");
+    await expect(options).toHaveCount(36);
+
+    await page.getByRole("button", { name: /^Rejects/ }).click();
+    await expect(page.getByRole("button", { name: /^Rejects/ })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    const narrowed = await options.count();
+    expect(narrowed).toBeGreaterThan(0);
+    expect(narrowed).toBeLessThan(36);
+
+    await page.getByRole("button", { name: /^All/ }).click();
+    await expect(options).toHaveCount(36);
+  });
+
+  test("adding photos is offered at the head of the roll", async ({ page }) => {
+    await openDemo(page);
+    const add = page.getByRole("button", { name: "Add photos" });
+    const folder = page.getByRole("button", { name: "Add a folder of photos" });
+    await expect(add).toBeVisible();
+    await expect(folder).toBeVisible();
+
+    // Above the thumbnails, below the sheet's own settings.
+    const addBox = (await add.boundingBox())!;
+    const settingsBox = (await page.getByLabel("Contact sheet title").boundingBox())!;
+    const firstThumb = (await page
+      .getByRole("listbox", { name: "Frames" })
+      .getByRole("option")
+      .first()
+      .boundingBox())!;
+    expect(addBox.y).toBeGreaterThan(settingsBox.y);
+    expect(addBox.y).toBeLessThan(firstThumb.y);
+  });
+
+  test("ink and width are offered as separate, readable choices", async ({ page }) => {
+    await openDemo(page);
+    await page.getByRole("button", { name: /^Ink and width/ }).click();
+
+    // Two weights, named rather than shown as bars of varying height.
+    const widths = page.getByRole("group", { name: "Stroke width" });
+    await expect(widths.getByRole("button")).toHaveCount(2);
+    await expect(widths.getByRole("button", { name: /Fine/ })).toBeVisible();
+    await expect(widths.getByRole("button", { name: /Bold/ })).toBeVisible();
+
+    // Colours are round.
+    const red = page.getByRole("button", { name: "Red grease pencil", exact: true });
+    await expect(red).toBeVisible();
+    const radius = await red.evaluate(
+      (el) => getComputedStyle(el.firstElementChild as Element).borderTopLeftRadius,
+    );
+    expect(radius).toContain("px");
+    expect(parseFloat(radius)).toBeGreaterThan(4);
+
+    await widths.getByRole("button", { name: /Bold/ }).click();
+    await expect(widths.getByRole("button", { name: /Bold/ })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
   test("fullscreen clears the furniture away from the sheet", async ({ page }) => {
-    await openDemoAlt(page);
+    await openDemo(page);
     await frame(page, 0).click();
     await page.keyboard.press("f");
 

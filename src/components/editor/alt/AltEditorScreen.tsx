@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { BottomDock } from "./BottomDock";
 import { PhotoSidebar } from "./PhotoSidebar";
-import { SheetCard } from "./SheetCard";
 import { CanvasStage } from "../CanvasStage";
 import { ExportDialog } from "../ExportDialog";
 import { ShareDialog } from "../ShareDialog";
@@ -68,11 +67,11 @@ export function AltEditorScreen({ sheetId }: { sheetId: string }) {
       {sheetFullscreen ? null : <PhotoSidebar />}
 
       <main id="main" className="relative flex min-w-0 flex-1 flex-col">
-        {/* Leave room for the card above and the dock below, so the sheet is
-            centred in what you can see rather than under the furniture. */}
+        {/* Leave room for the actions above and the dock below, so the sheet
+            is centred in what you can see rather than under the furniture. */}
         <CanvasStage
           layout={layout}
-          insets={sheetFullscreen ? undefined : { top: 76, bottom: 96 }}
+          insets={sheetFullscreen ? undefined : { top: 52, bottom: 96 }}
         />
 
         {sheetFullscreen ? (
@@ -81,7 +80,6 @@ export function AltEditorScreen({ sheetId }: { sheetId: string }) {
           </p>
         ) : (
           <>
-            <SheetCard />
             <ActionBar onExport={() => setShowExport(true)} onShare={() => setShowShare(true)} />
             <BottomDock />
           </>
@@ -122,9 +120,9 @@ function ActionBar({ onExport, onShare }: { onExport: () => void; onShare: () =>
 
       <div className="pill flex items-center gap-3 px-3 py-1.5">
         <Link
-          href={`/sheet/${doc.sheet.id}`}
+          href={`/sheet/${doc.sheet.id}/panels`}
           className="label hover:text-warm"
-          title="Back to the panelled layout"
+          title="The original panelled layout"
         >
           Panel layout
         </Link>

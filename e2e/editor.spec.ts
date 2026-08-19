@@ -1,16 +1,16 @@
 import { expect, test } from "@playwright/test";
-import { centreOf, chooseTemplate, dragBetween, frame, openDemo, sheetText } from "./helpers";
+import { centreOf, chooseTemplate, dragBetween, frame, openDemoPanels, sheetText } from "./helpers";
 
-test.describe("contact sheet editor", () => {
+test.describe("contact sheet editor — panelled layout", () => {
   test("renders the demo roll as a 36-frame contact sheet", async ({ page }) => {
-    await openDemo(page);
+    await openDemoPanels(page);
     await expect(page.locator("[data-frame-index]")).toHaveCount(36);
     await expect(page.getByRole("button", { name: /^All/ })).toBeVisible();
     await expect(page.locator("text=Harbour Road, Winter").first()).toBeVisible();
   });
 
   test("reordering by drag renumbers the frames", async ({ page }) => {
-    await openDemo(page);
+    await openDemoPanels(page);
     const firstPhoto = await frame(page, 0).getAttribute("data-photo-id");
     const from = await centreOf(page, '[data-frame-index="0"]');
     const to = await centreOf(page, '[data-frame-index="4"]');
@@ -29,7 +29,7 @@ test.describe("contact sheet editor", () => {
   test("drawing with the pen adds an editable annotation, and undo removes it", async ({
     page,
   }) => {
-    await openDemo(page);
+    await openDemoPanels(page);
     const before = await page.locator("[data-annotation-id]").count();
 
     await page.getByRole("button", { name: /^Draw —/ }).click();
@@ -47,7 +47,7 @@ test.describe("contact sheet editor", () => {
   });
 
   test("the eraser removes a drawn stroke without a pixel-perfect click", async ({ page }) => {
-    await openDemo(page);
+    await openDemoPanels(page);
     const before = await page.locator("[data-annotation-id]").count();
 
     await page.getByRole("button", { name: /^Draw —/ }).click();
@@ -81,7 +81,7 @@ test.describe("contact sheet editor", () => {
   });
 
   test("text can be written on the sheet, then re-opened and edited", async ({ page }) => {
-    await openDemo(page);
+    await openDemoPanels(page);
     const before = await page.locator("[data-annotation-id]").count();
 
     await page.getByRole("button", { name: /^Text/ }).click();
@@ -109,7 +109,7 @@ test.describe("contact sheet editor", () => {
   });
 
   test("empty text is discarded rather than left invisible on the sheet", async ({ page }) => {
-    await openDemo(page);
+    await openDemoPanels(page);
     const before = await page.locator("[data-annotation-id]").count();
 
     await page.getByRole("button", { name: /^Text/ }).click();
@@ -122,7 +122,7 @@ test.describe("contact sheet editor", () => {
   });
 
   test("review status can be set from the keyboard and survives a reload", async ({ page }) => {
-    await openDemo(page);
+    await openDemoPanels(page);
     await frame(page, 5).click();
     await page.getByLabel("Title", { exact: true }).fill("Blue hull, reprint");
     await page.keyboard.press("Tab");
@@ -149,7 +149,7 @@ test.describe("contact sheet editor", () => {
   });
 
   test("each surrounding panel folds away and comes back", async ({ page }) => {
-    await openDemo(page);
+    await openDemoPanels(page);
 
     const rail = page.getByRole("button", { name: "Select (V)" });
     const inspector = page.getByRole("combobox", { name: "Sheet template" });
@@ -179,7 +179,7 @@ test.describe("contact sheet editor", () => {
   });
 
   test("arrow keys walk the filmstrip", async ({ page }) => {
-    await openDemo(page);
+    await openDemoPanels(page);
 
     const frames = page.getByRole("listbox", { name: "Frames" }).getByRole("option");
     await frames.nth(3).click();
@@ -197,7 +197,7 @@ test.describe("contact sheet editor", () => {
   });
 
   test("switching template keeps frames, statuses and annotations", async ({ page }) => {
-    await openDemo(page);
+    await openDemoPanels(page);
     const annotations = await page.locator("[data-annotation-id]").count();
 
     for (const template of [/Darkroom Proof/, /Eliz Digital/, /Archival Sheet/]) {
@@ -208,7 +208,7 @@ test.describe("contact sheet editor", () => {
   });
 
   test("Eliz Digital prints butted thumbnails with a notes bar and order slip", async ({ page }) => {
-    await openDemo(page);
+    await openDemoPanels(page);
     await chooseTemplate(page, /Eliz Digital/);
 
     await expect(page.locator("text=Notes:")).toBeVisible();
@@ -228,7 +228,7 @@ test.describe("contact sheet editor", () => {
   });
 
   test("the sheet cannot be dragged away off the canvas", async ({ page }) => {
-    await openDemo(page);
+    await openDemoPanels(page);
 
     const measure = async () => {
       const stage = await page.getByTestId("canvas-stage").boundingBox();
@@ -255,7 +255,7 @@ test.describe("contact sheet editor", () => {
   });
 
   test("clicking a photograph only selects its frame", async ({ page }) => {
-    await openDemo(page);
+    await openDemoPanels(page);
     await frame(page, 2).click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.getByLabel("Title", { exact: true })).toBeVisible();
@@ -267,7 +267,7 @@ test.describe("contact sheet editor", () => {
   });
 
   test("F puts the whole contact sheet on the light table", async ({ page }) => {
-    await openDemo(page);
+    await openDemoPanels(page);
     const rail = page.getByRole("button", { name: "Select (V)" });
     const inspector = page.getByRole("complementary", { name: "Inspector" });
     const strip = page.getByRole("listbox", { name: "Frames" });
@@ -292,7 +292,7 @@ test.describe("contact sheet editor", () => {
   });
 
   test("the toolbar keeps its instruments behind the tool they belong to", async ({ page }) => {
-    await openDemo(page);
+    await openDemoPanels(page);
 
     // Eight things in the rail, not thirty.
     await expect(page.getByRole("button", { name: "Draw — Marker (B)" })).toBeVisible();

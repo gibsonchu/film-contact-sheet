@@ -28,10 +28,10 @@ import {
   DRAW_INSTRUMENTS,
   INK_COLORS,
   MARK_TOOLS,
-  STROKE_SIZES,
   TAPE_KINDS,
   instrumentFor,
-  sizeNames,
+  nearestSize,
+  sizeOptions,
 } from "@/lib/palette";
 import { useEditor, type ToolId } from "@/lib/store/editor";
 
@@ -77,7 +77,7 @@ export function ToolRail() {
   const markActive = MARK_TOOLS.some((m) => m.id === tool);
 
   return (
-    <div className="hair-r flex h-full w-[46px] shrink-0 flex-col items-center gap-1 overflow-y-auto py-2">
+    <div className="hair-r flex h-full w-[62px] shrink-0 flex-col items-center gap-1 overflow-y-auto py-2">
       <IconButton label="Select (V)" active={tool === "select"} onClick={() => setTool("select")}>
         <IconCursor className="h-[15px] w-[15px]" />
       </IconButton>
@@ -332,7 +332,11 @@ export function Family({
 
 /* ------------------------------------------------------- ink and weight */
 
-/** The analog palette, the four weights, and opacity only when it matters. */
+/**
+ * Ink and weight, kept plainly apart. Colour is a row of dots you pick from by
+ * eye; weight is a labelled choice, because "how thick" is a word, not a
+ * swatch — the two used to sit in one undifferentiated stack of bars.
+ */
 export function InkAndSize({ layout = "column" }: { layout?: "column" | "row" } = {}) {
   const tool = useEditor((s) => s.tool);
   const color = useEditor((s) => s.color);
@@ -345,66 +349,88 @@ export function InkAndSize({ layout = "column" }: { layout?: "column" | "row" } 
   const isText = tool === "text";
   const drawing = DRAW_INSTRUMENTS.find((i) => i.id === tool);
   const showOpacity = Boolean(drawing?.opacityMatters);
-
+  const options = sizeOptions(isText);
+  const current = nearestSize(strokeWidth, isText);
   const row = layout === "row";
 
   return (
-    <div className={cx("flex items-center gap-2", row ? "flex-row px-1" : "flex-col px-2 pb-2")}>
-      <div className={cx("grid gap-1", row ? "grid-cols-3" : "grid-cols-2")}>
-        {INK_COLORS.map((c) => (
-          <button
-            key={c.id}
-            type="button"
-            title={c.label}
-            aria-label={c.label}
-            aria-pressed={color === c.hex}
-            onClick={() => setColor(c.hex)}
-            className={cx(
-              "h-3.5 w-3.5 border transition-colors",
-              color === c.hex ? "border-warm" : "border-transparent hover:border-smoke",
-            )}
-            style={{ background: c.hex }}
-          />
-        ))}
-      </div>
-
-      <div className={cx("flex items-center gap-1", row ? "flex-row" : "flex-col")}>
-        {STROKE_SIZES.map((s, i) => {
-          const names = sizeNames(s, isText);
-          return (
+    <div
+      className={cx(
+        "flex",
+        row ? "flex-row items-start gap-4" : "flex-col items-stretch gap-3 px-1.5 pb-2",
+      )}
+    >
+      <section className={row ? "shrink-0" : "w-full"}>
+        <h3 className="label mb-1.5">Ink</h3>
+        <div className={cx("grid gap-2", row ? "grid-flow-col grid-rows-1" : "grid-cols-3")}>
+          {INK_COLORS.map((c) => (
             <button
-              key={s.id}
+              key={c.id}
               type="button"
-              title={names.full}
-              aria-label={isText ? `${names.full} text` : `${names.full} stroke`}
-              aria-pressed={strokeWidth === s.value}
-              onClick={() => setStrokeWidth(s.value)}
+              title={c.label}
+              aria-label={c.label}
+              aria-pressed={color === c.hex}
+              onClick={() => setColor(c.hex)}
               className={cx(
-                "grid h-4 w-7 place-items-center transition-colors",
-                strokeWidth === s.value ? "bg-white/10" : "hover:bg-white/6",
+                "grid h-[18px] w-[18px] place-items-center rounded-full transition-shadow",
+                color === c.hex ? "ring-1 ring-warm ring-offset-2 ring-offset-charcoal" : "",
               )}
             >
-              {isText ? (
-                <span
-                  className={cx("leading-none", strokeWidth === s.value ? "text-warm" : "text-smoke")}
-                  style={{ fontSize: 7 + i * 2.5 }}
-                  aria-hidden="true"
-                >
-                  A
-                </span>
-              ) : (
-                <span
-                  className={cx("block", strokeWidth === s.value ? "bg-warm" : "bg-smoke")}
-                  style={{ width: 16, height: Math.max(1, s.value * 0.55) }}
-                />
-              )}
+              <span
+                className="block h-4 w-4 rounded-full border border-white/20"
+                style={{ background: c.hex }}
+              />
             </button>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      </section>
+
+      {row ? <span className="mt-1 h-8 w-px shrink-0 bg-[var(--line)]" aria-hidden="true" /> : null}
+
+      <section className={row ? "shrink-0" : "w-full"}>
+        <h3 className="label mb-1.5">{isText ? "Size" : "Width"}</h3>
+        <div
+          role="group"
+          aria-label={isText ? "Text size" : "Stroke width"}
+          className={cx("flex gap-1", row || isText ? "flex-row" : "flex-col")}
+        >
+          {options.map((o) => {
+            const active = current.id === o.id;
+            return (
+              <button
+                key={o.id}
+                type="button"
+                title={o.label}
+                aria-label={isText ? `${o.label} text` : `${o.label} stroke`}
+                aria-pressed={active}
+                onClick={() => setStrokeWidth(o.value)}
+                className={cx(
+                  "flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] transition-colors",
+                  isText && !row ? "justify-center" : "",
+                  active ? "bg-warm text-noir" : "text-smoke hover:bg-white/8 hover:text-warm",
+                )}
+              >
+                {isText ? (
+                  <span className="leading-none">{o.short}</span>
+                ) : (
+                  <>
+                    <span
+                      className={cx("block shrink-0 rounded-full", active ? "bg-noir" : "bg-smoke")}
+                      style={{ width: 14, height: Math.max(1.5, o.value * 0.42) }}
+                      aria-hidden="true"
+                    />
+                    <span className="leading-none">{o.label}</span>
+                  </>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </section>
 
       {showOpacity ? (
-        <div className={cx("flex items-center gap-1", row ? "flex-row" : "flex-col")}>
+        <section className={row ? "shrink-0" : "w-full"}>
+          <h3 className="label mb-1.5">Opacity — {Math.round(opacity * 100)}%</h3>
           <input
             type="range"
             aria-label="Opacity"
@@ -413,10 +439,9 @@ export function InkAndSize({ layout = "column" }: { layout?: "column" | "row" } 
             step={0.05}
             value={opacity}
             onChange={(e) => setOpacity(Number(e.target.value))}
-            className={row ? "w-16" : "w-9"}
+            className={row ? "w-24" : "w-full"}
           />
-          <span className="label">{Math.round(opacity * 100)}</span>
-        </div>
+        </section>
       ) : null}
     </div>
   );

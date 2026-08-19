@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AddPhotos } from "../FilmstripBar";
+import { SheetSettings } from "./SheetSettings";
 import { cx } from "@/components/ui/primitives";
-import { useEditor } from "@/lib/store/editor";
+import { filteredPhotos, useEditor } from "@/lib/store/editor";
 import type { ReviewStatus } from "@/lib/types";
 
 const STATUS_GLYPH: Record<ReviewStatus, string> = {
@@ -22,12 +23,12 @@ const FILTERS: { value: ReviewStatus | "all"; label: string }[] = [
 ];
 
 /**
- * The roll down the left-hand side, the way Preview shows the pages of a
- * document: a single column of thumbnails, each captioned with its frame
- * number and filename, the current one outlined.
+ * Everything about the roll, down the left-hand side, in the order you reach
+ * for it: what the sheet is, how to put photographs on it, which of them to
+ * look at, and then the photographs themselves — captioned in a single column
+ * the way Preview lists the pages of a document.
  *
- * It is a way of finding a frame, not a second canvas — clicking selects, and
- * the sheet is still where the reviewing happens.
+ * The whole column folds away when the sheet wants the room.
  */
 export function PhotoSidebar() {
   const doc = useEditor((s) => s.doc);
@@ -36,18 +37,19 @@ export function PhotoSidebar() {
   const filter = useEditor((s) => s.filter);
   const setFilter = useEditor((s) => s.setFilter);
   const selectPhoto = useEditor((s) => s.selectPhoto);
+  const [open, setOpen] = useState(true);
   const listRef = useRef<HTMLDivElement>(null);
 
   /* Follow the selection however it was made — from here, from the sheet, or
      from the arrow keys. Focus only moves if it was already in the column. */
   useEffect(() => {
-    if (!selected) return;
+    if (!selected || !open) return;
     const list = listRef.current;
     const el = list?.querySelector<HTMLElement>(`[data-strip-photo="${selected}"]`);
     if (!el) return;
     el.scrollIntoView({ block: "nearest" });
     if (list?.contains(document.activeElement)) el.focus();
-  }, [selected]);
+  }, [selected, open]);
 
   if (!doc) return null;
 
@@ -55,30 +57,60 @@ export function PhotoSidebar() {
     acc[p.status] = (acc[p.status] ?? 0) + 1;
     return acc;
   }, {});
+  const shown = filteredPhotos(doc, filter);
+
+  if (!open) {
+    return (
+      <div className="hair-r flex h-full w-9 shrink-0 flex-col items-center bg-charcoal py-2">
+        <PanelHandle open={false} onClick={() => setOpen(true)} />
+        <span
+          className="label mt-3 whitespace-nowrap text-[10px]"
+          style={{ writingMode: "vertical-rl" }}
+        >
+          {doc.photos.length} frames
+        </span>
+      </div>
+    );
+  }
 
   return (
     <aside
-      className="hair-r flex h-full w-[184px] shrink-0 flex-col bg-charcoal"
+      className="hair-r flex h-full w-[212px] shrink-0 flex-col bg-charcoal"
       aria-label="Frames"
     >
-      <div className="hair-b flex flex-wrap gap-x-2.5 gap-y-1 px-3 py-2">
-        {FILTERS.map((f) => (
-          <button
-            key={f.value}
-            type="button"
-            onClick={() => setFilter(f.value)}
-            aria-pressed={filter === f.value}
-            className={cx(
-              "whitespace-nowrap text-[11px] transition-colors",
-              filter === f.value ? "text-warm" : "text-smoke hover:text-warm",
-            )}
-          >
-            {f.label}
-            <span className="ml-1 opacity-50">
-              {f.value === "all" ? doc.photos.length : (counts[f.value] ?? 0)}
-            </span>
-          </button>
-        ))}
+      <div className="hair-b flex items-start gap-1 p-2.5 pb-2">
+        <div className="min-w-0 flex-1">
+          <SheetSettings />
+        </div>
+        <PanelHandle open onClick={() => setOpen(false)} />
+      </div>
+
+      <div className="hair-b p-2.5">
+        <AddPhotos count={doc.photos.length} layout="wide" />
+      </div>
+
+      <div className="hair-b flex flex-wrap gap-1 p-2.5">
+        {FILTERS.map((f) => {
+          const active = filter === f.value;
+          const n = f.value === "all" ? doc.photos.length : (counts[f.value] ?? 0);
+          return (
+            <button
+              key={f.value}
+              type="button"
+              onClick={() => setFilter(f.value)}
+              aria-pressed={active}
+              className={cx(
+                "flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] transition-colors",
+                active
+                  ? "border-warm bg-warm text-noir"
+                  : "border-[var(--line)] text-smoke hover:border-smoke hover:text-warm",
+              )}
+            >
+              {f.label}
+              <span className={active ? "opacity-60" : "opacity-50"}>{n}</span>
+            </button>
+          );
+        })}
       </div>
 
       <div
@@ -86,9 +118,9 @@ export function PhotoSidebar() {
         role="listbox"
         aria-label="Frames"
         aria-activedescendant={selected ? `strip-${selected}` : undefined}
-        className="flex-1 overflow-y-auto px-3 py-3"
+        className="flex-1 overflow-y-auto px-2.5 py-3"
       >
-        {doc.photos.map((photo) => {
+        {shown.map((photo) => {
           const url = urls[photo.thumbPath] ?? urls[photo.storagePath];
           const isSelected = photo.id === selected;
           return (
@@ -137,10 +169,30 @@ export function PhotoSidebar() {
           );
         })}
       </div>
-
-      <div className="hair-t px-3 py-2">
-        <AddPhotos count={doc.photos.length} />
-      </div>
     </aside>
+  );
+}
+
+/** The chevron that folds the column away, and the one that brings it back. */
+function PanelHandle({ open, onClick }: { open: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-expanded={open}
+      aria-label={open ? "Hide the frames panel" : "Show the frames panel"}
+      title={open ? "Hide the frames panel" : "Show the frames panel"}
+      className="grid h-5 w-5 shrink-0 place-items-center text-smoke transition-colors hover:text-warm"
+    >
+      <svg viewBox="0 0 12 12" className="h-2.5 w-2.5" aria-hidden="true">
+        <path
+          d="M7.5 2 3.5 6l4 4"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          style={{ transform: open ? "none" : "rotate(180deg)", transformOrigin: "center" }}
+        />
+      </svg>
+    </button>
   );
 }

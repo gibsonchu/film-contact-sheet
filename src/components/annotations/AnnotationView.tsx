@@ -197,17 +197,18 @@ function Stroke({ annotation: a }: { annotation: Annotation }) {
     );
   }
 
-  if (instrument.texture === "chalk") {
+  if (instrument.texture === "crayon") {
+    // Wax builds up in passes: a faint halo of colour shed either side of the
+    // stroke, the body of the deposit, and a denser core where the stick bore
+    // down. The filter crumbles the edge and lets the paper through all three.
     return (
-      <g>
-        <path d={strokeOutlinePath(points, a.strokeWidth, a.tool, 1.1)} fill={a.color} opacity={0.4} />
-        <path d={core} fill={a.color} />
-        {/* Grain through the body: chalk never lays down evenly. */}
-        <path d={core} fill="url(#fcs-chalk)" opacity={0.55} style={{ mixBlendMode: "overlay" }} />
+      <g filter="url(#fcs-crayon)">
+        <path d={strokeOutlinePath(points, a.strokeWidth, a.tool, 1.22)} fill={a.color} opacity={0.22} />
+        <path d={core} fill={a.color} opacity={0.86} />
         <path
-          d={strokeOutlinePath(points, a.strokeWidth * 0.55, a.tool, 0.75)}
+          d={strokeOutlinePath(points, a.strokeWidth * 0.62, a.tool, 0.72)}
           fill={a.color}
-          opacity={0.5}
+          opacity={0.55}
         />
       </g>
     );

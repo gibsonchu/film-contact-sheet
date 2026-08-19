@@ -17,42 +17,51 @@ export const INK_COLORS: InkColor[] = [
   { id: "pen-green", label: "Green pen", hex: "#2e9e57", texture: "ink" },
 ];
 
+/**
+ * Two weights, because a contact sheet only ever asks for two: a line you
+ * write with and a line you mark with. Four steps of thickness was a paint
+ * program's idea of the problem.
+ */
 export const STROKE_SIZES = [
-  { id: "thin", label: "Thin", value: 2.5 },
-  { id: "medium", label: "Medium", value: 5 },
-  { id: "thick", label: "Thick", value: 9 },
-  { id: "extra", label: "Extra thick", value: 15 },
+  { id: "fine", label: "Fine", short: "Fine", value: 4 },
+  { id: "bold", label: "Bold", short: "Bold", value: 11 },
 ] as const;
 
 export type StrokeSizeId = (typeof STROKE_SIZES)[number]["id"];
 
 /**
- * The same four steps drive stroke weight and type size, but they are not the
- * same idea: a note is small or large, it is not thin or thick. Text gets its
- * own names so the control reads as what it actually does.
+ * Type keeps its four steps: a note is small or large, which is a different
+ * question from how thick the pencil is, and one that wants finer grading.
  */
-const TEXT_SIZE_NAMES: Record<StrokeSizeId, { full: string; short: string }> = {
-  thin: { full: "Small", short: "S" },
-  medium: { full: "Medium", short: "M" },
-  thick: { full: "Large", short: "L" },
-  extra: { full: "Extra large", short: "XL" },
-};
+export const TEXT_SIZES = [
+  { id: "small", label: "Small", short: "S", value: 2.5 },
+  { id: "medium", label: "Medium", short: "M", value: 5 },
+  { id: "large", label: "Large", short: "L", value: 9 },
+  { id: "xlarge", label: "Extra large", short: "XL", value: 15 },
+] as const;
 
-/** Abbreviations, written out rather than sliced — "Medium" cut to five
- *  characters reads as a mistake, not as a short label. */
-const STROKE_SIZE_SHORT: Record<StrokeSizeId, string> = {
-  thin: "Thin",
-  medium: "Med",
-  thick: "Thick",
-  extra: "X-thick",
-};
+export interface SizeOption {
+  id: string;
+  label: string;
+  short: string;
+  value: number;
+}
 
-export function sizeNames(
-  size: (typeof STROKE_SIZES)[number],
-  forText: boolean,
-): { full: string; short: string } {
-  if (forText) return TEXT_SIZE_NAMES[size.id];
-  return { full: size.label, short: STROKE_SIZE_SHORT[size.id] };
+/** The weights on offer for whatever is in hand. */
+export function sizeOptions(forText: boolean): readonly SizeOption[] {
+  return forText ? TEXT_SIZES : STROKE_SIZES;
+}
+
+/**
+ * Which option a given width belongs to. Widths are plain numbers and older
+ * sheets hold values these lists no longer contain, so the nearest one wins
+ * rather than the control showing nothing selected.
+ */
+export function nearestSize(value: number, forText: boolean): SizeOption {
+  const options = sizeOptions(forText);
+  return options.reduce((best, option) =>
+    Math.abs(option.value - value) < Math.abs(best.value - value) ? option : best,
+  );
 }
 
 export const TAPE_KINDS: { id: TapeKind; label: string; fill: string; ink: string }[] = [
@@ -84,7 +93,7 @@ export interface DrawInstrument {
   thinning: number;
   smoothing: number;
   streamline: number;
-  texture: "ink" | "wax" | "chalk" | "bleed";
+  texture: "ink" | "wax" | "crayon" | "bleed";
   /** Whether an opacity control is worth showing for it. */
   opacityMatters: boolean;
 }
@@ -117,13 +126,15 @@ export const DRAW_INSTRUMENTS: DrawInstrument[] = [
   {
     id: "pastel",
     label: "Pastel",
-    hint: "Soft and chalky, laid straight onto the paper",
-    widthScale: 2.1,
-    opacity: 0.62,
-    thinning: 0.72,
-    smoothing: 0.3,
-    streamline: 0.3,
-    texture: "chalk",
+    hint: "Waxy and blunt, dragged over the tooth of the paper",
+    // A wax stick is blunt and holds its width; what varies is how much of it
+    // reaches the paper, which is the texture's job rather than the geometry's.
+    widthScale: 2.4,
+    opacity: 0.9,
+    thinning: 0.34,
+    smoothing: 0.22,
+    streamline: 0.26,
+    texture: "crayon",
     opacityMatters: true,
   },
   {
@@ -153,7 +164,7 @@ export function instrumentFor(tool: string): DrawInstrument {
 const RETIRED_INSTRUMENTS: Record<string, DrawInstrument> = {
   grease: { ...DRAW_INSTRUMENTS[0], id: "marker", widthScale: 1.5, opacity: 0.92, thinning: 0.65, smoothing: 0.32, streamline: 0.36, texture: "wax" },
   highlighter: { ...DRAW_INSTRUMENTS[0], id: "marker", widthScale: 2.6, opacity: 0.38, thinning: 0.05, smoothing: 0.6, streamline: 0.55, texture: "wax" },
-  pencil: { ...DRAW_INSTRUMENTS[1], id: "pen", widthScale: 0.6, opacity: 0.78, thinning: 0.7, smoothing: 0.4, streamline: 0.4, texture: "chalk" },
+  pencil: { ...DRAW_INSTRUMENTS[1], id: "pen", widthScale: 0.6, opacity: 0.78, thinning: 0.7, smoothing: 0.4, streamline: 0.4, texture: "crayon" },
 };
 
 /** Tools that draw a freehand stroke rather than a parametric shape. */

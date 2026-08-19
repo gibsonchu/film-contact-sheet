@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { IconEye, IconEyeOff, IconLayers, IconLock, IconRotate, IconTrash } from "@/components/icons";
 import { Button, Field, IconButton, Panel, Segmented, Select, Toggle, cx, inputClass } from "@/components/ui/primitives";
-import { DRAW_INSTRUMENTS, INK_COLORS, STROKE_SIZES, TAPE_KINDS, TEXT_FONTS, sizeNames } from "@/lib/palette";
+import { DRAW_INSTRUMENTS, INK_COLORS, TAPE_KINDS, TEXT_FONTS, nearestSize, sizeOptions } from "@/lib/palette";
 import { TEMPLATE_LIST } from "@/lib/templates";
 import { useEditor } from "@/lib/store/editor";
 import type { PickMark, ReviewStatus, TemplateId } from "@/lib/types";
@@ -223,13 +223,14 @@ export function AnnotationInspector() {
 
           {hasWeight ? (
             <Segmented
-              label={isText ? "Text size" : "Stroke size"}
-              value={String(a.strokeWidth)}
+              label={isText ? "Text size" : "Stroke width"}
+              value={String(nearestSize(a.strokeWidth, isText).value)}
               onChange={(v) => update(a.id, { strokeWidth: Number(v) })}
-              options={STROKE_SIZES.map((sz) => {
-                const names = sizeNames(sz, isText);
-                return { value: String(sz.value), label: names.short, title: names.full };
-              })}
+              options={sizeOptions(isText).map((o) => ({
+                value: String(o.value),
+                label: isText ? o.short : o.label,
+                title: o.label,
+              }))}
             />
           ) : null}
 

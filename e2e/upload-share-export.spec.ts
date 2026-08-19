@@ -27,7 +27,9 @@ test.describe("upload limits", () => {
     await page.getByRole("button", { name: /Build 2 sheets/ }).click();
     await page.waitForURL(/\/sheet\//, { timeout: 60_000 });
 
-    // New sheets open on the default template; it is changed in the editor.
+    // New sheets open on the default template; it is changed in the editor,
+    // where the sheet's settings live at the head of the left-hand column.
+    await page.getByRole("button", { name: "Contact sheet settings" }).click();
     await expect(templateButton(page)).toContainText("Eliz Digital");
 
     await page.goto("/projects");
@@ -47,14 +49,14 @@ test.describe("upload limits", () => {
   test("adding to a full sheet stops at the 38-frame roll limit", async ({ page }) => {
     await openDemo(page);
     await expect(page.locator("[data-frame-index]")).toHaveCount(36);
-    await expect(page.getByText("2 free")).toBeVisible();
+    await expect(page.getByText("2 of 38 free")).toBeVisible();
 
     // Five more into a sheet with room for two.
     await page.setInputFiles(FOLDER_INPUT, makeImageFolder(5));
 
     await expect(page.locator("[data-frame-index]")).toHaveCount(38, { timeout: 30_000 });
     await expect(page.getByText(/3 left out/)).toBeVisible();
-    await expect(page.getByRole("button", { name: "Add a folder of photographs" })).toBeDisabled();
+    await expect(page.getByRole("button", { name: "Add a folder of photos" })).toBeDisabled();
   });
 
   test("rejects a RAW file with a readable message", async ({ page }) => {
@@ -70,8 +72,9 @@ test.describe("sharing", () => {
   test("a shared view is read-only and never exposes private notes", async ({ page }) => {
     await openDemo(page);
 
-    // Put a private note on frame 1.
+    // Put a private note on frame 1, from the dock's contextual strip.
     await page.locator('[data-frame-index="0"]').click();
+    await page.getByRole("button", { name: /^Notes/ }).click();
     await page.getByLabel("Private note").fill("negative is scratched");
     await expect(page.getByLabel("Private note")).toHaveValue("negative is scratched");
 

@@ -1,6 +1,7 @@
-import { EditorScreen } from "@/components/editor/EditorScreen";
+import { AltEditorScreen } from "@/components/editor/alt/AltEditorScreen";
 
+/** The dock layout is the default; /panels keeps the original arrangement. */
 export default async function SheetPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  return <EditorScreen sheetId={id} />;
+  return <AltEditorScreen sheetId={id} />;
 }

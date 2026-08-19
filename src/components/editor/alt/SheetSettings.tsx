@@ -7,27 +7,26 @@ import { cx } from "@/components/ui/primitives";
 import { useEditor } from "@/lib/store/editor";
 
 /**
- * The sheet itself, top left, the way a document names itself in the corner of
- * a canvas application: title, how it is doing, and a disclosure that drops the
- * whole of the sheet's settings underneath.
+ * What the sheet is, at the head of the left-hand column: its name, how it is
+ * doing, and a disclosure holding everything that shapes it — template,
+ * layout, what gets printed, the roll's details.
  *
- * Nothing here is about a photograph — this is the roll, the template and the
- * printing. Frame-level things belong to the dock at the bottom.
+ * Nothing here belongs to a single photograph. Frame-level things live on the
+ * dock at the bottom, next to the hand doing the work.
  */
-export function SheetCard() {
+export function SheetSettings() {
   const doc = useEditor((s) => s.doc);
   const saveState = useEditor((s) => s.saveState);
   const dirty = useEditor((s) => s.dirty);
   const updateSheet = useEditor((s) => s.updateSheet);
   const [open, setOpen] = useState(false);
-  const cardRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
-  /* Click away or press Escape and the settings fold back up, leaving the
-     sheet unobstructed. */
+  /* Click away or press Escape and the settings fold back up. */
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
-      if (!cardRef.current?.contains(e.target as Node)) setOpen(false);
+      if (!panelRef.current?.contains(e.target as Node)) setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
@@ -51,19 +50,16 @@ export function SheetCard() {
   };
 
   return (
-    <div
-      ref={cardRef}
-      className="pointer-events-auto absolute left-3 top-3 z-30 w-[268px] overflow-hidden rounded-[2px] border border-[var(--line)] bg-charcoal/95 backdrop-blur"
-    >
-      <div className="flex items-center gap-2 px-2.5 py-2">
-        <Link
-          href="/projects"
-          aria-label="Back to all contact sheets"
-          title="All contact sheets"
-          className="label shrink-0 hover:text-warm"
-        >
-          ‹ Sheets
-        </Link>
+    <div ref={panelRef} className="relative">
+      <Link
+        href="/projects"
+        aria-label="Back to all contact sheets"
+        className="label block hover:text-warm"
+      >
+        ‹ Sheets
+      </Link>
+
+      <div className="mt-0.5 flex items-center gap-1">
         <input
           value={doc.sheet.title}
           onChange={(e) => updateSheet({ title: e.target.value })}
@@ -94,17 +90,14 @@ export function SheetCard() {
         </button>
       </div>
 
-      <div className="hair-t flex items-center justify-between px-2.5 py-1.5">
-        <span className="label">
-          {doc.photos.length} frames · {doc.sheet.rollNumber || "no roll number"}
-        </span>
-        <span className="label" role="status" aria-live="polite">
-          {save[saveState] ?? save.idle}
-        </span>
-      </div>
+      <p className="label truncate">
+        {doc.photos.length} frames · {save[saveState] ?? save.idle}
+      </p>
 
+      {/* Floated clear of the column so a long settings list is not trapped
+          inside it, and so the roll underneath stays where it was. */}
       {open ? (
-        <div className="hair-t max-h-[min(70vh,620px)] space-y-3 overflow-y-auto p-3">
+        <div className="absolute left-0 top-[calc(100%+8px)] z-40 max-h-[70vh] w-[248px] space-y-3 overflow-y-auto border border-[var(--line)] bg-noir p-3">
           <SheetInspector />
         </div>
       ) : null}

@@ -205,7 +205,7 @@ export const useEditor = create<EditorState>()((set, get) => {
 
     tool: "select",
     color: INK_COLORS[0].hex,
-    strokeWidth: STROKE_SIZES[1].value,
+    strokeWidth: STROKE_SIZES[0].value,
     opacity: 1,
     tapeKind: "masking",
 
