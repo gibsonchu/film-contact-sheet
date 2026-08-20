@@ -174,6 +174,15 @@ export const IconFullscreen = (p: P) => (
   </svg>
 );
 
+/** Settings: a six-toothed gear silhouette, softened by the same rounded
+ *  joins as the rest of the set rather than cut sharp. */
+export const IconGear = (p: P) => (
+  <svg {...base} {...p}>
+    <path d="M10 3.6 12.2 6.3 15.5 6.8 14.3 10 15.5 13.2 12.2 13.7 10 16.4 7.9 13.7 4.5 13.2 5.7 10 4.5 6.8 7.9 6.3Z" />
+    <circle cx="10" cy="10" r="2.1" />
+  </svg>
+);
+
 export const IconUndo = (p: P) => (
   <svg {...base} {...p}>
     <path d="M6.4 6.2H3.6V3.4" />

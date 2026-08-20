@@ -506,7 +506,7 @@ export function SheetInspector() {
         <Toggle label="Film grain" checked={showGrain} onChange={toggleGrain} hint="Preview only — export follows the sheet setting." />
       </Panel>
 
-      <Panel title="Roll details" className="mb-4">
+      <Panel title="Roll Details" className="mb-4">
         <div className="space-y-2.5">
           {(
             [

@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { SheetInspector } from "../Inspector";
+import { IconGear } from "@/components/icons";
 import { cx } from "@/components/ui/primitives";
 import { useEditor } from "@/lib/store/editor";
 
@@ -59,15 +59,7 @@ export function SheetSettings() {
 
   return (
     <div ref={panelRef} className="relative">
-      <Link
-        href="/projects"
-        aria-label="Back to all contact sheets"
-        className="label block hover:text-warm"
-      >
-        ‹ Sheets
-      </Link>
-
-      <div className="mt-0.5 flex items-center gap-1">
+      <div className="flex items-center gap-1">
         <input
           value={doc.sheet.title}
           onChange={(e) => updateSheet({ title: e.target.value })}
@@ -86,15 +78,7 @@ export function SheetSettings() {
             open ? "text-warm" : "text-smoke hover:text-warm",
           )}
         >
-          <svg viewBox="0 0 12 12" className="h-2.5 w-2.5" aria-hidden="true">
-            <path
-              d="M2 4.5 6 8.5l4-4"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.4"
-              style={{ transform: open ? "rotate(180deg)" : "none", transformOrigin: "center" }}
-            />
-          </svg>
+          <IconGear className="h-3.5 w-3.5" />
         </button>
       </div>
 

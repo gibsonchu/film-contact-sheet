@@ -263,7 +263,7 @@ export function UploadFlow() {
         </section>
 
         <section>
-          <h2 className="mb-2 text-[13px] text-warm">Roll details</h2>
+          <h2 className="mb-2 text-[13px] text-warm">Roll Details</h2>
           <div className="space-y-3">
               <Field label="Title">
                 {(id) => (

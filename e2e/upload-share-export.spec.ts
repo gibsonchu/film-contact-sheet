@@ -5,6 +5,7 @@ import {
   fakeImages,
   makeImageFolder,
   openDemo,
+  openDemoPanels,
   templateButton,
 } from "./helpers";
 
@@ -70,11 +71,12 @@ test.describe("upload limits", () => {
 
 test.describe("sharing", () => {
   test("a shared view is read-only and never exposes private notes", async ({ page }) => {
-    await openDemo(page);
+    // Sharing lives on the panelled layout — the default dock layout no
+    // longer surfaces it, by design.
+    await openDemoPanels(page);
 
-    // Put a private note on frame 1, from the dock's contextual strip.
+    // Put a private note on frame 1.
     await page.locator('[data-frame-index="0"]').click();
-    await page.getByRole("button", { name: /^Notes/ }).click();
     await page.getByLabel("Private note").fill("negative is scratched");
     await expect(page.getByLabel("Private note")).toHaveValue("negative is scratched");
 

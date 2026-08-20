@@ -236,4 +236,38 @@ test.describe("dock layout", () => {
     // Scrolling never moved the document itself.
     expect(await page.evaluate(() => window.scrollY)).toBe(0);
   });
+
+  test("the panel/preview/postcard/share views are gone, and the way back sits over the canvas", async ({ page }) => {
+    await openDemo(page);
+
+    await expect(page.getByRole("link", { name: "Panel layout" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Preview" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Postcard" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Share" })).toHaveCount(0);
+
+    // "All sheets" moved out of the left column and onto the canvas itself.
+    const sidebar = page.getByRole("complementary", { name: "Frames" });
+    await expect(sidebar.getByRole("link", { name: /all sheets/i })).toHaveCount(0);
+
+    const back = page.getByRole("link", { name: "‹ All sheets" });
+    await expect(back).toBeVisible();
+    const backBox = (await back.boundingBox())!;
+    const sidebarBox = (await sidebar.boundingBox())!;
+    expect(backBox.x).toBeGreaterThan(sidebarBox.x + sidebarBox.width);
+
+    await back.click();
+    await expect(page).toHaveURL(/\/projects$/);
+  });
+
+  test("the settings toggle is a gear, not an arrow, and its section reads Roll Details", async ({ page }) => {
+    await openDemo(page);
+    // The gear is a toothed outline plus a centre hole — the old chevron
+    // was a single path and nothing else.
+    const gear = page.getByRole("button", { name: "Contact sheet settings" });
+    await expect(gear.locator("path")).toHaveCount(1);
+    await expect(gear.locator("circle")).toHaveCount(1);
+
+    await gear.click();
+    await expect(page.getByText("Roll Details")).toBeVisible();
+  });
 });

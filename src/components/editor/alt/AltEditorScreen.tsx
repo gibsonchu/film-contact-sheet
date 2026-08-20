@@ -6,7 +6,6 @@ import { BottomDock } from "./BottomDock";
 import { PhotoSidebar } from "./PhotoSidebar";
 import { CanvasStage } from "../CanvasStage";
 import { ExportDialog } from "../ExportDialog";
-import { ShareDialog } from "../ShareDialog";
 import { useEditorSession } from "../useEditorSession";
 import { Button, IconButton } from "@/components/ui/primitives";
 import { IconRedo, IconUndo, IconZoomIn, IconZoomOut } from "@/components/icons";
@@ -29,7 +28,6 @@ export function AltEditorScreen({ sheetId }: { sheetId: string }) {
   const dirty = useEditor((s) => s.dirty);
   const sheetFullscreen = useEditor((s) => s.sheetFullscreen);
   const [showExport, setShowExport] = useState(false);
-  const [showShare, setShowShare] = useState(false);
 
   useEditorSession(sheetId);
 
@@ -80,7 +78,8 @@ export function AltEditorScreen({ sheetId }: { sheetId: string }) {
           </p>
         ) : (
           <>
-            <ActionBar onExport={() => setShowExport(true)} onShare={() => setShowShare(true)} />
+            <BackLink />
+            <ActionBar onExport={() => setShowExport(true)} />
             <BottomDock />
           </>
         )}
@@ -89,7 +88,6 @@ export function AltEditorScreen({ sheetId }: { sheetId: string }) {
       </main>
 
       <ExportDialog open={showExport} onClose={() => setShowExport(false)} />
-      <ShareDialog open={showShare} onClose={() => setShowShare(false)} />
 
       <span className="sr-only" role="status" aria-live="polite">
         {dirty ? "Unsaved changes" : "All changes saved"}
@@ -98,8 +96,20 @@ export function AltEditorScreen({ sheetId }: { sheetId: string }) {
   );
 }
 
-/** Undo, the two read-only views, and the ways out — top right, out of the way. */
-function ActionBar({ onExport, onShare }: { onExport: () => void; onShare: () => void }) {
+/** The way out, top left of the canvas — out of the way of the sheet itself. */
+function BackLink() {
+  return (
+    <Link
+      href="/projects"
+      className="pill pointer-events-auto absolute left-3 top-3 z-30 px-3 py-1.5 text-[12px] text-bone transition-colors hover:text-warm"
+    >
+      ‹ All sheets
+    </Link>
+  );
+}
+
+/** Undo and the way to print it — top right, out of the way. */
+function ActionBar({ onExport }: { onExport: () => void }) {
   const doc = useEditor((s) => s.doc);
   const undo = useEditor((s) => s.undo);
   const redo = useEditor((s) => s.redo);
@@ -116,25 +126,6 @@ function ActionBar({ onExport, onShare }: { onExport: () => void; onShare: () =>
         <IconButton label="Redo (⇧⌘Z)" onClick={redo} disabled={future === 0}>
           <IconRedo className="h-3.5 w-3.5" />
         </IconButton>
-      </div>
-
-      <div className="pill flex items-center gap-3 px-3 py-1.5">
-        <Link
-          href={`/sheet/${doc.sheet.id}/panels`}
-          className="label hover:text-warm"
-          title="The original panelled layout"
-        >
-          Panel layout
-        </Link>
-        <Link href={`/sheet/${doc.sheet.id}/preview`} className="label hover:text-warm">
-          Preview
-        </Link>
-        <Link href={`/sheet/${doc.sheet.id}/postcard`} className="label hover:text-warm">
-          Postcard
-        </Link>
-        <button type="button" onClick={onShare} className="label hover:text-warm">
-          Share
-        </button>
       </div>
 
       <Button variant="primary" size="sm" onClick={onExport}>
