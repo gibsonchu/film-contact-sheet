@@ -54,16 +54,26 @@ export function UploadFlow() {
   const sheetCount = Math.max(1, Math.ceil(valid.length / MAX_PHOTOS_PER_SHEET));
 
   async function create() {
-    if (valid.length === 0) return;
     setBusy(true);
     setProgress({ done: 0, total: valid.length });
     const storage = getStorage();
-    const batches = chunkForSheets(valid, MAX_PHOTOS_PER_SHEET);
-    const baseTitle = meta.title.trim() || "Untitled Roll";
-    const ids: string[] = [];
-    let done = 0;
 
     try {
+      // With nothing uploaded yet, this is exactly what "Blank sheet" used to
+      // do — a single empty sheet, carrying whatever roll details were
+      // already filled in, ready for photos in the editor.
+      if (valid.length === 0) {
+        const doc = createDocument({ ...meta, title: meta.title.trim() || "Untitled Roll" });
+        await storage.saveDocument(doc);
+        router.push(`/sheet/${doc.sheet.id}`);
+        return;
+      }
+
+      const batches = chunkForSheets(valid, MAX_PHOTOS_PER_SHEET);
+      const baseTitle = meta.title.trim() || "Untitled Roll";
+      const ids: string[] = [];
+      let done = 0;
+
       for (const [batchIndex, batch] of batches.entries()) {
         // New sheets start on the default template; it is switched from the
         // editor's inspector, where the change can be seen on the sheet.
@@ -133,7 +143,7 @@ export function UploadFlow() {
           <SiteMark />
           <div className="flex-1" />
           <Link href="/projects" className="label hover:text-warm">
-            All sheets
+            Binder
           </Link>
         </div>
       </header>
@@ -357,8 +367,8 @@ export function UploadFlow() {
         </section>
 
         <div className="flex items-center gap-3">
-          <Button variant="primary" onClick={create} disabled={busy || valid.length === 0}>
-            {busy ? `Building… ${progress.done}/${progress.total}` : `Build ${sheetCount > 1 ? `${sheetCount} sheets` : "the sheet"}`}
+          <Button variant="primary" onClick={create} disabled={busy}>
+            {busy ? (valid.length > 0 ? `Creating… ${progress.done}/${progress.total}` : "Creating…") : "Create"}
           </Button>
           {busy ? (
             <div className="h-px flex-1 bg-white/15" role="progressbar" aria-valuenow={progress.done} aria-valuemax={progress.total}>

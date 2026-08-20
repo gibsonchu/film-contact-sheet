@@ -11,24 +11,24 @@ test.describe("landing page", () => {
     await expect(page.getByRole("heading", { name: "Film Contact Sheet" })).toBeVisible();
 
     const create = page.getByRole("link", { name: "Create a Contact Sheet" });
-    const past = page.getByRole("link", { name: "My Sheets" });
+    const binder = page.getByRole("link", { name: "Binder" });
     await expect(create).toBeVisible();
-    await expect(past).toBeVisible();
+    await expect(binder).toBeVisible();
 
     // The artwork itself is decorative — the accessible name comes from the
     // link's own label, not from the image.
     await expect(create.locator("img")).toHaveAttribute("alt", "");
     await expect(create.getByText("New")).toBeVisible();
-    await expect(past.getByText("Past")).toBeVisible();
+    await expect(binder.getByText("Binder")).toBeVisible();
   });
 
-  test("New leads to a fresh sheet, Past leads to the sheet list", async ({ page }) => {
+  test("New leads to a fresh sheet, Binder leads to the sheet list", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("link", { name: "Create a Contact Sheet" }).click();
     await expect(page).toHaveURL(/\/new$/);
 
     await page.goto("/");
-    await page.getByRole("link", { name: "My Sheets" }).click();
+    await page.getByRole("link", { name: "Binder" }).click();
     await expect(page).toHaveURL(/\/projects$/);
   });
 });

@@ -28,8 +28,8 @@ export default function HomePage() {
         />
         <HandDrawnCTA
           href="/projects"
-          label="My Sheets"
-          word="Past"
+          label="Binder"
+          word="Binder"
           src="/mark-past.png"
           width={297}
           height={275}

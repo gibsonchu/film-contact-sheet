@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { SiteMark } from "@/components/SiteMark";
 import { Button, Segmented, cx } from "@/components/ui/primitives";
 import { ensureDemoDocument } from "@/lib/demo";
-import { createDocument, uid } from "@/lib/document";
+import { uid } from "@/lib/document";
 import { getStorage, summarize } from "@/lib/storage/local";
 import { TEMPLATES } from "@/lib/templates";
 import type { ProjectSummary, SheetDocument } from "@/lib/types";
@@ -104,13 +104,6 @@ export function ProjectLibrary() {
     await refresh();
   }
 
-  async function blankSheet() {
-    setBusy(true);
-    const doc = createDocument({ title: "Untitled Roll" });
-    await getStorage().saveDocument(doc);
-    router.push(`/sheet/${doc.sheet.id}`);
-  }
-
   async function openDemo() {
     setBusy(true);
     const doc = await ensureDemoDocument();
@@ -124,52 +117,56 @@ export function ProjectLibrary() {
           <SiteMark />
           <div className="flex-1" />
           <button type="button" onClick={openDemo} disabled={busy} className="label hover:text-warm">
-            Demo roll
-          </button>
-          <button type="button" onClick={blankSheet} disabled={busy} className="label hover:text-warm">
-            Blank sheet
+            Demo
           </button>
           <Link href="/new">
             <Button variant="primary" size="sm">
-              Upload
+              New Sheet
             </Button>
           </Link>
         </div>
       </header>
 
       <div className="hair-b">
-        <div className="mx-auto flex max-w-4xl flex-wrap items-center gap-3 px-3 py-1.5">
+        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-4 px-3 py-4">
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search"
             aria-label="Search sheets"
-            className="w-40 border-none bg-transparent text-[12px] text-warm outline-none placeholder:text-smoke"
+            className="w-56 border border-[var(--line)] bg-transparent px-2.5 py-1.5 text-[12px] text-warm outline-none placeholder:text-smoke focus:border-warm"
           />
-          <div className="w-52">
-            <Segmented
-              label="Sort by"
-              value={sort}
-              onChange={setSort}
-              options={[
-                { value: "updated", label: "Edited" },
-                { value: "created", label: "Created" },
-                { value: "title", label: "Title" },
-                { value: "photos", label: "Frames" },
-              ]}
-            />
-          </div>
-          <div className="w-48">
-            <Segmented
-              label="View"
-              value={view}
-              onChange={setView}
-              options={[
-                { value: "active", label: "Active" },
-                { value: "archived", label: "Archived" },
-                { value: "deleted", label: "Deleted" },
-              ]}
-            />
+
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="label shrink-0">Sort By</span>
+              <Segmented
+                label="Sort by"
+                value={sort}
+                onChange={setSort}
+                options={[
+                  { value: "updated", label: "Last Edited" },
+                  { value: "created", label: "Created" },
+                  { value: "title", label: "Title" },
+                ]}
+              />
+            </div>
+
+            <span className="h-5 w-px bg-[var(--line)]" aria-hidden="true" />
+
+            <div className="flex items-center gap-2">
+              <span className="label shrink-0">Filter By</span>
+              <Segmented
+                label="View"
+                value={view}
+                onChange={setView}
+                options={[
+                  { value: "active", label: "Active" },
+                  { value: "archived", label: "Archived" },
+                  { value: "deleted", label: "Deleted" },
+                ]}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -188,7 +185,7 @@ export function ProjectLibrary() {
           ) : null}
         </div>
       ) : (
-        <ul className="mx-auto grid max-w-4xl grid-cols-2 gap-x-4 gap-y-7 px-3 py-5 sm:grid-cols-3">
+        <ul className="mx-auto grid max-w-4xl grid-cols-2 gap-x-4 gap-y-4 px-3 py-5 sm:grid-cols-3">
           {visible.map((p) => (
             <li key={p.id} className="group">
               <Link href={`/sheet/${p.id}`} className="block">
@@ -275,7 +272,7 @@ export function ProjectLibrary() {
       )}
 
       <p className="label mx-auto max-w-4xl px-3 pb-6">
-        Sheets are stored in this browser. Connect Supabase to sync them to an account.
+        Sheets are only stored locally on this browser. Download your contact sheets to share with friends and family.
       </p>
     </div>
   );
