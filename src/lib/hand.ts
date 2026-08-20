@@ -55,14 +55,18 @@ export function handEllipse(
   rx: number,
   ry: number,
   seed: string,
-  opts?: { wobble?: number; overshoot?: number; laps?: number },
+  opts?: { wobble?: number; overshoot?: number; laps?: number; start?: number },
 ): string {
   const rand = rng(seed);
   const wobble = opts?.wobble ?? 0.055;
+  // Negative overshoot stops the loop short of a full revolution instead of
+  // running past it — a deliberate open gap rather than a closed circle.
   const overshoot = opts?.overshoot ?? 0.28;
   const laps = opts?.laps ?? 1;
   const steps = 34 * laps;
-  const start = rand() * Math.PI * 2;
+  // A caller that wants the gap somewhere specific (e.g. lined up with a
+  // flourish) can pin the start angle; everyone else keeps the random one.
+  const start = opts?.start ?? rand() * Math.PI * 2;
   const end = start + Math.PI * 2 * laps + overshoot;
   const tilt = (rand() - 0.5) * 0.14;
   const pts: P[] = [];
