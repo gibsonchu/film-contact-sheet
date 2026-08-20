@@ -23,10 +23,24 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        {/*
+          Runs before anything paints, so a saved "light" preference never
+          shows a flash of the dark theme first. Dark needs no script — it's
+          what the CSS already assumes with no data-theme attribute at all.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(localStorage.getItem('fcs-theme')==='light')document.documentElement.setAttribute('data-theme','light')}catch(e){}`,
+          }}
+        />
+      </head>
       <body className="min-h-full antialiased">
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded focus:bg-grease focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-noir"
+          // bg-grease and text-black are both fixed, not theme tokens — the skip
+          // link needs to stay legible before the theme is even known.
+          className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded focus:bg-grease focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-black"
         >
           Skip to content
         </a>

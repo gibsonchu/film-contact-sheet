@@ -13,7 +13,11 @@ export default function HomePage() {
       className="flex min-h-dvh flex-col px-6 py-8 sm:px-10 sm:py-10"
       style={{ background: "var(--color-darkroom)" }}
     >
-      <h1 className="text-[11vw] leading-none text-warm sm:text-6xl md:text-7xl">
+      {/* Fixed colour, not the --color-warm token — see HandDrawnCTA for why. */}
+      <h1
+        className="text-[11vw] leading-none sm:text-6xl md:text-7xl"
+        style={{ color: "#ededea" }}
+      >
         Film Contact Sheet
       </h1>
 

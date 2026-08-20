@@ -183,6 +183,21 @@ export const IconGear = (p: P) => (
   </svg>
 );
 
+/** Sun: a simple disc with rays, the light-mode half of the toggle. */
+export const IconSun = (p: P) => (
+  <svg {...base} {...p}>
+    <circle cx="10" cy="10" r="3.6" />
+    <path d="M10 2.6v2.2M10 15.2v2.2M17.4 10h-2.2M4.8 10H2.6M15.4 4.6l-1.6 1.6M6.2 13.8l-1.6 1.6M15.4 15.4l-1.6-1.6M6.2 6.2 4.6 4.6" />
+  </svg>
+);
+
+/** Moon: a crescent, the dark-mode half of the toggle. */
+export const IconMoon = (p: P) => (
+  <svg {...base} {...p}>
+    <path d="M14.8 12.1A6 6 0 0 1 7.9 5.2a6.2 6.2 0 1 0 6.9 6.9Z" />
+  </svg>
+);
+
 export const IconUndo = (p: P) => (
   <svg {...base} {...p}>
     <path d="M6.4 6.2H3.6V3.4" />

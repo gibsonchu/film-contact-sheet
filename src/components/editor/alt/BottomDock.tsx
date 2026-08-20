@@ -416,7 +416,7 @@ function FrameControls() {
             setConfirmRemove(false);
           }}
           onBlur={() => setConfirmRemove(false)}
-          className="shrink-0 rounded-full px-2.5 py-1 text-[11px] text-darkroom transition-colors hover:bg-darkroom hover:text-warm"
+          className="shrink-0 rounded-full px-2.5 py-1 text-[11px] text-darkroom transition-colors hover:bg-darkroom hover:text-white"
         >
           Remove?
         </button>

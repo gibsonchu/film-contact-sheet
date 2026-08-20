@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SiteMark } from "@/components/SiteMark";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button, Segmented, cx } from "@/components/ui/primitives";
 import { ensureDemoDocument } from "@/lib/demo";
 import { uid } from "@/lib/document";
@@ -124,6 +125,7 @@ export function ProjectLibrary() {
               New Sheet
             </Button>
           </Link>
+          <ThemeToggle />
         </div>
       </header>
 

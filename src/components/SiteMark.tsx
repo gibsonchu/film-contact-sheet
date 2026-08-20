@@ -8,7 +8,17 @@ import Link from "next/link";
 export function SiteMark({ className }: { className?: string }) {
   return (
     <Link href="/" aria-label="Film Contact Sheet" className={className}>
-      <Image src="/mark-new.png" alt="" width={400} height={266} className="h-6 w-auto" priority />
+      {/* The artwork is white pixels baked into the PNG, not a colour a CSS
+          class can touch — invert flips it to dark for light mode, since
+          alpha (the transparent background) passes through untouched. */}
+      <Image
+        src="/mark-new.png"
+        alt=""
+        width={400}
+        height={266}
+        className="theme-invert h-6 w-auto"
+        priority
+      />
     </Link>
   );
 }

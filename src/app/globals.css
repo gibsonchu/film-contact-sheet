@@ -29,6 +29,47 @@
   /* Every rule in the interface is this one hairline. */
   --line: rgba(255, 255, 255, 0.14);
   --line-soft: rgba(255, 255, 255, 0.08);
+  --scrollbar-thumb: #262626;
+  --scrollbar-thumb-hover: #3a3a3a;
+  --pill-bg: rgba(16, 16, 16, 0.92);
+}
+
+/*
+ * Light mode: the same neutral scale, run the other way. The chrome's
+ * background/surface tokens (noir → ash) go from darkest to lightest in dark
+ * mode, so their light-mode values go from lightest to darkest, keeping
+ * "more elevated" mapped to "more distinct from the void" in both. Text
+ * tokens (smoke/bone/warm) invert the same way: warm stays the primary
+ * foreground colour, just recast from near-white to near-black.
+ *
+ * The physical-material colours — paper, china, darkroom red, grease
+ * yellow — are content, not chrome: a template's paper stays paper, a
+ * grease pencil stays that exact red, regardless of which mode you're
+ * reading the app in. Only the surrounding UI retheme.
+ */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --color-noir: #f6f4ef;
+  --color-charcoal: #efece3;
+  --color-graphite: #e6e2d5;
+  --color-slate: #dad4c2;
+  --color-ash: #c7bfa8;
+  --color-smoke: #756e5c;
+  --color-bone: #46402f;
+  --color-warm: #17140d;
+
+  --line: rgba(0, 0, 0, 0.14);
+  --line-soft: rgba(0, 0, 0, 0.08);
+  --scrollbar-thumb: #d8d2c2;
+  --scrollbar-thumb-hover: #c3bba5;
+  --pill-bg: rgba(246, 244, 239, 0.92);
+}
+
+/* Chrome-only marks baked as white pixels on transparent PNGs (the site
+   icon) — invert flips them dark for light mode. Content-level artwork
+   (the landing page's own marks) never carries this class. */
+:root[data-theme="light"] .theme-invert {
+  filter: invert(1);
 }
 
 html,
@@ -75,7 +116,7 @@ body {
 .pill {
   border-radius: 999px;
   border: 1px solid var(--line);
-  background: rgba(16, 16, 16, 0.92);
+  background: var(--pill-bg);
   backdrop-filter: blur(6px);
 }
 
@@ -116,12 +157,12 @@ select {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #262626;
+  background: var(--scrollbar-thumb);
   border: 2px solid transparent;
   background-clip: content-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3a3a3a;
+  background: var(--scrollbar-thumb-hover);
   background-clip: content-box;
 }
 

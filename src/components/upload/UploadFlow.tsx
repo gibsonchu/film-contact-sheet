@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCallback, useRef, useState } from "react";
 import { SiteMark } from "@/components/SiteMark";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button, Field, cx, inputClass } from "@/components/ui/primitives";
 import { chunkForSheets, createDocument, createPhoto, renumber, sheetTitleForChunk } from "@/lib/document";
 import { ACCEPT_ATTR, formatBytes, processImage, validateFile } from "@/lib/images";
@@ -145,6 +146,7 @@ export function UploadFlow() {
           <Link href="/projects" className="label hover:text-warm">
             Binder
           </Link>
+          <ThemeToggle />
         </div>
       </header>
 
@@ -215,7 +217,7 @@ export function UploadFlow() {
                     <img
                       src={c.previewUrl}
                       alt=""
-                      className={cx("aspect-[3/2] w-full bg-[#151515] object-cover", c.error && "opacity-25")}
+                      className={cx("aspect-[3/2] w-full bg-charcoal object-cover", c.error && "opacity-25")}
                     />
                     <button
                       type="button"

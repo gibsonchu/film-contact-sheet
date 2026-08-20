@@ -7,6 +7,7 @@ import { PhotoSidebar } from "./PhotoSidebar";
 import { CanvasStage } from "../CanvasStage";
 import { ExportDialog } from "../ExportDialog";
 import { useEditorSession } from "../useEditorSession";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button, IconButton } from "@/components/ui/primitives";
 import { IconRedo, IconUndo, IconZoomIn, IconZoomOut } from "@/components/icons";
 import { computeLayout } from "@/lib/layout";
@@ -119,6 +120,10 @@ function ActionBar({ onExport }: { onExport: () => void }) {
 
   return (
     <div className="pointer-events-auto absolute right-3 top-3 z-30 flex items-center gap-2">
+      <div className="pill flex items-center px-0.5 py-0.5">
+        <ThemeToggle />
+      </div>
+
       <div className="pill flex items-center px-1 py-0.5">
         <IconButton label="Undo (⌘Z)" onClick={undo} disabled={past === 0}>
           <IconUndo className="h-3.5 w-3.5" />
