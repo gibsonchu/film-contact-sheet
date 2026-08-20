@@ -43,8 +43,10 @@ export function IconButton({
 }: Omit<ButtonHTMLAttributes<HTMLButtonElement>, "size"> & {
   label: string;
   active?: boolean;
-  /** The dock wants a larger, more tactile target than the rail does. */
-  size?: "sm" | "md";
+  /** The dock wants a larger, more tactile target than the rail does; "lg" is
+   *  the dock's primary row, sized to read as the main instrument, not a
+   *  secondary control. */
+  size?: "sm" | "md" | "lg";
 }) {
   return (
     <button
@@ -54,7 +56,7 @@ export function IconButton({
       aria-pressed={active}
       className={cx(
         "relative grid place-items-center transition-colors",
-        size === "md" ? "h-9 w-9 rounded-full" : "h-7 w-7",
+        size === "lg" ? "h-12 w-12 rounded-full" : size === "md" ? "h-9 w-9 rounded-full" : "h-7 w-7",
         active ? "bg-warm text-noir" : "text-smoke hover:text-warm",
         className,
       )}

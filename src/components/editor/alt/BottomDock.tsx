@@ -101,22 +101,22 @@ export function BottomDock() {
 
       <ContextStrip />
 
-      <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-[var(--line)] bg-charcoal/95 px-2 py-1.5 backdrop-blur">
+      <div className="pointer-events-auto flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-charcoal/95 px-3 py-2 backdrop-blur">
         <IconButton
           label="Select (V)"
-          size="md"
+          size="lg"
           active={tool === "select"}
           onClick={() => setTool("select")}
         >
-          <IconCursor className="h-[17px] w-[17px]" />
+          <IconCursor className="h-[21px] w-[21px]" />
         </IconButton>
         <IconButton
           label="Hand / pan (H)"
-          size="md"
+          size="lg"
           active={tool === "pan"}
           onClick={() => setTool("pan")}
         >
-          <IconHand className="h-[17px] w-[17px]" />
+          <IconHand className="h-[21px] w-[21px]" />
         </IconButton>
 
         <Rule />
@@ -125,7 +125,7 @@ export function BottomDock() {
           label={`Draw — ${instrumentFor(instrument).label} (B)`}
           title="Draw with"
           placement="above"
-          size="md"
+          size="lg"
           active={drawingActive}
           open={open === "draw"}
           onOpen={(next) => setOpen(next ? "draw" : null)}
@@ -142,14 +142,14 @@ export function BottomDock() {
             };
           })}
         >
-          <DrawIcon className="h-[17px] w-[17px]" />
+          <DrawIcon className="h-[21px] w-[21px]" />
         </Family>
 
         <Family
           label={`Marks — ${MARK_TOOLS.find((m) => m.id === markTool)?.label ?? "Circle"}`}
           title="Mark"
           placement="above"
-          size="md"
+          size="lg"
           active={markActive}
           open={open === "marks"}
           onOpen={(next) => setOpen(next ? "marks" : null)}
@@ -165,18 +165,18 @@ export function BottomDock() {
             };
           })}
         >
-          <MarkIcon className="h-[17px] w-[17px]" />
+          <MarkIcon className="h-[21px] w-[21px]" />
         </Family>
 
-        <IconButton label="Text (T)" size="md" active={tool === "text"} onClick={() => setTool("text")}>
-          <IconText className="h-[17px] w-[17px]" />
+        <IconButton label="Text (T)" size="lg" active={tool === "text"} onClick={() => setTool("text")}>
+          <IconText className="h-[21px] w-[21px]" />
         </IconButton>
 
         <Family
           label="Tape and stickers"
           title="Add"
           placement="above"
-          size="md"
+          size="lg"
           active={tool === "tape" || tool === "sticker"}
           open={open === "tape"}
           onOpen={(next) => setOpen(next ? "tape" : null)}
@@ -206,16 +206,16 @@ export function BottomDock() {
             },
           ]}
         >
-          <IconTape className="h-[17px] w-[17px]" />
+          <IconTape className="h-[21px] w-[21px]" />
         </Family>
 
         <IconButton
           label="Eraser (E)"
-          size="md"
+          size="lg"
           active={tool === "eraser"}
           onClick={() => setTool("eraser")}
         >
-          <IconEraser className="h-[17px] w-[17px]" />
+          <IconEraser className="h-[21px] w-[21px]" />
         </IconButton>
 
         <Rule />
@@ -225,11 +225,11 @@ export function BottomDock() {
 
         <IconButton
           label="Fullscreen contact sheet (F)"
-          size="md"
+          size="lg"
           active={sheetFullscreen}
           onClick={() => useEditor.getState().setSheetFullscreen(!sheetFullscreen)}
         >
-          <IconFullscreen className="h-[17px] w-[17px]" />
+          <IconFullscreen className="h-[21px] w-[21px]" />
         </IconButton>
       </div>
     </div>
@@ -237,7 +237,7 @@ export function BottomDock() {
 }
 
 function Rule() {
-  return <span className="mx-0.5 h-5 w-px bg-[var(--line)]" aria-hidden="true" />;
+  return <span className="mx-0.5 h-7 w-px bg-[var(--line)]" aria-hidden="true" />;
 }
 
 /* ----------------------------------------------------------------- ink */
@@ -278,12 +278,12 @@ function InkButton({ open, onOpen }: { open: boolean; onOpen: (v: boolean) => vo
       aria-label={`Ink and width — ${name}`}
       title={`Ink and width — ${name}`}
       className={cx(
-        "grid h-9 w-9 place-items-center rounded-full transition-colors",
+        "grid h-12 w-12 place-items-center rounded-full transition-colors",
         open ? "bg-white/10" : "hover:bg-white/6",
       )}
     >
       <span
-        className="block h-4 w-4 rounded-full border border-white/25"
+        className="block h-5 w-5 rounded-full border border-white/25"
         style={{ background: color }}
       />
     </button>

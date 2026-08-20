@@ -9,7 +9,7 @@ import { ExportDialog } from "../ExportDialog";
 import { ShareDialog } from "../ShareDialog";
 import { useEditorSession } from "../useEditorSession";
 import { Button, IconButton } from "@/components/ui/primitives";
-import { IconFit, IconRedo, IconUndo, IconZoomIn, IconZoomOut } from "@/components/icons";
+import { IconRedo, IconUndo, IconZoomIn, IconZoomOut } from "@/components/icons";
 import { computeLayout } from "@/lib/layout";
 import { useEditor } from "@/lib/store/editor";
 
@@ -145,7 +145,6 @@ function ActionBar({ onExport, onShare }: { onExport: () => void; onShare: () =>
 }
 
 function ViewControls() {
-  const requestFit = useEditor((s) => s.requestFit);
   const step = (factor: number) => {
     const state = useEditor.getState();
     state.setZoom(state.zoom * factor);
@@ -155,9 +154,6 @@ function ViewControls() {
       <div className="pill pointer-events-auto flex px-0.5">
         <IconButton label="Zoom out" onClick={() => step(1 / 1.2)}>
           <IconZoomOut className="h-3.5 w-3.5" />
-        </IconButton>
-        <IconButton label="Fit sheet to screen" onClick={requestFit}>
-          <IconFit className="h-3.5 w-3.5" />
         </IconButton>
         <IconButton label="Zoom in" onClick={() => step(1.2)}>
           <IconZoomIn className="h-3.5 w-3.5" />

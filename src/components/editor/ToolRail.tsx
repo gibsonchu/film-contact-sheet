@@ -210,7 +210,7 @@ export function InkSwatches({
   value: string;
   onChange: (hex: string) => void;
   layout?: "row" | "grid";
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "lg";
 }) {
   const dot = size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4";
   const hit = size === "sm" ? "h-4 w-4" : "h-[18px] w-[18px]";
@@ -279,7 +279,7 @@ export function Family({
   onPick: () => void;
   items: FamilyItem[];
   placement?: "right" | "above";
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "lg";
   children: React.ReactNode;
 }) {
   const anchorRef = useRef<HTMLDivElement>(null);
