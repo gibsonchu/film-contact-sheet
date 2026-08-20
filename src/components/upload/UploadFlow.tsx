@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCallback, useRef, useState } from "react";
+import { SiteMark } from "@/components/SiteMark";
 import { Button, Field, cx, inputClass } from "@/components/ui/primitives";
 import { chunkForSheets, createDocument, createPhoto, renumber, sheetTitleForChunk } from "@/lib/document";
 import { ACCEPT_ATTR, formatBytes, processImage, validateFile } from "@/lib/images";
@@ -127,15 +128,14 @@ export function UploadFlow() {
 
   return (
     <div className="min-h-dvh">
-      <header className="hair-b flex h-9 items-center gap-4 px-3">
-        <Link href="/" className="text-[12px] text-warm">
-          Film Contact Sheet
-        </Link>
-        <span className="label">New Contact Sheet</span>
-        <div className="flex-1" />
-        <Link href="/projects" className="label hover:text-warm">
-          All sheets
-        </Link>
+      <header className="hair-b">
+        <div className="mx-auto flex h-9 max-w-4xl items-center gap-4 px-3">
+          <SiteMark />
+          <div className="flex-1" />
+          <Link href="/projects" className="label hover:text-warm">
+            All sheets
+          </Link>
+        </div>
       </header>
 
       <div className="mx-auto max-w-4xl space-y-6 px-3 py-5">

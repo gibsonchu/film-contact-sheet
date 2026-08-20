@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { SiteMark } from "@/components/SiteMark";
 import { Button, Segmented, cx } from "@/components/ui/primitives";
 import { ensureDemoDocument } from "@/lib/demo";
 import { createDocument, uid } from "@/lib/document";
@@ -118,27 +119,26 @@ export function ProjectLibrary() {
 
   return (
     <div className="min-h-dvh">
-      <header className="hair-b flex h-9 items-center gap-4 px-3">
-        <Link href="/" className="text-[12px] text-warm">
-          Film Contact Sheet
-        </Link>
-        <span className="label">Sheets</span>
-        <div className="flex-1" />
-        <button type="button" onClick={openDemo} disabled={busy} className="label hover:text-warm">
-          Demo roll
-        </button>
-        <button type="button" onClick={blankSheet} disabled={busy} className="label hover:text-warm">
-          Blank sheet
-        </button>
-        <Link href="/new">
-          <Button variant="primary" size="sm">
-            Upload
-          </Button>
-        </Link>
+      <header className="hair-b">
+        <div className="mx-auto flex h-9 max-w-4xl items-center gap-4 px-3">
+          <SiteMark />
+          <div className="flex-1" />
+          <button type="button" onClick={openDemo} disabled={busy} className="label hover:text-warm">
+            Demo roll
+          </button>
+          <button type="button" onClick={blankSheet} disabled={busy} className="label hover:text-warm">
+            Blank sheet
+          </button>
+          <Link href="/new">
+            <Button variant="primary" size="sm">
+              Upload
+            </Button>
+          </Link>
+        </div>
       </header>
 
-      <div className="hair-b px-3 py-1.5">
-        <div className="mx-auto flex max-w-4xl flex-wrap items-center gap-3">
+      <div className="hair-b">
+        <div className="mx-auto flex max-w-4xl flex-wrap items-center gap-3 px-3 py-1.5">
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}

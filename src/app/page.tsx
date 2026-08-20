@@ -22,15 +22,17 @@ export default function HomePage() {
           href="/new"
           label="Create a Contact Sheet"
           word="New"
-          variant="loop"
-          seed="landing-new"
+          src="/mark-new.png"
+          width={400}
+          height={266}
         />
         <HandDrawnCTA
           href="/projects"
           label="My Sheets"
           word="Past"
-          variant="frame"
-          seed="landing-past"
+          src="/mark-past.png"
+          width={297}
+          height={275}
         />
       </div>
     </main>
