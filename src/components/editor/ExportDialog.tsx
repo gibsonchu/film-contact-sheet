@@ -104,12 +104,7 @@ export function ExportDialog({ open, onClose }: { open: boolean; onClose: () => 
   }
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      title="Export contact sheet"
-      description="Rendered from the same vector description you see in the editor — not a screenshot."
-    >
+    <Dialog open={open} onClose={onClose} title="Export contact sheet">
       <div className="space-y-4">
         <div>
           <span className="label mb-1.5 block">Format</span>
@@ -170,6 +165,10 @@ export function ExportDialog({ open, onClose }: { open: boolean; onClose: () => 
 
         {error ? <p className="text-[13px] text-darkroom">{error}</p> : null}
         {result ? <p className="text-[13px] text-bone">Saved {result}</p> : null}
+
+        <p className="text-[12px] italic text-smoke">
+          Coming soon will be the ability to save, share, and publish your contact sheets online.
+        </p>
 
         <div className="flex items-center justify-end gap-2 border-t border-white/8 pt-3">
           <Button variant="ghost" onClick={onClose}>

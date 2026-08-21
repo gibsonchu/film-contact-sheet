@@ -114,6 +114,25 @@ test.describe("sharing", () => {
 });
 
 test.describe("export", () => {
+  test("teases the coming-soon online features and drops the old subtitle", async ({ page }) => {
+    await openDemo(page);
+    await page.getByRole("button", { name: "Export" }).click();
+
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByText("Rendered from the same vector description")).toHaveCount(0);
+
+    const tease = dialog.getByText(
+      "Coming soon will be the ability to save, share, and publish your contact sheets online.",
+    );
+    await expect(tease).toBeVisible();
+    await expect(tease).toHaveCSS("font-style", "italic");
+
+    // Sits above the Cancel/Export row, not below it.
+    const teaseBox = (await tease.boundingBox())!;
+    const cancelBox = (await dialog.getByRole("button", { name: "Cancel" }).boundingBox())!;
+    expect(teaseBox.y).toBeLessThan(cancelBox.y);
+  });
+
   test("exports a high-resolution PNG containing the sheet", async ({ page }) => {
     await openDemo(page);
     await page.getByRole("button", { name: "Export" }).click();

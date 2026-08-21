@@ -10,7 +10,7 @@ export default function HomePage() {
   return (
     <main
       id="main"
-      className="flex min-h-dvh flex-col px-6 py-8 sm:px-10 sm:py-10"
+      className="relative flex min-h-dvh flex-col px-6 py-8 sm:px-10 sm:py-10"
       style={{ background: "var(--color-darkroom)" }}
     >
       {/* Fixed colour, not the --color-warm token — see HandDrawnCTA for why. */}
@@ -37,6 +37,18 @@ export default function HomePage() {
           src="/mark-past.png"
           width={297}
           height={275}
+        />
+      </div>
+
+      <div className="absolute bottom-4 right-4 sm:bottom-8 sm:right-8">
+        <HandDrawnCTA
+          href="/community"
+          label="Community"
+          word="Community"
+          src="/mark-community.png"
+          width={485}
+          height={350}
+          size="sm"
         />
       </div>
     </main>

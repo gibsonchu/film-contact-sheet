@@ -31,6 +31,26 @@ test.describe("landing page", () => {
     await page.getByRole("link", { name: "Binder" }).click();
     await expect(page).toHaveURL(/\/binder$/);
   });
+
+  test("a smaller Community mark sits bottom-right and leads to the community page", async ({ page }) => {
+    await page.goto("/");
+    const community = page.getByRole("link", { name: "Community" });
+    await expect(community).toBeVisible();
+    await expect(community.getByText("Community")).toBeVisible();
+
+    // Smaller than the two primary marks, and anchored to the bottom-right
+    // of the page rather than sitting in the centred pair.
+    const communityBox = (await community.boundingBox())!;
+    const binderBox = (await page.getByRole("link", { name: "Binder" }).boundingBox())!;
+    expect(communityBox.width).toBeLessThan(binderBox.width);
+
+    const viewport = page.viewportSize()!;
+    expect(communityBox.x + communityBox.width).toBeGreaterThan(viewport.width * 0.6);
+    expect(communityBox.y + communityBox.height).toBeGreaterThan(viewport.height * 0.6);
+
+    await community.click();
+    await expect(page).toHaveURL(/\/community$/);
+  });
 });
 
 /**
