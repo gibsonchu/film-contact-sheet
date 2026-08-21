@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCallback, useRef, useState } from "react";
+import { SiteFooter } from "@/components/SiteFooter";
 import { SiteMark } from "@/components/SiteMark";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button, Field, cx, inputClass } from "@/components/ui/primitives";
@@ -143,6 +144,9 @@ export function UploadFlow() {
         <div className="mx-auto flex h-9 max-w-4xl items-center gap-4 px-3">
           <SiteMark />
           <div className="flex-1" />
+          <Link href="/about" className="label hover:text-warm">
+            About
+          </Link>
           <Link href="/binder" className="label hover:text-warm">
             Binder
           </Link>
@@ -382,6 +386,8 @@ export function UploadFlow() {
           ) : null}
         </div>
       </div>
+
+      <SiteFooter />
     </div>
   );
 }

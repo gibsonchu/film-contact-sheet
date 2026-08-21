@@ -40,6 +40,16 @@ test.describe("theme toggle", () => {
     expect(bg).toBe("rgb(216, 31, 38)");
   });
 
+  test("the primary button fades on hover in light mode, not just dark", async ({ page }) => {
+    await page.goto("/binder");
+    await page.getByRole("button", { name: "Switch to light mode" }).click();
+
+    const newSheet = page.getByRole("link", { name: "New Sheet" }).getByRole("button");
+    await expect(newSheet).toHaveCSS("opacity", "1");
+    await newSheet.hover();
+    await expect(newSheet).toHaveCSS("opacity", "0.8");
+  });
+
   test("appears top right, left of Undo, on the contact sheet editor", async ({ page }) => {
     await openDemo(page);
     const toggle = page.getByRole("button", { name: "Switch to light mode" });

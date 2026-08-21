@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { SiteFooter } from "@/components/SiteFooter";
 import { SiteMark } from "@/components/SiteMark";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button, Segmented, cx } from "@/components/ui/primitives";
@@ -117,6 +118,9 @@ export function ProjectLibrary() {
         <div className="mx-auto flex h-9 max-w-4xl items-center gap-4 px-3">
           <SiteMark />
           <div className="flex-1" />
+          <Link href="/about" className="label hover:text-warm">
+            About
+          </Link>
           <button type="button" onClick={openDemo} disabled={busy} className="label hover:text-warm">
             Demo
           </button>
@@ -276,6 +280,8 @@ export function ProjectLibrary() {
       <p className="label mx-auto max-w-4xl px-3 pb-6">
         Sheets are only stored locally on this browser. Download your contact sheets to share with friends and family.
       </p>
+
+      <SiteFooter />
     </div>
   );
 }
