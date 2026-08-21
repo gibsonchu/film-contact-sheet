@@ -22,6 +22,10 @@ export interface ProcessedImage {
   thumb: Blob;
   width: number;
   height: number;
+  /** Vertical shots land rotated left (270°) so every frame lays horizontal
+   *  on the sheet — the same non-destructive rotation the editor's own
+   *  Rotate controls use, not a re-encode of the pixels. */
+  rotation: 0 | 90 | 180 | 270;
   mimeType: string;
   fileSize: number;
   originalFilename: string;
@@ -61,6 +65,7 @@ export async function processImage(file: File): Promise<ProcessedImage> {
     thumb,
     width,
     height,
+    rotation: height > width ? 270 : 0,
     mimeType: file.type || "image/jpeg",
     fileSize: file.size,
     originalFilename: file.name,

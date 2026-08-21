@@ -71,6 +71,7 @@ export function AddPhotos({ count, layout = "strip" }: { count: number; layout?:
             mimeType: processed.mimeType,
             width: processed.width,
             height: processed.height,
+            rotation: processed.rotation,
             fileSize: processed.fileSize,
           }),
         );

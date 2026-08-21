@@ -97,6 +97,7 @@ export function UploadFlow() {
               mimeType: processed.mimeType,
               width: processed.width,
               height: processed.height,
+              rotation: processed.rotation,
               fileSize: processed.fileSize,
               position: i,
               frameNumber: i + 1,
