@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://filmcontactsheets.com"),
   title: "Film Contact Sheet",
   description:
     "Build, mark up and share photographic contact sheets — film strips, grease pencil, tape and print-ready export.",
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
     description:
       "Build, mark up and share photographic contact sheets — film strips, grease pencil, tape and print-ready export.",
     type: "website",
+    url: "https://filmcontactsheets.com",
   },
 };
 

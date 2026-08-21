@@ -4,7 +4,7 @@ A proofing table for photographs. Upload a roll, get a contact sheet that looks
 like it came out of a darkroom, mark it up with grease pencil and tape, and
 export something worth printing.
 
-- **Live:** https://film-contact-sheet.vercel.app
+- **Live:** https://filmcontactsheets.com
 - **Demo roll:** `/demo` — 36 procedurally generated frames, already marked up.
   No account, no upload, nothing to install.
 
