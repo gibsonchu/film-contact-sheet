@@ -45,6 +45,7 @@ export function ExportDialog({ open, onClose }: { open: boolean; onClose: () => 
     return computeLayout({
       templateId: isPostcard ? "postcard" : doc.sheet.templateId,
       templateSettings: doc.sheet.templateSettings,
+      orientation: doc.sheet.orientation,
       photos: doc.photos,
       overrides: { showTitles: includeTitles, showMetadata: includeMetadata },
     });

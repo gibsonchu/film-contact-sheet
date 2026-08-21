@@ -40,6 +40,7 @@ export function createSheet(partial: Partial<ContactSheet> = {}): ContactSheet {
     filmStock: partial.filmStock ?? "",
     templateId: partial.templateId ?? DEFAULT_TEMPLATE_ID,
     templateSettings: partial.templateSettings ?? {},
+    orientation: partial.orientation ?? "landscape",
     sharingMode: partial.sharingMode ?? "private",
     commentsEnabled: partial.commentsEnabled ?? false,
     downloadsEnabled: partial.downloadsEnabled ?? true,

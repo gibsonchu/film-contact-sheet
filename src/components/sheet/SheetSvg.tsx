@@ -586,11 +586,11 @@ function FrameCell({
   const innerW = swapped ? frame.height : frame.width;
   const innerH = swapped ? frame.width : frame.height;
 
-  const label = photo
-    ? [showTitles ? photo.title : "", showFilenames ? photo.originalFilename : ""]
-        .filter(Boolean)
-        .join("  ")
-    : "";
+  // Title and filename each print on their own line below the frame, rather
+  // than sharing one — run together they were unreadable, and worse, sat
+  // right on top of the frame number on templates that print one there too.
+  const titleLabel = photo && showTitles ? photo.title : "";
+  const filenameLabel = photo && showFilenames ? photo.originalFilename : "";
 
   return (
     <g
@@ -685,16 +685,29 @@ function FrameCell({
         )
       ) : null}
 
-      {label ? (
+      {titleLabel ? (
         <text
           x={frame.x}
-          y={frame.captionY}
+          y={frame.titleY}
           fill={palette.inkMuted}
           fontFamily={SHEET_FONT}
           fontSize={11}
           letterSpacing="0.6"
         >
-          {truncate(label, Math.floor(frame.width / 6))}
+          {truncate(titleLabel, Math.floor(frame.width / 6))}
+        </text>
+      ) : null}
+
+      {filenameLabel ? (
+        <text
+          x={frame.x}
+          y={frame.filenameY}
+          fill={palette.inkMuted}
+          fontFamily={SHEET_FONT}
+          fontSize={11}
+          letterSpacing="0.6"
+        >
+          {truncate(filenameLabel, Math.floor(frame.width / 6))}
         </text>
       ) : null}
 

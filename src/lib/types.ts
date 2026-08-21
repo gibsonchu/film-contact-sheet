@@ -228,6 +228,9 @@ export interface ContactSheet {
   filmStock: string;
   templateId: TemplateId;
   templateSettings: TemplateSettings;
+  /** Rotates the frame grid 90° — everything else about the sheet is the
+   *  same, just laid out down the page instead of across it. */
+  orientation: "landscape" | "portrait";
   sharingMode: SharingMode;
   commentsEnabled: boolean;
   downloadsEnabled: boolean;

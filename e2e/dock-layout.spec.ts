@@ -270,4 +270,34 @@ test.describe("dock layout", () => {
     await gear.click();
     await expect(page.getByText("Roll Details")).toBeVisible();
   });
+
+  test("the template field is titled Sheet Template with no description below it", async ({ page }) => {
+    await openDemo(page);
+    await page.getByRole("button", { name: "Contact sheet settings" }).click();
+
+    await expect(page.getByText("Sheet Template", { exact: true })).toBeVisible();
+    await expect(page.getByText("Switching keeps order")).toHaveCount(0);
+    await expect(page.getByText("Six frames to a strip")).toHaveCount(0);
+  });
+
+  test("Sprocket holes and Edge printing grey out on templates without a strip housing", async ({
+    page,
+  }) => {
+    await openDemo(page);
+    await page.getByRole("button", { name: "Contact sheet settings" }).click();
+
+    // Classic 35mm is a film strip — both are live.
+    const sprockets = page.getByRole("switch", { name: "Sprocket holes" });
+    const edgePrinting = page.getByRole("switch", { name: "Edge printing" });
+    await expect(sprockets).toBeEnabled();
+    await expect(edgePrinting).toBeEnabled();
+
+    await chooseTemplate(page, /Eliz Digital/);
+    await expect(sprockets).toBeDisabled();
+    await expect(edgePrinting).toBeDisabled();
+    await expect(page.getByText("Film-strip templates only")).toHaveCount(2);
+
+    // Frame numbers has nothing to do with the strip housing — stays live.
+    await expect(page.getByRole("switch", { name: "Frame numbers" })).toBeEnabled();
+  });
 });

@@ -363,16 +363,20 @@ export function Toggle({
   checked,
   onChange,
   hint,
+  disabled,
 }: {
   label: string;
   checked: boolean;
   onChange: (v: boolean) => void;
   hint?: string;
+  /** The current template can't do anything with this setting — greyed out
+   *  and inert rather than hidden, so it's clear the option exists. */
+  disabled?: boolean;
 }) {
   const id = useId();
   return (
-    <div className="flex items-start justify-between gap-3 py-[3px]">
-      <label htmlFor={id} className="cursor-pointer text-[12px] text-bone">
+    <div className={cx("flex items-start justify-between gap-3 py-[3px]", disabled && "opacity-40")}>
+      <label htmlFor={id} className={cx("text-[12px] text-bone", disabled ? "cursor-not-allowed" : "cursor-pointer")}>
         {label}
         {hint ? <span className="mt-0.5 block text-[11px] text-smoke/80">{hint}</span> : null}
       </label>
@@ -381,9 +385,11 @@ export function Toggle({
         type="button"
         role="switch"
         aria-checked={checked}
+        disabled={disabled}
         onClick={() => onChange(!checked)}
         className={cx(
           "mt-[3px] grid h-3 w-3 shrink-0 place-items-center border transition-colors",
+          disabled ? "cursor-not-allowed" : "",
           checked ? "border-warm bg-warm" : "border-[var(--line)] bg-transparent hover:border-smoke",
         )}
       >

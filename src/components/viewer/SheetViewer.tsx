@@ -39,6 +39,7 @@ export function SheetViewer({ doc, mode, allowComments = false, allowDownload = 
       computeLayout({
         templateId: doc.sheet.templateId,
         templateSettings: doc.sheet.templateSettings,
+        orientation: doc.sheet.orientation,
         photos: doc.photos,
       }),
     [doc],

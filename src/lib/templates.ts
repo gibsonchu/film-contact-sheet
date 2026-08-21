@@ -64,7 +64,9 @@ export interface TemplateDef {
   fixedSize?: { width: number; height: number };
   /** Choose the column count from the photo count instead of a fixed value. */
   autoColumns?: boolean;
-  /** Caption band height below each frame, when titles/filenames are shown. */
+  /** Height of one caption line below each frame — the frame number (unless
+   *  it's a strip edge or an on-photo chip), title and filename each get
+   *  their own stacked line when shown, sized off this same value. */
   captionHeight: number;
   /** Defaults to "edge". */
   numberStyle?: NumberStyle;
@@ -114,7 +116,7 @@ export const TEMPLATES: Record<TemplateId, TemplateDef> = {
       grain: 0.08,
       edgeLabel: "",
     },
-    captionHeight: 0,
+    captionHeight: 16,
     numberStyle: "chip",
   },
   "classic-35mm": {
@@ -314,7 +316,7 @@ export const TEMPLATES: Record<TemplateId, TemplateDef> = {
       grain: 0.4,
       edgeLabel: "PAN 400",
     },
-    captionHeight: 0,
+    captionHeight: 14,
   },
 };
 

@@ -37,6 +37,7 @@ export function AltEditorScreen({ sheetId }: { sheetId: string }) {
     return computeLayout({
       templateId: doc.sheet.templateId,
       templateSettings: doc.sheet.templateSettings,
+      orientation: doc.sheet.orientation,
       photos: doc.photos,
     });
   }, [doc]);

@@ -22,7 +22,9 @@ export interface FrameBox {
   slotY: number;
   slotWidth: number;
   slotHeight: number;
-  captionY: number;
+  /** y for the title/filename caption lines — 0 when that line isn't shown. */
+  titleY: number;
+  filenameY: number;
   numberX: number;
   numberY: number;
   numberAnchor: "start" | "middle" | "end";
@@ -72,11 +74,21 @@ const HEADER_HEIGHT: Record<string, number> = {
 const SPROCKET_BAND = 23;
 const SPROCKET_INSET = 7;
 const STRIP_PAD_X = 16;
+/** Gap between the bottom of the photo and its first caption line. */
+const CAPTION_TOP_PAD = 8;
+/** Used only if a template forgets to set its own caption line height. */
+const CAPTION_LINE_HEIGHT_FALLBACK = 16;
 
 export interface LayoutInput {
   templateId: TemplateId;
   templateSettings?: TemplateSettings;
   photos: Photo[];
+  /** "Portrait" rotates the frame grid 90° — same frames, same reading
+   *  order, same header/footer/captions, just laid out down the page
+   *  instead of across it. Fixed-size cards (a postcard's 6×4 stock) and
+   *  film-strip sprockets don't rotate — there's no card stock or strip
+   *  housing to redraw, so they keep their natural shape either way. */
+  orientation?: "landscape" | "portrait";
   /** Overrides used by exports (e.g. hide titles). */
   overrides?: Partial<{ showTitles: boolean; showFilenames: boolean; showMetadata: boolean }>;
 }
@@ -85,6 +97,7 @@ export function computeLayout({
   templateId,
   templateSettings,
   photos,
+  orientation,
   overrides,
 }: LayoutInput): SheetLayout {
   const template = getTemplate(templateId);
@@ -114,9 +127,6 @@ export function computeLayout({
   const columns = autoColumns ?? Math.max(1, Math.round(settings.columns));
   const rows = Math.max(1, Math.ceil(count / columns));
 
-  const showCaption = Boolean(settings.showTitles || settings.showFilenames);
-  const captionHeight = showCaption ? template.captionHeight : 0;
-
   const gap = settings.frameGap;
   const rowGap = settings.stripGap;
   const margin = settings.margin;
@@ -130,13 +140,46 @@ export function computeLayout({
   const isFilm = template.chrome === "film-strip";
   const stripPadY = isFilm ? SPROCKET_BAND + SPROCKET_INSET : 0;
 
+  // A postcard's grid is fitted inside fixed card stock, and a film strip is
+  // a physical housing with sprockets along its length — neither has a
+  // second shape to rotate into, so orientation only affects the plain
+  // thumbnail-grid templates.
+  const portrait = orientation === "portrait" && !template.fixedSize && !isFilm;
+  // Rotating the table: what was laid out across the page now runs down it.
+  // Reading order (row-major over columns/rows) is untouched — only which
+  // axis each index maps to on the page flips, along with which gap governs
+  // which axis.
+  const gridCols = portrait ? rows : columns;
+  const gridRows = portrait ? columns : rows;
+  const colSpacing = portrait ? rowGap : gap;
+  const rowSpacing = portrait ? gap : rowGap;
+
+  // A frame's number sits below the photo, alongside the title/filename,
+  // for every style except film-strip (numbered on the strip edge) and
+  // "chip" (a number badge printed straight onto the corner of the photo).
+  // Whichever of these three lines are actually on stacks compactly, in
+  // that order, instead of overlapping each other at a single fixed y.
+  const numberBelowPhoto = settings.showFrameNumbers && !isFilm && template.numberStyle !== "chip";
+  const showTitleLine = settings.showTitles;
+  const showFilenameLine = settings.showFilenames;
+  const captionLineHeight = template.captionHeight || CAPTION_LINE_HEIGHT_FALLBACK;
+  let nextCaptionRow = 0;
+  const numberRowOffset = numberBelowPhoto
+    ? CAPTION_TOP_PAD + captionLineHeight * nextCaptionRow++
+    : null;
+  const titleRowOffset = showTitleLine ? CAPTION_TOP_PAD + captionLineHeight * nextCaptionRow++ : null;
+  const filenameRowOffset = showFilenameLine
+    ? CAPTION_TOP_PAD + captionLineHeight * nextCaptionRow++
+    : null;
+  const captionHeight = nextCaptionRow > 0 ? CAPTION_TOP_PAD + nextCaptionRow * captionLineHeight : 0;
+
   // --- horizontal extent -------------------------------------------------
-  let contentWidth = columns * frameWidth + (columns - 1) * gap;
+  let contentWidth = gridCols * frameWidth + (gridCols - 1) * colSpacing;
   if (isFilm) contentWidth += STRIP_PAD_X * 2;
 
   let width = contentWidth + margin * 2;
   const rowHeight = stripPadY * 2 + frameHeight + captionHeight;
-  let contentHeight = rows * rowHeight + (rows - 1) * rowGap;
+  let contentHeight = gridRows * rowHeight + (gridRows - 1) * rowSpacing;
   let height = margin + headerHeight + contentHeight + footerHeight + margin;
   let contentTop = margin + headerHeight;
 
@@ -167,15 +210,16 @@ export function computeLayout({
   const effectiveRowHeight = (isFilm ? stripPadY * 2 : 0) + frameHeight + captionHeight;
 
   for (let row = 0; row < rows; row += 1) {
-    const rowY = contentY + row * (effectiveRowHeight + rowGap);
     if (isFilm) {
+      // isFilm implies !portrait, so the pixel row equals the logical row.
+      const stripY = contentY + row * (effectiveRowHeight + rowSpacing);
       strips.push({
         x: contentX,
-        y: rowY,
+        y: stripY,
         width: contentWidth,
         height: effectiveRowHeight,
-        sprocketTopY: rowY + 4,
-        sprocketBottomY: rowY + effectiveRowHeight - SPROCKET_BAND - 4,
+        sprocketTopY: stripY + 4,
+        sprocketBottomY: stripY + effectiveRowHeight - SPROCKET_BAND - 4,
         sprocketHeight: SPROCKET_BAND - 8,
         row,
       });
@@ -184,7 +228,14 @@ export function computeLayout({
       const index = row * columns + col;
       if (index >= count && index >= visible.length) break;
       const photo = visible[index] ?? null;
-      const x = contentX + (isFilm ? STRIP_PAD_X : 0) + col * (frameWidth + gap);
+
+      // In landscape, pixel position matches logical position exactly. In
+      // portrait, the logical row (a strip of frames read left to right)
+      // becomes a pixel column read top to bottom instead.
+      const pixelCol = portrait ? row : col;
+      const pixelRow = portrait ? col : row;
+      const rowY = contentY + pixelRow * (effectiveRowHeight + rowSpacing);
+      const x = contentX + (isFilm ? STRIP_PAD_X : 0) + pixelCol * (frameWidth + colSpacing);
       const y = rowY + stripPadY;
       frames.push({
         index,
@@ -194,16 +245,19 @@ export function computeLayout({
         y,
         width: frameWidth,
         height: frameHeight,
-        slotX: x - gap / 2,
+        slotX: x - colSpacing / 2,
         slotY: rowY,
-        slotWidth: frameWidth + gap,
+        slotWidth: frameWidth + colSpacing,
         slotHeight: effectiveRowHeight,
-        captionY: y + frameHeight + (captionHeight ? 15 : 0),
+        titleY: titleRowOffset !== null ? y + frameHeight + titleRowOffset : 0,
+        filenameY: filenameRowOffset !== null ? y + frameHeight + filenameRowOffset : 0,
         numberX: isFilm ? x + 3 : x,
-        numberY: isFilm ? rowY + effectiveRowHeight - 8 : y + frameHeight + 13,
+        numberY: isFilm
+          ? rowY + effectiveRowHeight - 8
+          : y + frameHeight + (numberRowOffset ?? CAPTION_TOP_PAD),
         numberAnchor: "start",
-        row,
-        col,
+        row: pixelRow,
+        col: pixelCol,
       });
     }
   }

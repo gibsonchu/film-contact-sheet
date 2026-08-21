@@ -285,6 +285,26 @@ test.describe("contact sheet editor — panelled layout", () => {
     await expect(page.locator("text=/\\d+ FRAMES/")).toBeHidden();
   });
 
+  test("frame number, title and filename stack as separate rows instead of overlapping", async ({
+    page,
+  }) => {
+    await openDemoPanels(page);
+    await chooseTemplate(page, /Eliz Digital/);
+    await page.getByRole("switch", { name: "Frame titles" }).click();
+    await page.getByRole("switch", { name: "Filenames" }).click();
+
+    const ys = await page.evaluate(() => {
+      const frame = document.querySelector('[data-frame-index="0"]')!;
+      return [...frame.querySelectorAll("text")].map((t) => Number(t.getAttribute("y")));
+    });
+    expect(ys).toHaveLength(3);
+    const [numberY, titleY, filenameY] = ys;
+    // Each line reads below the last, with real breathing room between them
+    // — not stacked at the same y, and not just a couple of pixels apart.
+    expect(titleY - numberY).toBeGreaterThan(10);
+    expect(filenameY - titleY).toBeGreaterThan(10);
+  });
+
   test("the sheet cannot be dragged away off the canvas", async ({ page }) => {
     await openDemoPanels(page);
 

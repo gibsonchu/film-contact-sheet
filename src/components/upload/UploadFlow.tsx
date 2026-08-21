@@ -6,7 +6,7 @@ import { useCallback, useRef, useState } from "react";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteMark } from "@/components/SiteMark";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Button, Field, cx, inputClass } from "@/components/ui/primitives";
+import { Button, Field, Segmented, cx, inputClass } from "@/components/ui/primitives";
 import { chunkForSheets, createDocument, createPhoto, renumber, sheetTitleForChunk } from "@/lib/document";
 import { ACCEPT_ATTR, formatBytes, processImage, validateFile } from "@/lib/images";
 import { filesFromDrop, pathOf, sortFiles } from "@/lib/upload";
@@ -38,6 +38,7 @@ export function UploadFlow() {
     filmStock: "",
     camera: "",
     description: "",
+    orientation: "landscape" as "landscape" | "portrait",
   });
 
   const addFiles = useCallback((files: File[]) => {
@@ -326,16 +327,31 @@ export function UploadFlow() {
                   />
                 )}
               </Field>
-              <Field label="Location">
-                {(id) => (
-                  <input
-                    id={id}
-                    className={inputClass}
-                    value={meta.location}
-                    onChange={(e) => setMeta({ ...meta, location: e.target.value })}
-                  />
-                )}
-              </Field>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Location">
+                  {(id) => (
+                    <input
+                      id={id}
+                      className={inputClass}
+                      value={meta.location}
+                      onChange={(e) => setMeta({ ...meta, location: e.target.value })}
+                    />
+                  )}
+                </Field>
+                <Field label="Orientation">
+                  {() => (
+                    <Segmented
+                      label="Orientation"
+                      value={meta.orientation}
+                      onChange={(v) => setMeta({ ...meta, orientation: v })}
+                      options={[
+                        { value: "landscape", label: "Landscape" },
+                        { value: "portrait", label: "Portrait" },
+                      ]}
+                    />
+                  )}
+                </Field>
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Film stock">
                   {(id) => (

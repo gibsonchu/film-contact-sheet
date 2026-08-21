@@ -106,6 +106,63 @@ describe("layout engine", () => {
   });
 });
 
+describe("portrait orientation", () => {
+  it("rotates the grid — landscape's column count becomes portrait's row count", () => {
+    const landscape = computeLayout({
+      templateId: "eliz-digital",
+      photos: photos(21),
+      orientation: "landscape",
+    });
+    const portrait = computeLayout({
+      templateId: "eliz-digital",
+      photos: photos(21),
+      orientation: "portrait",
+    });
+    expect(landscape.columns).toBe(8);
+    expect(landscape.rows).toBe(3);
+    // The sheet itself flips from wider-than-tall to taller-than-wide.
+    expect(landscape.width).toBeGreaterThan(landscape.height);
+    expect(portrait.height).toBeGreaterThan(portrait.width);
+
+    // Same 8 frames that shared landscape's first row now share portrait's
+    // first column, stacked in the same reading order.
+    const firstColumn = portrait.frames.slice(0, 8);
+    expect(firstColumn.every((f) => f.x === firstColumn[0].x)).toBe(true);
+    expect(firstColumn.map((f) => f.frameNumber)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+    for (let i = 1; i < firstColumn.length; i += 1) {
+      expect(firstColumn[i].y).toBeGreaterThan(firstColumn[i - 1].y);
+    }
+  });
+
+  it("keeps every frame on the sheet in portrait, same as landscape", () => {
+    for (const templateId of TEMPLATE_LIST.map((t) => t.id)) {
+      const layout = computeLayout({ templateId, photos: photos(24), orientation: "portrait" });
+      expect(layout.frames.length).toBeGreaterThan(0);
+      for (const frame of layout.frames) {
+        expect(frame.x).toBeGreaterThanOrEqual(0);
+        expect(frame.x + frame.width).toBeLessThanOrEqual(layout.width + 1);
+        expect(frame.y).toBeGreaterThanOrEqual(0);
+      }
+    }
+  });
+
+  it("leaves a fixed-size postcard and a film strip unrotated", () => {
+    const postcard = computeLayout({ templateId: "postcard", photos: photos(12), orientation: "portrait" });
+    expect(postcard.width).toBe(1200);
+    expect(postcard.height).toBe(800);
+
+    const filmLandscape = computeLayout({ templateId: "classic-35mm", photos: photos(12) });
+    const filmPortrait = computeLayout({
+      templateId: "classic-35mm",
+      photos: photos(12),
+      orientation: "portrait",
+    });
+    expect(filmPortrait.width).toBe(filmLandscape.width);
+    expect(filmPortrait.height).toBe(filmLandscape.height);
+    expect(filmPortrait.strips).toHaveLength(filmLandscape.strips.length);
+  });
+});
+
 describe("hit testing", () => {
   it("finds the frame under a point", () => {
     const layout = computeLayout({ templateId: "classic-35mm", photos: photos(12) });

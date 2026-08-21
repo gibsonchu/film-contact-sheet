@@ -141,6 +141,7 @@ function frameMapFor(doc: SheetDocument, templateId: TemplateId) {
   const layout = computeLayout({
     templateId,
     templateSettings: doc.sheet.templateSettings,
+    orientation: doc.sheet.orientation,
     photos: doc.photos,
   });
   const frames = new Map<string, { x: number; y: number; width: number; height: number }>();

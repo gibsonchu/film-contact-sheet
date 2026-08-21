@@ -361,30 +361,28 @@ export function SheetInspector() {
   const template = TEMPLATE_LIST.find((t) => t.id === sheet.templateId) ?? TEMPLATE_LIST[0];
   const get = <K extends keyof typeof template.defaults>(key: K) =>
     (ts[key as keyof typeof ts] as (typeof template.defaults)[K] | undefined) ?? template.defaults[key];
+  // Sprockets and edge printing only render on the film-strip housing — every
+  // other template's chrome has nowhere to put them, so the toggle would be
+  // a promise the sheet can't keep.
+  const supportsFilmStrip = template.chrome === "film-strip";
 
   return (
     <>
       <Panel title="Template">
-        <div className="space-y-2">
-          <Field label="Sheet template">
-            {(id) => (
-              <Select
-                id={id}
-                label="Sheet template"
-                value={sheet.templateId}
-                onChange={(v) => setTemplate(v as TemplateId)}
-                options={TEMPLATE_LIST.map((t) => ({
-                  value: t.id,
-                  label: `${t.name} · ${t.format}`,
-                }))}
-              />
-            )}
-          </Field>
-          <p className="label leading-snug">{template.blurb}</p>
-          <p className="label leading-snug">
-            Switching keeps order, titles, statuses, notes, annotations and tape.
-          </p>
-        </div>
+        <Field label="Sheet Template">
+          {(id) => (
+            <Select
+              id={id}
+              label="Sheet Template"
+              value={sheet.templateId}
+              onChange={(v) => setTemplate(v as TemplateId)}
+              options={TEMPLATE_LIST.map((t) => ({
+                value: t.id,
+                label: `${t.name} · ${t.format}`,
+              }))}
+            />
+          )}
+        </Field>
       </Panel>
 
       <Panel title="Review">
@@ -497,12 +495,24 @@ export function SheetInspector() {
       </Panel>
 
       <Panel title="Show">
-        <Toggle label="Sprocket holes" checked={get("showSprockets")} onChange={(v) => updateTemplateSettings({ showSprockets: v })} />
+        <Toggle
+          label="Sprocket holes"
+          checked={get("showSprockets")}
+          onChange={(v) => updateTemplateSettings({ showSprockets: v })}
+          disabled={!supportsFilmStrip}
+          hint={supportsFilmStrip ? undefined : "Film-strip templates only"}
+        />
         <Toggle label="Frame numbers" checked={get("showFrameNumbers")} onChange={(v) => updateTemplateSettings({ showFrameNumbers: v })} />
         <Toggle label="Frame titles" checked={get("showTitles")} onChange={(v) => updateTemplateSettings({ showTitles: v })} />
         <Toggle label="Filenames" checked={get("showFilenames")} onChange={(v) => updateTemplateSettings({ showFilenames: v })} />
         <Toggle label="Roll metadata" checked={get("showMetadata")} onChange={(v) => updateTemplateSettings({ showMetadata: v })} />
-        <Toggle label="Edge printing" checked={get("showEdgeLabel")} onChange={(v) => updateTemplateSettings({ showEdgeLabel: v })} />
+        <Toggle
+          label="Edge printing"
+          checked={get("showEdgeLabel")}
+          onChange={(v) => updateTemplateSettings({ showEdgeLabel: v })}
+          disabled={!supportsFilmStrip}
+          hint={supportsFilmStrip ? undefined : "Film-strip templates only"}
+        />
         <Toggle label="Film grain" checked={showGrain} onChange={toggleGrain} hint="Preview only — export follows the sheet setting." />
       </Panel>
 

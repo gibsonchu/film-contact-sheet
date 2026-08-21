@@ -102,6 +102,7 @@ function demoAnnotations(doc: SheetDocument): Annotation[] {
   const layout = computeLayout({
     templateId: doc.sheet.templateId,
     templateSettings: doc.sheet.templateSettings,
+    orientation: doc.sheet.orientation,
     photos: doc.photos,
   });
   const frameOf = (index: number) => layout.frames[index];
