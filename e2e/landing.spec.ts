@@ -32,25 +32,21 @@ test.describe("landing page", () => {
     await expect(page).toHaveURL(/\/binder$/);
   });
 
-  test("a smaller Community mark sits centred below the New/Binder pair and leads to the community page", async ({
-    page,
-  }) => {
+  test("a smaller Community mark sits bottom-right and leads to the community page", async ({ page }) => {
     await page.goto("/");
     const community = page.getByRole("link", { name: "Community" });
     await expect(community).toBeVisible();
     await expect(community.getByText("Community")).toBeVisible();
 
-    // Smaller than the two primary marks, and centred under them rather
-    // than sitting inside their row.
+    // Smaller than the two primary marks, and anchored to the bottom-right
+    // of the page rather than sitting in the centred pair.
     const communityBox = (await community.boundingBox())!;
-    const newBox = (await page.getByRole("link", { name: "Create a Contact Sheet" }).boundingBox())!;
     const binderBox = (await page.getByRole("link", { name: "Binder" }).boundingBox())!;
     expect(communityBox.width).toBeLessThan(binderBox.width);
-    expect(communityBox.y).toBeGreaterThan(newBox.y + newBox.height);
 
-    const pairCenter = (newBox.x + (binderBox.x + binderBox.width)) / 2;
-    const communityCenter = communityBox.x + communityBox.width / 2;
-    expect(Math.abs(communityCenter - pairCenter)).toBeLessThan(4);
+    const viewport = page.viewportSize()!;
+    expect(communityBox.x + communityBox.width).toBeGreaterThan(viewport.width * 0.6);
+    expect(communityBox.y + communityBox.height).toBeGreaterThan(viewport.height * 0.6);
 
     await community.click();
     await expect(page).toHaveURL(/\/community$/);

@@ -10,7 +10,7 @@ export default function HomePage() {
   return (
     <main
       id="main"
-      className="flex min-h-dvh flex-col px-6 py-8 sm:px-10 sm:py-10"
+      className="relative flex min-h-dvh flex-col px-6 py-8 sm:px-10 sm:py-10"
       style={{ background: "var(--color-darkroom)" }}
     >
       {/* Fixed colour, not the --color-warm token — see HandDrawnCTA for why. */}
@@ -40,7 +40,7 @@ export default function HomePage() {
         />
       </div>
 
-      <div className="flex justify-center pb-2 sm:pb-4">
+      <div className="absolute bottom-4 right-4 sm:bottom-8 sm:right-8">
         <HandDrawnCTA
           href="/community"
           label="Community"
