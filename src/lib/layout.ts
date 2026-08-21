@@ -74,8 +74,10 @@ const HEADER_HEIGHT: Record<string, number> = {
 const SPROCKET_BAND = 23;
 const SPROCKET_INSET = 7;
 const STRIP_PAD_X = 16;
-/** Gap between the bottom of the photo and its first caption line. */
-const CAPTION_TOP_PAD = 8;
+/** Gap between the bottom of the photo and its first caption line — Frame
+ *  titles most often lands here, so this is effectively "space above the
+ *  title". */
+const CAPTION_TOP_PAD = 16;
 /** Used only if a template forgets to set its own caption line height. */
 const CAPTION_LINE_HEIGHT_FALLBACK = 16;
 
