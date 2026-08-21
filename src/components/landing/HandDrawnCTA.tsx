@@ -12,6 +12,11 @@ interface Props {
   /** "lg" is the two primary calls to action; "sm" is for a secondary mark
    *  (smaller mark, word set like a caption rather than a headline). */
   size?: "lg" | "sm";
+  /** Centre point of the word as a percentage of the artwork's own box.
+   *  Defaults to dead centre; a mark whose drawn lines aren't symmetric
+   *  (open cell sits off the canvas's true middle) can override this so the
+   *  word reads as centred on the ink, not on the invisible image bounds. */
+  wordCenter?: { x: string; y: string };
 }
 
 const SIZES = {
@@ -23,7 +28,16 @@ const SIZES = {
  * One of the landing page's calls to action: a word inside a mark drawn by
  * hand — the actual artwork, not a procedural stand-in for it.
  */
-export function HandDrawnCTA({ href, label, word, src, width, height, size = "lg" }: Props) {
+export function HandDrawnCTA({
+  href,
+  label,
+  word,
+  src,
+  width,
+  height,
+  size = "lg",
+  wordCenter = { x: "50%", y: "50%" },
+}: Props) {
   const sized = SIZES[size];
   return (
     <Link
@@ -36,8 +50,14 @@ export function HandDrawnCTA({ href, label, word, src, width, height, size = "lg
           and always reads white on red, even if a light preference was set
           elsewhere and follows the visitor here. */}
       <span
-        className={`pointer-events-none absolute inset-0 flex items-center justify-center ${sized.word}`}
-        style={{ fontFamily: "var(--font-sans)", color: "#ededea" }}
+        className={`pointer-events-none absolute whitespace-nowrap ${sized.word}`}
+        style={{
+          left: wordCenter.x,
+          top: wordCenter.y,
+          transform: "translate(-50%, -50%)",
+          fontFamily: "var(--font-sans)",
+          color: "#ededea",
+        }}
         aria-hidden="true"
       >
         {word}

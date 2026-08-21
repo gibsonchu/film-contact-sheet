@@ -10,7 +10,7 @@ export default function HomePage() {
   return (
     <main
       id="main"
-      className="relative flex min-h-dvh flex-col px-6 py-8 sm:px-10 sm:py-10"
+      className="flex min-h-dvh flex-col px-6 py-8 sm:px-10 sm:py-10"
       style={{ background: "var(--color-darkroom)" }}
     >
       {/* Fixed colour, not the --color-warm token — see HandDrawnCTA for why. */}
@@ -40,7 +40,7 @@ export default function HomePage() {
         />
       </div>
 
-      <div className="absolute bottom-4 right-4 sm:bottom-8 sm:right-8">
+      <div className="flex justify-center pb-2 sm:pb-4">
         <HandDrawnCTA
           href="/community"
           label="Community"
@@ -49,6 +49,9 @@ export default function HomePage() {
           width={485}
           height={350}
           size="sm"
+          // The drawn grid's crossing lines aren't centred on the canvas —
+          // this is the middle of the open cell they actually form.
+          wordCenter={{ x: "51%", y: "42%" }}
         />
       </div>
     </main>
