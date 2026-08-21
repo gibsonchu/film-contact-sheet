@@ -50,7 +50,7 @@ export function AltEditorScreen({ sheetId }: { sheetId: string }) {
           {loadError ?? "Sheet not found."}
         </p>
         <div className="flex gap-2">
-          <Link href="/projects">
+          <Link href="/binder">
             <Button variant="outline">All sheets</Button>
           </Link>
           <Link href="/new">
@@ -101,7 +101,7 @@ export function AltEditorScreen({ sheetId }: { sheetId: string }) {
 function BackLink() {
   return (
     <Link
-      href="/projects"
+      href="/binder"
       className="pill pointer-events-auto absolute left-3 top-3 z-30 px-3 py-1.5 text-[12px] text-bone transition-colors hover:text-warm"
     >
       ‹ All sheets

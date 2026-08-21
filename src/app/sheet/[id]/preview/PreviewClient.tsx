@@ -24,7 +24,7 @@ export function PreviewClient({ sheetId }: { sheetId: string }) {
       <div className="grid min-h-dvh place-items-center px-6 text-center">
         <div>
           <p className="text-[15px] text-warm">That sheet isn’t on this device.</p>
-          <Link href="/projects" className="label mt-3 inline-block hover:text-warm">
+          <Link href="/binder" className="label mt-3 inline-block hover:text-warm">
             ← All sheets
           </Link>
         </div>

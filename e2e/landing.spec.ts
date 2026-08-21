@@ -29,7 +29,7 @@ test.describe("landing page", () => {
 
     await page.goto("/");
     await page.getByRole("link", { name: "Binder" }).click();
-    await expect(page).toHaveURL(/\/projects$/);
+    await expect(page).toHaveURL(/\/binder$/);
   });
 });
 
@@ -57,7 +57,7 @@ test.describe("site chrome", () => {
   });
 
   test("the projects header has no title text and centers with its content", async ({ page }) => {
-    await page.goto("/projects");
+    await page.goto("/binder");
     const header = page.locator("header");
     await expect(header.getByRole("link", { name: "Film Contact Sheet" })).toBeVisible();
     await expect(header.getByText("Sheets", { exact: true })).toHaveCount(0);

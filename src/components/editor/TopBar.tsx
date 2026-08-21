@@ -26,7 +26,7 @@ export function TopBar({
   return (
     <header className="hair-b flex h-9 shrink-0 items-center gap-4 px-3">
       <Link
-        href="/projects"
+        href="/binder"
         className="label shrink-0 hover:text-warm"
         aria-label="Back to all contact sheets"
       >

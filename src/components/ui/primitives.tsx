@@ -25,7 +25,11 @@ export function Button({ variant = "outline", size = "md", className, ...props }
     "inline-flex items-center justify-center gap-1.5 whitespace-nowrap transition-colors disabled:opacity-35 disabled:pointer-events-none";
   const sizes = size === "sm" ? "h-6 px-2 text-[11px]" : "h-7 px-2.5 text-[12px]";
   const variants = {
-    primary: "bg-warm text-noir hover:bg-white",
+    // bg-warm is already the extreme of the neutral scale in each theme —
+    // near-white in dark mode, near-black in light — so hover pushes further
+    // the same direction rather than to a fixed white, which went invisible
+    // against a light-mode page and to a jarring flip in light mode besides.
+    primary: "bg-warm text-noir hover:bg-[var(--primary-hover)]",
     ghost: "text-smoke hover:text-warm",
     outline: "border border-[var(--line)] text-bone hover:border-warm hover:text-warm",
     danger: "border border-darkroom/70 text-darkroom hover:bg-darkroom hover:text-white",

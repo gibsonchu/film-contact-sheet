@@ -12,10 +12,10 @@ test.describe("theme toggle", () => {
     await expect(page.getByRole("button", { name: /Switch to (light|dark) mode/ })).toHaveCount(0);
   });
 
-  test("switches /projects to light, persists across navigation, and never touches the landing page", async ({
+  test("switches /binder to light, persists across navigation, and never touches the landing page", async ({
     page,
   }) => {
-    await page.goto("/projects");
+    await page.goto("/binder");
     const toggle = page.getByRole("button", { name: "Switch to light mode" });
     await expect(toggle).toBeVisible();
     await toggle.click();

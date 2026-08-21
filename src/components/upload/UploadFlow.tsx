@@ -143,7 +143,7 @@ export function UploadFlow() {
         <div className="mx-auto flex h-9 max-w-4xl items-center gap-4 px-3">
           <SiteMark />
           <div className="flex-1" />
-          <Link href="/projects" className="label hover:text-warm">
+          <Link href="/binder" className="label hover:text-warm">
             Binder
           </Link>
           <ThemeToggle />

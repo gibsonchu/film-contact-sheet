@@ -256,7 +256,7 @@ test.describe("dock layout", () => {
     expect(backBox.x).toBeGreaterThan(sidebarBox.x + sidebarBox.width);
 
     await back.click();
-    await expect(page).toHaveURL(/\/projects$/);
+    await expect(page).toHaveURL(/\/binder$/);
   });
 
   test("the settings toggle is a gear, not an arrow, and its section reads Roll Details", async ({ page }) => {

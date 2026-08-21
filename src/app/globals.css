@@ -32,6 +32,7 @@
   --scrollbar-thumb: #262626;
   --scrollbar-thumb-hover: #3a3a3a;
   --pill-bg: rgba(16, 16, 16, 0.92);
+  --primary-hover: #ffffff;
 }
 
 /*
@@ -63,6 +64,7 @@
   --scrollbar-thumb: #d8d2c2;
   --scrollbar-thumb-hover: #c3bba5;
   --pill-bg: rgba(246, 244, 239, 0.92);
+  --primary-hover: #0b0b0b;
 }
 
 /* Chrome-only marks baked as white pixels on transparent PNGs (the site

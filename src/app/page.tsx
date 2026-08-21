@@ -15,8 +15,8 @@ export default function HomePage() {
     >
       {/* Fixed colour, not the --color-warm token — see HandDrawnCTA for why. */}
       <h1
-        className="text-[11vw] leading-none sm:text-6xl md:text-7xl"
-        style={{ color: "#ededea" }}
+        className="text-[10vw] leading-none sm:text-5xl md:text-6xl"
+        style={{ color: "#0b0b0b" }}
       >
         Film Contact Sheet
       </h1>
@@ -31,7 +31,7 @@ export default function HomePage() {
           height={266}
         />
         <HandDrawnCTA
-          href="/projects"
+          href="/binder"
           label="Binder"
           word="Binder"
           src="/mark-past.png"
