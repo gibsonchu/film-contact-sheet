@@ -5,9 +5,9 @@ import { SiteMark } from "@/components/SiteMark";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/primitives";
 
-export const metadata: Metadata = { title: "Community · Film Contact Sheet" };
+export const metadata: Metadata = { title: "Explore · Film Contact Sheet" };
 
-export default function CommunityPage() {
+export default function ExplorePage() {
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="hair-b">
@@ -17,8 +17,8 @@ export default function CommunityPage() {
           <Link href="/about" className="label hover:text-warm">
             About
           </Link>
-          <Link href="/binder" className="label hover:text-warm">
-            Binder
+          <Link href="/sheets" className="label hover:text-warm">
+            Sheets
           </Link>
           <Link href="/new">
             <Button variant="primary" size="sm">
@@ -30,7 +30,7 @@ export default function CommunityPage() {
       </header>
 
       <main id="main" className="mx-auto w-full max-w-xl flex-1 px-3 py-10">
-        <h1 className="mb-4 text-[13px] text-warm">Community</h1>
+        <h1 className="mb-4 text-[13px] text-warm">Explore</h1>
         <div className="space-y-4 text-[13px] leading-relaxed text-bone">
           <p>Coming soon will be a place for people to publish their contact sheets and explore others.</p>
         </div>

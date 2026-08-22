@@ -48,7 +48,7 @@ export function EditorScreen({ sheetId }: { sheetId: string }) {
       <Centered>
         <p className="mb-4 max-w-sm text-center text-[12px] text-bone">{loadError ?? "Sheet not found."}</p>
         <div className="flex gap-2">
-          <Link href="/binder">
+          <Link href="/sheets">
             <Button variant="outline">All sheets</Button>
           </Link>
           <Link href="/new">

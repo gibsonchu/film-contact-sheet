@@ -1,13 +1,13 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("about page", () => {
-  test("is reachable from the new-sheet and binder navs, next to Demo", async ({ page }) => {
+  test("is reachable from the new-sheet and sheets navs, next to Demo", async ({ page }) => {
     await page.goto("/new");
     await expect(page.getByRole("link", { name: "About" })).toBeVisible();
     await page.getByRole("link", { name: "About" }).click();
     await expect(page).toHaveURL(/\/about$/);
 
-    await page.goto("/binder");
+    await page.goto("/sheets");
     const about = page.getByRole("link", { name: "About" });
     const demo = page.getByRole("button", { name: "Demo" });
     await expect(about).toBeVisible();
@@ -26,8 +26,8 @@ test.describe("about page", () => {
     await expect(handle).toHaveAttribute("href", "https://x.com/gibsontchu");
   });
 
-  test("Built by @gibsontchu appears bottom-center on New Sheet, Binder, and About", async ({ page }) => {
-    for (const path of ["/new", "/binder", "/about"]) {
+  test("Built by @gibsontchu appears bottom-center on New Sheet, Sheets, and About", async ({ page }) => {
+    for (const path of ["/new", "/sheets", "/about"]) {
       await page.goto(path);
       const credit = page.getByRole("link", { name: "Built by @gibsontchu" });
       await expect(credit).toBeVisible();

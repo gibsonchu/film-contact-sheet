@@ -5,9 +5,9 @@ import { openDemo } from "./helpers";
  * The library page — search left, sort and filter grouped to the right, and
  * the header buttons trimmed down to what's actually needed to get started.
  */
-test.describe("projects page", () => {
+test.describe("sheets page", () => {
   test("New Sheet replaces Upload, Blank sheet is gone, Demo roll reads Demo", async ({ page }) => {
-    await page.goto("/binder");
+    await page.goto("/sheets");
     await expect(page.getByRole("button", { name: "Blank sheet" })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Upload" })).toHaveCount(0);
 
@@ -19,7 +19,7 @@ test.describe("projects page", () => {
   });
 
   test("search sits left with a visible border, sort and filter are grouped on the right", async ({ page }) => {
-    await page.goto("/binder");
+    await page.goto("/sheets");
 
     const search = page.getByLabel("Search sheets");
     const sortGroup = page.getByRole("group", { name: "Sort by" });
@@ -46,7 +46,7 @@ test.describe("projects page", () => {
   });
 
   test("the footer explains sheets are local, not synced", async ({ page }) => {
-    await page.goto("/binder");
+    await page.goto("/sheets");
     await expect(
       page.getByText(
         "Sheets are only stored locally on this browser. Download your contact sheets to share with friends and family.",
@@ -56,7 +56,7 @@ test.describe("projects page", () => {
 
   test("results sit closer together than the old wider row spacing", async ({ page }) => {
     await openDemo(page);
-    await page.goto("/binder");
+    await page.goto("/sheets");
     const grid = page.locator("ul").filter({ has: page.getByRole("link") }).first();
     const rowGap = await grid.evaluate((el) => getComputedStyle(el).rowGap);
     expect(parseFloat(rowGap)).toBeLessThan(28); // the old gap-y-7 (28px)

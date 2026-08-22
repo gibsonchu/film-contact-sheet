@@ -19,8 +19,8 @@ export default function AboutPage() {
               New Sheet
             </Button>
           </Link>
-          <Link href="/binder" className="label hover:text-warm">
-            Binder
+          <Link href="/sheets" className="label hover:text-warm">
+            Sheets
           </Link>
           <ThemeToggle />
         </div>

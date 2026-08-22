@@ -92,7 +92,7 @@ export function AuthPanel({ mode }: { mode: "login" | "signup" }) {
           <Link href={mode === "login" ? "/signup" : "/login"} className="text-smoke hover:text-warm">
             {mode === "login" ? "Create an account" : "I already have an account"}
           </Link>
-          <Link href="/binder" className="text-smoke hover:text-warm">
+          <Link href="/sheets" className="text-smoke hover:text-warm">
             Continue without one →
           </Link>
         </div>

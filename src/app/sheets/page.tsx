@@ -3,7 +3,7 @@ import { ProjectLibrary } from "@/components/library/ProjectLibrary";
 
 export const metadata: Metadata = { title: "Contact sheets · Film Contact Sheet" };
 
-export default function BinderPage() {
+export default function SheetsPage() {
   return (
     <main id="main">
       <ProjectLibrary />

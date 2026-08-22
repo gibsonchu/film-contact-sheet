@@ -50,7 +50,7 @@ test.describe("upload limits", () => {
     await page.getByRole("button", { name: "Contact sheet settings" }).click();
     await expect(templateButton(page)).toContainText("Eliz Digital");
 
-    await page.goto("/binder");
+    await page.goto("/sheets");
     await expect(page.getByText("Roll 1 of 2")).toBeVisible();
     await expect(page.getByText("Roll 2 of 2")).toBeVisible();
   });

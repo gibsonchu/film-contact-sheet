@@ -12,10 +12,10 @@ test.describe("theme toggle", () => {
     await expect(page.getByRole("button", { name: /Switch to (light|dark) mode/ })).toHaveCount(0);
   });
 
-  test("switches /binder to light, persists across navigation, and never touches the landing page", async ({
+  test("switches /sheets to light, persists across navigation, and never touches the landing page", async ({
     page,
   }) => {
-    await page.goto("/binder");
+    await page.goto("/sheets");
     const toggle = page.getByRole("button", { name: "Switch to light mode" });
     await expect(toggle).toBeVisible();
     await toggle.click();
@@ -41,7 +41,7 @@ test.describe("theme toggle", () => {
   });
 
   test("the primary button fades on hover in light mode, not just dark", async ({ page }) => {
-    await page.goto("/binder");
+    await page.goto("/sheets");
     await page.getByRole("button", { name: "Switch to light mode" }).click();
 
     const newSheet = page.getByRole("link", { name: "New Sheet" }).getByRole("button");

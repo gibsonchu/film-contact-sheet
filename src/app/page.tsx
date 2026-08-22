@@ -1,10 +1,12 @@
 import { HandDrawnCTA } from "@/components/landing/HandDrawnCTA";
+import { PlaceholderCTA } from "@/components/landing/PlaceholderCTA";
 
 /**
  * A section-divider page, the way Magnum Contact Sheets breaks between
  * decades: a single field of red with nothing on it but a title and, here,
- * the two things worth doing next — each circled in wax the way a real
- * editor would mark a frame.
+ * the four things worth doing next — each circled in wax the way a real
+ * editor would mark a frame. New/Binders share a column, Sheets/Explore
+ * share the other, primary action on top and its secondary companion below.
  */
 export default function HomePage() {
   return (
@@ -21,7 +23,14 @@ export default function HomePage() {
         Film Contact Sheet
       </h1>
 
-      <div className="mt-10 flex flex-1 flex-wrap content-center items-center justify-center gap-10 sm:mt-16 sm:gap-12">
+      {/* A real grid, not two independent columns: New and Sheets aren't the
+          same aspect ratio, so stacking each column with its own flex flow
+          would leave Binders and Explore misaligned with each other. Below
+          `sm`, the two primary marks alone are too wide to sit side by side
+          (each at least 240px), so there's no explicit grid-cols here — one
+          implicit column stacks all four in reading order until `sm` opens
+          up the two-column, two-row arrangement. */}
+      <div className="mt-10 grid flex-1 items-center justify-items-center gap-8 sm:mt-16 sm:grid-cols-2 sm:grid-rows-2 sm:gap-x-12 sm:gap-y-8">
         <HandDrawnCTA
           href="/new"
           label="Create a Contact Sheet"
@@ -31,20 +40,18 @@ export default function HomePage() {
           height={266}
         />
         <HandDrawnCTA
-          href="/binder"
-          label="Binder"
-          word="Binder"
+          href="/sheets"
+          label="Sheets"
+          word="Sheets"
           src="/mark-past.png"
           width={297}
           height={275}
         />
-      </div>
-
-      <div className="absolute bottom-4 right-4 sm:bottom-8 sm:right-8">
+        <PlaceholderCTA href="/binders" label="Binders" word="Binders" />
         <HandDrawnCTA
-          href="/community"
-          label="Community"
-          word="Community"
+          href="/explore"
+          label="Explore"
+          word="Explore"
           src="/mark-community.png"
           width={485}
           height={350}

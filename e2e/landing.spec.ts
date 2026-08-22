@@ -1,55 +1,69 @@
 import { expect, test } from "@playwright/test";
 
 /**
- * The landing page is now a section-divider page in the style of Magnum
- * Contact Sheets: a field of red with a title and two hand-drawn marks that
- * double as the site's only two calls to action.
+ * The landing page is a section-divider page in the style of Magnum Contact
+ * Sheets: a field of red with a title and four hand-drawn marks in two
+ * columns — New/Binders on the left, Sheets/Explore on the right.
  */
 test.describe("landing page", () => {
-  test("shows the title and both hand-drawn calls to action", async ({ page }) => {
+  test("shows the title and all four calls to action", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { name: "Film Contact Sheet" })).toBeVisible();
 
     const create = page.getByRole("link", { name: "Create a Contact Sheet" });
-    const binder = page.getByRole("link", { name: "Binder" });
+    const sheets = page.getByRole("link", { name: "Sheets" });
+    const binders = page.getByRole("link", { name: "Binders" });
+    const explore = page.getByRole("link", { name: "Explore" });
     await expect(create).toBeVisible();
-    await expect(binder).toBeVisible();
+    await expect(sheets).toBeVisible();
+    await expect(binders).toBeVisible();
+    await expect(explore).toBeVisible();
 
     // The artwork itself is decorative — the accessible name comes from the
     // link's own label, not from the image.
     await expect(create.locator("img")).toHaveAttribute("alt", "");
     await expect(create.getByText("New")).toBeVisible();
-    await expect(binder.getByText("Binder")).toBeVisible();
+    await expect(sheets.getByText("Sheets")).toBeVisible();
   });
 
-  test("New leads to a fresh sheet, Binder leads to the sheet list", async ({ page }) => {
+  test("New leads to a fresh sheet, Sheets leads to the sheet list", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("link", { name: "Create a Contact Sheet" }).click();
     await expect(page).toHaveURL(/\/new$/);
 
     await page.goto("/");
-    await page.getByRole("link", { name: "Binder" }).click();
-    await expect(page).toHaveURL(/\/binder$/);
+    await page.getByRole("link", { name: "Sheets" }).click();
+    await expect(page).toHaveURL(/\/sheets$/);
   });
 
-  test("a smaller Community mark sits bottom-right and leads to the community page", async ({ page }) => {
+  test("Binders sits below New, Explore sits below Sheets", async ({ page }) => {
     await page.goto("/");
-    const community = page.getByRole("link", { name: "Community" });
-    await expect(community).toBeVisible();
-    await expect(community.getByText("Community")).toBeVisible();
+    const create = page.getByRole("link", { name: "Create a Contact Sheet" });
+    const sheets = page.getByRole("link", { name: "Sheets" });
+    const binders = page.getByRole("link", { name: "Binders" });
+    const explore = page.getByRole("link", { name: "Explore" });
 
-    // Smaller than the two primary marks, and anchored to the bottom-right
-    // of the page rather than sitting in the centred pair.
-    const communityBox = (await community.boundingBox())!;
-    const binderBox = (await page.getByRole("link", { name: "Binder" }).boundingBox())!;
-    expect(communityBox.width).toBeLessThan(binderBox.width);
+    const createBox = (await create.boundingBox())!;
+    const sheetsBox = (await sheets.boundingBox())!;
+    const bindersBox = (await binders.boundingBox())!;
+    const exploreBox = (await explore.boundingBox())!;
 
-    const viewport = page.viewportSize()!;
-    expect(communityBox.x + communityBox.width).toBeGreaterThan(viewport.width * 0.6);
-    expect(communityBox.y + communityBox.height).toBeGreaterThan(viewport.height * 0.6);
+    // Same column (roughly the same horizontal centre), stacked below.
+    expect(Math.abs(createBox.x + createBox.width / 2 - (bindersBox.x + bindersBox.width / 2))).toBeLessThan(4);
+    expect(bindersBox.y).toBeGreaterThan(createBox.y + createBox.height);
+    expect(Math.abs(sheetsBox.x + sheetsBox.width / 2 - (exploreBox.x + exploreBox.width / 2))).toBeLessThan(4);
+    expect(exploreBox.y).toBeGreaterThan(sheetsBox.y + sheetsBox.height);
 
-    await community.click();
-    await expect(page).toHaveURL(/\/community$/);
+    // Binders and Explore are the smaller, secondary pair — same row as
+    // each other, below the two primary marks.
+    expect(Math.abs(bindersBox.y - exploreBox.y)).toBeLessThan(4);
+
+    await binders.click();
+    await expect(page).toHaveURL(/\/binders$/);
+
+    await page.goto("/");
+    await explore.click();
+    await expect(page).toHaveURL(/\/explore$/);
   });
 });
 
@@ -76,8 +90,8 @@ test.describe("site chrome", () => {
     await expect(page).toHaveURL(/\/$/);
   });
 
-  test("the projects header has no title text and centers with its content", async ({ page }) => {
-    await page.goto("/binder");
+  test("the sheets header has no title text and centers with its content", async ({ page }) => {
+    await page.goto("/sheets");
     const header = page.locator("header");
     await expect(header.getByRole("link", { name: "Film Contact Sheet" })).toBeVisible();
     await expect(header.getByText("Sheets", { exact: true })).toHaveCount(0);
