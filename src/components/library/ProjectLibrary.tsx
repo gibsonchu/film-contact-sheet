@@ -10,6 +10,8 @@ import { Button, Segmented, cx } from "@/components/ui/primitives";
 import { ensureDemoDocument } from "@/lib/demo";
 import { uid } from "@/lib/document";
 import { getStorage, summarize } from "@/lib/storage/local";
+import { isSupabaseConfigured } from "@/lib/storage/adapter";
+import { deleteCloudCopy } from "@/lib/cloudSync";
 import { TEMPLATES } from "@/lib/templates";
 import type { ProjectSummary, SheetDocument } from "@/lib/types";
 
@@ -210,6 +212,7 @@ export function ProjectLibrary() {
                   <p className="label truncate opacity-70">
                     {new Date(p.updatedAt).toLocaleDateString()}
                     {p.sharingMode === "private" ? "" : " · shared"}
+                    {isSupabaseConfigured() ? (p.userId ? " · Online" : " · Local") : ""}
                   </p>
                 </div>
               </Link>
@@ -269,6 +272,19 @@ export function ProjectLibrary() {
                     >
                       Delete
                     </button>
+                    {p.userId ? (
+                      <button
+                        type="button"
+                        className="hover:text-darkroom"
+                        onClick={async () => {
+                          if (!confirm(`Remove the online copy of “${p.title}”? The local sheet stays.`)) return;
+                          await deleteCloudCopy(p.id);
+                          await mutate(p.id, (d) => ({ ...d, sheet: { ...d.sheet, userId: null } }));
+                        }}
+                      >
+                        Delete cloud copy
+                      </button>
+                    ) : null}
                   </>
                 )}
               </div>

@@ -109,6 +109,7 @@ export function summarize(doc: SheetDocument): ProjectSummary {
     templateId: doc.sheet.templateId,
     sharingMode: doc.sheet.sharingMode,
     coverThumb: doc.photos[0]?.thumbPath ?? null,
+    userId: doc.sheet.userId,
     createdAt: doc.sheet.createdAt,
     updatedAt: doc.sheet.updatedAt,
     archivedAt: doc.sheet.archivedAt,

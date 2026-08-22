@@ -305,6 +305,10 @@ export interface ProjectSummary {
   templateId: TemplateId;
   sharingMode: SharingMode;
   coverThumb: string | null;
+  /** Set once the sheet has been saved online — same meaning as
+   *  ContactSheet.userId, surfaced here so the Sheets list can show a
+   *  Local/Cloud indicator without loading each full document. */
+  userId: string | null;
   createdAt: string;
   updatedAt: string;
   archivedAt: string | null;

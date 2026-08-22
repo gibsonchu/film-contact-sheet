@@ -1,12 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { IconEye, IconEyeOff, IconLayers, IconLock, IconRotate, IconTrash } from "@/components/icons";
 import { Button, Field, IconButton, Panel, Segmented, Select, Toggle, cx, inputClass } from "@/components/ui/primitives";
 import { DRAW_INSTRUMENTS, TAPE_KINDS, TEXT_FONTS, nearestSize, sizeOptions } from "@/lib/palette";
 import { InkSwatches } from "./ToolRail";
 import { TEMPLATE_LIST } from "@/lib/templates";
 import { useEditor } from "@/lib/store/editor";
+import { useAuth } from "@/lib/store/auth";
+import { isSupabaseConfigured } from "@/lib/storage/adapter";
+import { deleteCloudCopy, isSavedOnline, saveSheetOnline } from "@/lib/cloudSync";
 import type { PickMark, ReviewStatus, TemplateId } from "@/lib/types";
 
 /** The only four judgements a contact sheet asks for. */
@@ -516,6 +520,8 @@ export function SheetInspector() {
         <Toggle label="Film grain" checked={showGrain} onChange={toggleGrain} hint="Preview only — export follows the sheet setting." />
       </Panel>
 
+      {isSupabaseConfigured() ? <OnlinePanel /> : null}
+
       <Panel title="Roll Details" className="mb-4">
         <div className="space-y-2.5">
           {(
@@ -554,5 +560,66 @@ export function SheetInspector() {
         </div>
       </Panel>
     </>
+  );
+}
+
+/**
+ * Local Only vs Saved Online, per the sheet — never a global storage-mode
+ * switch. Only rendered when Supabase is configured; signed-out visitors
+ * see a plain sign-in prompt rather than a toggle that can't do anything.
+ */
+function OnlinePanel() {
+  const doc = useEditor((s) => s.doc);
+  const updateSheet = useEditor((s) => s.updateSheet);
+  const user = useAuth((s) => s.user);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  if (!doc) return null;
+  const online = isSavedOnline(doc);
+
+  if (!user) {
+    return (
+      <Panel title="Online">
+        <p className="label leading-snug">
+          <Link href="/login" className="hover:text-warm">
+            Sign in
+          </Link>{" "}
+          to save this sheet online and open it from another device.
+        </p>
+      </Panel>
+    );
+  }
+
+  async function toggle(v: boolean) {
+    if (!doc || !user) return;
+    setBusy(true);
+    setError(null);
+    try {
+      if (v) {
+        const linked = await saveSheetOnline(doc, user.id);
+        updateSheet({ userId: linked.sheet.userId });
+      } else {
+        await deleteCloudCopy(doc.sheet.id);
+        updateSheet({ userId: null });
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Panel title="Online">
+      <Toggle
+        label={busy ? "Saving…" : "Save online"}
+        checked={online}
+        onChange={toggle}
+        disabled={busy}
+        hint="Open this sheet from any signed-in device."
+      />
+      {error ? <p className="mt-1.5 text-[11px] text-darkroom">{error}</p> : null}
+    </Panel>
   );
 }

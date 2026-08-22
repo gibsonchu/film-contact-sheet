@@ -1,10 +1,12 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button, Field, inputClass } from "@/components/ui/primitives";
 import { isSupabaseConfigured } from "@/lib/storage/adapter";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 const schema = z.object({
   email: z.email("Enter a valid email address."),
@@ -15,11 +17,12 @@ const schema = z.object({
 type Values = z.infer<typeof schema>;
 
 /**
- * Accounts are Phase 2. The form is real and validated, but until Supabase
- * credentials exist it says so plainly rather than failing silently.
+ * Real Supabase auth once credentials exist; until then, the exact same
+ * honest "not configured" message it has always shown — no silent failure.
  */
 export function AuthPanel({ mode }: { mode: "login" | "signup" }) {
   const configured = isSupabaseConfigured();
+  const router = useRouter();
   const {
     register,
     handleSubmit,
@@ -34,11 +37,25 @@ export function AuthPanel({ mode }: { mode: "login" | "signup" }) {
       setError((issue.path[0] as keyof Values) ?? "email", { message: issue.message });
       return;
     }
-    setError("email", {
-      message: configured
-        ? "Supabase auth isn’t wired up in this build yet."
-        : "Accounts need Supabase credentials. Your sheets are saved in this browser meanwhile.",
-    });
+    const client = getSupabaseBrowserClient();
+    if (!configured || !client) {
+      setError("email", {
+        message: "Accounts need Supabase credentials. Your sheets are saved in this browser meanwhile.",
+      });
+      return;
+    }
+
+    const { email, password, displayName } = parsed.data;
+    const { error } =
+      mode === "signup"
+        ? await client.auth.signUp({ email, password, options: { data: { display_name: displayName } } })
+        : await client.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      setError("email", { message: error.message });
+      return;
+    }
+    router.push("/sheets");
   });
 
   return (
