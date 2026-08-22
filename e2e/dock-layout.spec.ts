@@ -237,13 +237,15 @@ test.describe("dock layout", () => {
     expect(await page.evaluate(() => window.scrollY)).toBe(0);
   });
 
-  test("the panel/preview/postcard/share views are gone, and the way back sits over the canvas", async ({ page }) => {
+  test("the panel/preview/postcard views are gone, and the way back sits over the canvas", async ({ page }) => {
     await openDemo(page);
 
     await expect(page.getByRole("link", { name: "Panel layout" })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Preview" })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Postcard" })).toHaveCount(0);
-    await expect(page.getByRole("button", { name: "Share" })).toHaveCount(0);
+    // Share reappeared here once cloud-backed markup sharing needed an entry
+    // point on the layout everyone actually uses.
+    await expect(page.getByRole("button", { name: "Share" })).toBeVisible();
 
     // "All sheets" moved out of the left column and onto the canvas itself.
     const sidebar = page.getByRole("complementary", { name: "Frames" });
@@ -278,6 +280,20 @@ test.describe("dock layout", () => {
     await expect(page.getByText("Sheet Template", { exact: true })).toBeVisible();
     await expect(page.getByText("Switching keeps order")).toHaveCount(0);
     await expect(page.getByText("Six frames to a strip")).toHaveCount(0);
+  });
+
+  test("Share opens the same dialog local sharing has always used, with no cloud-only controls unconfigured", async ({
+    page,
+  }) => {
+    await openDemo(page);
+    await page.getByRole("button", { name: "Share" }).click();
+    await expect(page.getByRole("dialog", { name: "Share this sheet" })).toBeVisible();
+
+    await page.getByRole("button", { name: "Link · view" }).click();
+    await expect(page.getByLabel("Share link")).toHaveValue(/\/share\//);
+    // Cloud-only — this sheet was never saved online, so neither shows up.
+    await expect(page.getByRole("switch", { name: "Link enabled" })).toHaveCount(0);
+    await expect(page.getByRole("switch", { name: "Allow markup / remixing" })).toHaveCount(0);
   });
 
   test("Sprocket holes and Edge printing grey out on templates without a strip housing", async ({

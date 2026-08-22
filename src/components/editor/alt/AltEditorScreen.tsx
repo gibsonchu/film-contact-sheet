@@ -6,6 +6,7 @@ import { BottomDock } from "./BottomDock";
 import { PhotoSidebar } from "./PhotoSidebar";
 import { CanvasStage } from "../CanvasStage";
 import { ExportDialog } from "../ExportDialog";
+import { ShareDialog } from "../ShareDialog";
 import { useEditorSession } from "../useEditorSession";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button, IconButton } from "@/components/ui/primitives";
@@ -29,6 +30,7 @@ export function AltEditorScreen({ sheetId }: { sheetId: string }) {
   const dirty = useEditor((s) => s.dirty);
   const sheetFullscreen = useEditor((s) => s.sheetFullscreen);
   const [showExport, setShowExport] = useState(false);
+  const [showShare, setShowShare] = useState(false);
 
   useEditorSession(sheetId);
 
@@ -81,7 +83,7 @@ export function AltEditorScreen({ sheetId }: { sheetId: string }) {
         ) : (
           <>
             <BackLink />
-            <ActionBar onExport={() => setShowExport(true)} />
+            <ActionBar onExport={() => setShowExport(true)} onShare={() => setShowShare(true)} />
             <BottomDock />
           </>
         )}
@@ -90,6 +92,7 @@ export function AltEditorScreen({ sheetId }: { sheetId: string }) {
       </main>
 
       <ExportDialog open={showExport} onClose={() => setShowExport(false)} />
+      <ShareDialog open={showShare} onClose={() => setShowShare(false)} />
 
       <span className="sr-only" role="status" aria-live="polite">
         {dirty ? "Unsaved changes" : "All changes saved"}
@@ -111,7 +114,7 @@ function BackLink() {
 }
 
 /** Undo and the way to print it — top right, out of the way. */
-function ActionBar({ onExport }: { onExport: () => void }) {
+function ActionBar({ onExport, onShare }: { onExport: () => void; onShare: () => void }) {
   const doc = useEditor((s) => s.doc);
   const undo = useEditor((s) => s.undo);
   const redo = useEditor((s) => s.redo);
@@ -133,6 +136,10 @@ function ActionBar({ onExport }: { onExport: () => void }) {
           <IconRedo className="h-3.5 w-3.5" />
         </IconButton>
       </div>
+
+      <Button variant="outline" size="sm" onClick={onShare}>
+        Share
+      </Button>
 
       <Button variant="primary" size="sm" onClick={onExport}>
         Export

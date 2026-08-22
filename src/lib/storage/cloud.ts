@@ -117,6 +117,32 @@ class CloudAdapter implements StorageAdapter {
     if (doc.annotations.length) {
       await client.from("annotations").insert(doc.annotations.map(annotationToRow));
     }
+
+    // Share links: local ShareLink only knows token/passwordHash/permission
+    // — allow_markup/allow_download/disabled are cloud-only flags a visitor
+    // to /binders sets directly (see cloudShare.ts), so this must never
+    // stomp them back to their defaults on every autosave. Rows the local
+    // side no longer has (sharing turned off) are removed; everything else
+    // is an update of only the columns the local model actually tracks.
+    const keepIds = doc.shareLinks.map((l) => l.id);
+    let deleteQuery = client.from("share_links").delete().eq("contact_sheet_id", doc.sheet.id);
+    if (keepIds.length) deleteQuery = deleteQuery.not("id", "in", `(${keepIds.join(",")})`);
+    await deleteQuery;
+    for (const link of doc.shareLinks) {
+      await client
+        .from("share_links")
+        .upsert(
+          {
+            id: link.id,
+            contact_sheet_id: doc.sheet.id,
+            token: link.token,
+            password_hash: link.passwordHash,
+            permission: link.permission,
+            expires_at: link.expiresAt,
+          },
+          { onConflict: "id", ignoreDuplicates: false },
+        );
+    }
   }
 
   async deleteDocument(id: string, opts?: { hard?: boolean }): Promise<void> {

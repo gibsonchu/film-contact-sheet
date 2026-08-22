@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Dialog, Field, Segmented, Toggle, inputClass } from "@/components/ui/primitives";
 import { ensureShareLink, shareUrl } from "@/lib/share";
 import { getStorage } from "@/lib/storage/local";
+import { cloudAdapter } from "@/lib/storage/cloud";
+import { isSavedOnline } from "@/lib/cloudSync";
+import { getCloudShareFlags, updateCloudShareFlags, type CloudShareFlags } from "@/lib/cloudShare";
 import { useEditor } from "@/lib/store/editor";
 import type { SharingMode } from "@/lib/types";
 
@@ -15,6 +18,28 @@ export function ShareDialog({ open, onClose }: { open: boolean; onClose: () => v
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [emailNote, setEmailNote] = useState<string | null>(null);
+  const [cloudFlags, setCloudFlags] = useState<CloudShareFlags | null>(null);
+
+  const online = doc ? isSavedOnline(doc) : false;
+  const linkId = doc?.shareLinks[0]?.id ?? null;
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      if (!online || !doc || doc.sheet.sharingMode === "private") {
+        if (!cancelled) setCloudFlags(null);
+        return;
+      }
+      const flags = await getCloudShareFlags(doc.sheet.id);
+      if (!cancelled) setCloudFlags(flags);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // linkId changes when a link is (re)created, which is when the cloud
+    // row is worth re-reading.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [online, doc?.sheet.id, doc?.sheet.sharingMode, linkId]);
 
   if (!doc) return null;
   const mode = doc.sheet.sharingMode;
@@ -27,6 +52,30 @@ export function ShareDialog({ open, onClose }: { open: boolean; onClose: () => v
     const { doc: updated } = await ensureShareLink(current, { mode: next, password });
     useEditor.setState({ doc: updated, dirty: true });
     await getStorage().saveDocument(updated);
+    if (isSavedOnline(updated)) {
+      await cloudAdapter.saveDocument(updated);
+      // The effect keyed on linkId already re-fetches on the next render,
+      // but that render happened before this cloud write landed — fetch
+      // once more directly so a brand-new link's flags show immediately
+      // instead of only after the next state change.
+      setCloudFlags(await getCloudShareFlags(updated.sheet.id));
+    }
+  }
+
+  async function toggleAllowMarkup(value: boolean) {
+    if (!doc) return;
+    setCloudFlags((f) => (f ? { ...f, allowMarkup: value } : f));
+    await updateCloudShareFlags(doc.sheet.id, { allow_markup: value });
+  }
+  async function toggleAllowDownload(value: boolean) {
+    if (!doc) return;
+    setCloudFlags((f) => (f ? { ...f, allowDownload: value } : f));
+    await updateCloudShareFlags(doc.sheet.id, { allow_download: value });
+  }
+  async function toggleLinkDisabled(value: boolean) {
+    if (!doc) return;
+    setCloudFlags((f) => (f ? { ...f, disabled: value } : f));
+    await updateCloudShareFlags(doc.sheet.id, { disabled: value });
   }
 
   async function copyLink() {
@@ -114,7 +163,10 @@ export function ShareDialog({ open, onClose }: { open: boolean; onClose: () => v
               <Toggle
                 label="Allow downloading the export"
                 checked={doc.sheet.downloadsEnabled}
-                onChange={(v) => useEditor.getState().updateSheet({ downloadsEnabled: v })}
+                onChange={(v) => {
+                  useEditor.getState().updateSheet({ downloadsEnabled: v });
+                  if (online) void toggleAllowDownload(v);
+                }}
               />
               <Toggle
                 label="Allow frame comments"
@@ -122,6 +174,23 @@ export function ShareDialog({ open, onClose }: { open: boolean; onClose: () => v
                 onChange={(v) => useEditor.getState().updateSheet({ commentsEnabled: v })}
               />
             </div>
+
+            {online && cloudFlags ? (
+              <div className="space-y-0.5 border-t border-white/8 pt-3">
+                <Toggle
+                  label="Link enabled"
+                  checked={!cloudFlags.disabled}
+                  onChange={(v) => void toggleLinkDisabled(!v)}
+                  hint="Turn off to stop anyone new from opening it — the link keeps its address for when you turn it back on."
+                />
+                <Toggle
+                  label="Allow markup / remixing"
+                  checked={cloudFlags.allowMarkup}
+                  onChange={(v) => void toggleAllowMarkup(v)}
+                  hint="Viewers can make their own marked-up copy, shared back to you in a Binder."
+                />
+              </div>
+            ) : null}
 
             <div className="space-y-2 border-t border-white/8 pt-3">
               <Field label="Send by email">
