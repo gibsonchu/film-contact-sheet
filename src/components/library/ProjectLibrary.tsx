@@ -14,6 +14,7 @@ import { isSupabaseConfigured } from "@/lib/storage/adapter";
 import { deleteCloudCopy } from "@/lib/cloudSync";
 import { listMyBinders } from "@/lib/binders";
 import { useAuth } from "@/lib/store/auth";
+import { PublishDialog } from "@/components/community/PublishDialog";
 import { TEMPLATES } from "@/lib/templates";
 import type { ProjectSummary, SheetDocument } from "@/lib/types";
 
@@ -30,6 +31,7 @@ export function ProjectLibrary() {
   const [view, setView] = useState<View>("active");
   const [busy, setBusy] = useState(false);
   const [binderBySheet, setBinderBySheet] = useState<Record<string, string>>({});
+  const [publishTarget, setPublishTarget] = useState<SheetDocument | null>(null);
   const user = useAuth((s) => s.user);
 
   useEffect(() => {
@@ -309,6 +311,18 @@ export function ProjectLibrary() {
                     ) : null}
                   </>
                 )}
+                {isSupabaseConfigured() && user && !p.deletedAt ? (
+                  <button
+                    type="button"
+                    className="hover:text-warm"
+                    onClick={async () => {
+                      const doc = await getStorage().loadDocument(p.id);
+                      if (doc) setPublishTarget(doc);
+                    }}
+                  >
+                    Publish
+                  </button>
+                ) : null}
                 {binderBySheet[p.id] ? (
                   <Link href={`/binders/${binderBySheet[p.id]}`} className="hover:text-warm">
                     View Binder
@@ -330,6 +344,19 @@ export function ProjectLibrary() {
       </p>
 
       <SiteFooter />
+
+      {publishTarget ? (
+        <PublishDialog
+          open={Boolean(publishTarget)}
+          onClose={() => setPublishTarget(null)}
+          doc={publishTarget}
+          userId={user?.id ?? null}
+          onChange={async (updated) => {
+            await getStorage().saveDocument(updated);
+            await refresh();
+          }}
+        />
+      ) : null}
     </div>
   );
 }

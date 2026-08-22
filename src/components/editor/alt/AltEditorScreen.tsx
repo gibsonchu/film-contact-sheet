@@ -8,11 +8,14 @@ import { CanvasStage } from "../CanvasStage";
 import { ExportDialog } from "../ExportDialog";
 import { ShareDialog } from "../ShareDialog";
 import { useEditorSession } from "../useEditorSession";
+import { PublishDialog } from "@/components/community/PublishDialog";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button, IconButton } from "@/components/ui/primitives";
 import { IconRedo, IconUndo, IconZoomIn, IconZoomOut } from "@/components/icons";
 import { computeLayout } from "@/lib/layout";
 import { useEditor } from "@/lib/store/editor";
+import { useAuth } from "@/lib/store/auth";
+import { isSupabaseConfigured } from "@/lib/storage/adapter";
 
 /**
  * The same editor with the furniture moved: the sheet's own settings in the
@@ -31,6 +34,8 @@ export function AltEditorScreen({ sheetId }: { sheetId: string }) {
   const sheetFullscreen = useEditor((s) => s.sheetFullscreen);
   const [showExport, setShowExport] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  const [showPublish, setShowPublish] = useState(false);
+  const user = useAuth((s) => s.user);
 
   useEditorSession(sheetId);
 
@@ -83,7 +88,11 @@ export function AltEditorScreen({ sheetId }: { sheetId: string }) {
         ) : (
           <>
             <BackLink />
-            <ActionBar onExport={() => setShowExport(true)} onShare={() => setShowShare(true)} />
+            <ActionBar
+              onExport={() => setShowExport(true)}
+              onShare={() => setShowShare(true)}
+              onPublish={isSupabaseConfigured() && user ? () => setShowPublish(true) : undefined}
+            />
             <BottomDock />
           </>
         )}
@@ -93,6 +102,15 @@ export function AltEditorScreen({ sheetId }: { sheetId: string }) {
 
       <ExportDialog open={showExport} onClose={() => setShowExport(false)} />
       <ShareDialog open={showShare} onClose={() => setShowShare(false)} />
+      {showPublish ? (
+        <PublishDialog
+          open={showPublish}
+          onClose={() => setShowPublish(false)}
+          doc={doc}
+          userId={user?.id ?? null}
+          onChange={(updated) => useEditor.setState({ doc: updated })}
+        />
+      ) : null}
 
       <span className="sr-only" role="status" aria-live="polite">
         {dirty ? "Unsaved changes" : "All changes saved"}
@@ -114,7 +132,18 @@ function BackLink() {
 }
 
 /** Undo and the way to print it — top right, out of the way. */
-function ActionBar({ onExport, onShare }: { onExport: () => void; onShare: () => void }) {
+function ActionBar({
+  onExport,
+  onShare,
+  onPublish,
+}: {
+  onExport: () => void;
+  onShare: () => void;
+  /** Omitted (not just disabled) when there's no signed-in account to
+   *  publish as — same "hide, don't grey out" pattern the rest of the
+   *  cloud-gated UI uses. */
+  onPublish?: () => void;
+}) {
   const doc = useEditor((s) => s.doc);
   const undo = useEditor((s) => s.undo);
   const redo = useEditor((s) => s.redo);
@@ -140,6 +169,12 @@ function ActionBar({ onExport, onShare }: { onExport: () => void; onShare: () =>
       <Button variant="outline" size="sm" onClick={onShare}>
         Share
       </Button>
+
+      {onPublish ? (
+        <Button variant="outline" size="sm" onClick={onPublish}>
+          Publish
+        </Button>
+      ) : null}
 
       <Button variant="primary" size="sm" onClick={onExport}>
         Export

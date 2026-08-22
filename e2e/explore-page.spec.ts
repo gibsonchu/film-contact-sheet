@@ -10,12 +10,15 @@ test.describe("explore page", () => {
     await expect(page).toHaveURL(/\/explore$/);
   });
 
-  test("shows the Explore title and coming-soon description", async ({ page }) => {
+  test("shows the Explore title — the real feed once cloud storage exists, an honest stub without it", async ({
+    page,
+  }) => {
     await page.goto("/explore");
     await expect(page.getByRole("heading", { name: "Explore" })).toBeVisible();
-    await expect(
-      page.getByText("Coming soon will be a place for people to publish their contact sheets and explore others."),
-    ).toBeVisible();
+    // This deployment has no Supabase credentials, so the feed itself is
+    // covered by explore-feed.spec.ts's honest-stub coverage — just confirm
+    // the old static placeholder copy is gone.
+    await expect(page.getByText("Coming soon will be a place for people to publish")).toHaveCount(0);
   });
 
   test("nav matches the Sheets page, with Sheets in place of Demo", async ({ page }) => {

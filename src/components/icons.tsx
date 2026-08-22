@@ -307,3 +307,18 @@ export const IconFilm = (p: P) => (
     <path d="M2.4 7.2h15.2M2.4 12.8h15.2M6 5v2.2M10 5v2.2M14 5v2.2M6 12.8V15M10 12.8V15M14 12.8V15" />
   </svg>
 );
+
+/** Pass fill="currentColor" (overriding the shared `none` default) for the
+ *  liked/saved state — same on-off pattern every other toggleable icon in
+ *  this app uses via its own active styling, just at the SVG level here. */
+export const IconHeart = (p: P) => (
+  <svg {...base} {...p}>
+    <path d="M10 16.2 3.6 10.1c-2-2-1.7-5 .5-6.4 1.7-1.1 3.8-.7 5.1.8L10 5.4l.8-.9c1.3-1.5 3.4-1.9 5.1-.8 2.2 1.4 2.5 4.4.5 6.4Z" />
+  </svg>
+);
+
+export const IconBookmark = (p: P) => (
+  <svg {...base} {...p}>
+    <path d="M5.5 2.8h9a.6.6 0 0 1 .6.6v13.4l-5.1-3.4-5.1 3.4V3.4a.6.6 0 0 1 .6-.6Z" />
+  </svg>
+);

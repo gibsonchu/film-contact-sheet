@@ -7,6 +7,7 @@ import { getStorage } from "@/lib/storage/local";
 import { cloudAdapter } from "@/lib/storage/cloud";
 import { isSavedOnline } from "@/lib/cloudSync";
 import { getCloudShareFlags, updateCloudShareFlags, type CloudShareFlags } from "@/lib/cloudShare";
+import { setUnlistedVisibility } from "@/lib/publish";
 import { useEditor } from "@/lib/store/editor";
 import type { SharingMode } from "@/lib/types";
 
@@ -54,6 +55,10 @@ export function ShareDialog({ open, onClose }: { open: boolean; onClose: () => v
     await getStorage().saveDocument(updated);
     if (isSavedOnline(updated)) {
       await cloudAdapter.saveDocument(updated);
+      // Raises visibility to unlisted (or drops it back to private) without
+      // ever undoing a Publish — that's Publish/Explore's own concern, kept
+      // deliberately separate from what Share does.
+      await setUnlistedVisibility(updated.sheet.id, next !== "private");
       // The effect keyed on linkId already re-fetches on the next render,
       // but that render happened before this cloud write landed — fetch
       // once more directly so a brand-new link's flags show immediately
