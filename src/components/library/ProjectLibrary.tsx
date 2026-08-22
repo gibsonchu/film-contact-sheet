@@ -12,6 +12,8 @@ import { uid } from "@/lib/document";
 import { getStorage, summarize } from "@/lib/storage/local";
 import { isSupabaseConfigured } from "@/lib/storage/adapter";
 import { deleteCloudCopy } from "@/lib/cloudSync";
+import { listMyBinders } from "@/lib/binders";
+import { useAuth } from "@/lib/store/auth";
 import { TEMPLATES } from "@/lib/templates";
 import type { ProjectSummary, SheetDocument } from "@/lib/types";
 
@@ -27,6 +29,26 @@ export function ProjectLibrary() {
   const [sort, setSort] = useState<SortKey>("updated");
   const [view, setView] = useState<View>("active");
   const [busy, setBusy] = useState(false);
+  const [binderBySheet, setBinderBySheet] = useState<Record<string, string>>({});
+  const user = useAuth((s) => s.user);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      if (!isSupabaseConfigured() || !user) {
+        if (!cancelled) setBinderBySheet({});
+        return;
+      }
+      const binders = await listMyBinders();
+      if (cancelled) return;
+      const map: Record<string, string> = {};
+      for (const b of binders) if (b.sourceSheetId) map[b.sourceSheetId] = b.id;
+      setBinderBySheet(map);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   const refresh = useCallback(async () => {
     const storage = getStorage();
@@ -287,6 +309,11 @@ export function ProjectLibrary() {
                     ) : null}
                   </>
                 )}
+                {binderBySheet[p.id] ? (
+                  <Link href={`/binders/${binderBySheet[p.id]}`} className="hover:text-warm">
+                    View Binder
+                  </Link>
+                ) : null}
               </div>
             </li>
           ))}
