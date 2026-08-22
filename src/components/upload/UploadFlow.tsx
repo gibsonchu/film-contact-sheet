@@ -149,8 +149,14 @@ export function UploadFlow() {
           <Link href="/about" className="label hover:text-warm">
             About
           </Link>
+          <Link href="/binders" className="label hover:text-warm">
+            Binders
+          </Link>
           <Link href="/sheets" className="label hover:text-warm">
             Sheets
+          </Link>
+          <Link href="/explore" className="label hover:text-warm">
+            Explore
           </Link>
           <ThemeToggle />
         </div>

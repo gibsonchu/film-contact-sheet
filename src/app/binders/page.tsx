@@ -60,6 +60,9 @@ export default function BindersPage() {
           <Link href="/sheets" className="label hover:text-warm">
             Sheets
           </Link>
+          <Link href="/explore" className="label hover:text-warm">
+            Explore
+          </Link>
           {configured && user ? (
             <Button variant="primary" size="sm" onClick={newBinder} disabled={busy}>
               New Binder

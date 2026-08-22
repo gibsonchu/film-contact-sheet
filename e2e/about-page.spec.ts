@@ -13,7 +13,8 @@ test.describe("about page", () => {
     await expect(about).toBeVisible();
     const aboutBox = (await about.boundingBox())!;
     const demoBox = (await demo.boundingBox())!;
-    // About sits immediately left of Demo in the nav's right-hand cluster.
+    // About sits left of Demo in the nav's right-hand cluster (Binders and
+    // Explore now sit between them).
     expect(aboutBox.x).toBeLessThan(demoBox.x);
   });
 

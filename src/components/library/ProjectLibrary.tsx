@@ -147,6 +147,12 @@ export function ProjectLibrary() {
           <Link href="/about" className="label hover:text-warm">
             About
           </Link>
+          <Link href="/binders" className="label hover:text-warm">
+            Binders
+          </Link>
+          <Link href="/explore" className="label hover:text-warm">
+            Explore
+          </Link>
           <button type="button" onClick={openDemo} disabled={busy} className="label hover:text-warm">
             Demo
           </button>
@@ -335,12 +341,7 @@ export function ProjectLibrary() {
       )}
 
       <p className="label mx-auto max-w-4xl px-3 pb-6">
-        Sheets are only stored locally on this browser. Download your contact sheets to share with friends and family.{" "}
-        A new explore page is{" "}
-        <Link href="/explore" className="underline hover:text-warm">
-          coming soon
-        </Link>
-        .
+        Sheets are only stored locally on this browser. Download your contact sheets to share with friends and family.
       </p>
 
       <SiteFooter />

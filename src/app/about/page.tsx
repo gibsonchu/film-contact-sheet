@@ -14,13 +14,19 @@ export default function AboutPage() {
         <div className="mx-auto flex h-9 max-w-4xl items-center gap-4 px-3">
           <SiteMark />
           <div className="flex-1" />
+          <Link href="/binders" className="label hover:text-warm">
+            Binders
+          </Link>
+          <Link href="/sheets" className="label hover:text-warm">
+            Sheets
+          </Link>
+          <Link href="/explore" className="label hover:text-warm">
+            Explore
+          </Link>
           <Link href="/new">
             <Button variant="primary" size="sm">
               New Sheet
             </Button>
-          </Link>
-          <Link href="/sheets" className="label hover:text-warm">
-            Sheets
           </Link>
           <ThemeToggle />
         </div>

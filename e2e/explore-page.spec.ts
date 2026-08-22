@@ -1,12 +1,12 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("explore page", () => {
-  test("is teased from the Sheets footer and reachable by its 'coming soon' link", async ({ page }) => {
+  test("is reachable from the Sheets page nav", async ({ page }) => {
     await page.goto("/sheets");
-    const comingSoon = page.getByRole("link", { name: "coming soon" });
-    await expect(comingSoon).toBeVisible();
-    await expect(comingSoon).toHaveAttribute("href", "/explore");
-    await comingSoon.click();
+    const explore = page.getByRole("link", { name: "Explore" });
+    await expect(explore).toBeVisible();
+    await expect(explore).toHaveAttribute("href", "/explore");
+    await explore.click();
     await expect(page).toHaveURL(/\/explore$/);
   });
 
